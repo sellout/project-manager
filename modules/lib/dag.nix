@@ -6,12 +6,10 @@
 #
 #  - the addition of the function `entryBefore` indicating a "wanted
 #    by" relationship.
-
-{ lib }:
-
-let inherit (lib) all filterAttrs head pm mapAttrs length tail toposort;
+{lib}: let
+  inherit (lib) all filterAttrs head pm mapAttrs length tail toposort;
 in {
-  empty = { };
+  empty = {};
 
   isEntry = e: e ? data && e ? after && e ? before;
   isDag = dag:
@@ -73,33 +71,36 @@ in {
   #                ];
   #              }
   #    true
-  topoSort = dag:
-    let
-      dagBefore = dag: name:
-        builtins.attrNames
-        (filterAttrs (n: v: builtins.elem name v.before) dag);
-      normalizedDag = mapAttrs (n: v: {
+  topoSort = dag: let
+    dagBefore = dag: name:
+      builtins.attrNames
+      (filterAttrs (n: v: builtins.elem name v.before) dag);
+    normalizedDag =
+      mapAttrs (n: v: {
         name = n;
         data = v.data;
         after = v.after ++ dagBefore dag n;
-      }) dag;
-      before = a: b: builtins.elem a.name b.after;
-      sorted = toposort before (builtins.attrValues normalizedDag);
-    in if sorted ? result then {
-      result = map (v: { inherit (v) name data; }) sorted.result;
-    } else
-      sorted;
+      })
+      dag;
+    before = a: b: builtins.elem a.name b.after;
+    sorted = toposort before (builtins.attrValues normalizedDag);
+  in
+    if sorted ? result
+    then {
+      result = map (v: {inherit (v) name data;}) sorted.result;
+    }
+    else sorted;
 
   # Applies a function to each element of the given DAG.
-  map = f: mapAttrs (n: v: v // { data = f n v.data; });
+  map = f: mapAttrs (n: v: v // {data = f n v.data;});
 
-  entryBetween = before: after: data: { inherit data before after; };
+  entryBetween = before: after: data: {inherit data before after;};
 
   # Create a DAG entry with no particular dependency information.
-  entryAnywhere = pm.dag.entryBetween [ ] [ ];
+  entryAnywhere = pm.dag.entryBetween [] [];
 
-  entryAfter = pm.dag.entryBetween [ ];
-  entryBefore = before: pm.dag.entryBetween before [ ];
+  entryAfter = pm.dag.entryBetween [];
+  entryBefore = before: pm.dag.entryBetween before [];
 
   # Given a list of entries, this function places them in order within the DAG.
   # Each entry is labeled "${tag}-${entry index}" and other DAG entries can be
@@ -107,23 +108,26 @@ in {
   #
   # The entries as a whole can be given a relation to other DAG nodes. All
   # generated nodes are then placed before or after those dependencies.
-  entriesBetween = tag:
-    let
-      go = i: before: after: entries:
-        let
-          name = "${tag}-${toString i}";
-          i' = i + 1;
-        in if entries == [ ] then
-          pm.dag.empty
-        else if length entries == 1 then {
-          "${name}" = pm.dag.entryBetween before after (head entries);
-        } else
-          {
-            "${name}" = pm.dag.entryAfter after (head entries);
-          } // go (i + 1) before [ name ] (tail entries);
-    in go 0;
+  entriesBetween = tag: let
+    go = i: before: after: entries: let
+      name = "${tag}-${toString i}";
+      i' = i + 1;
+    in
+      if entries == []
+      then pm.dag.empty
+      else if length entries == 1
+      then {
+        "${name}" = pm.dag.entryBetween before after (head entries);
+      }
+      else
+        {
+          "${name}" = pm.dag.entryAfter after (head entries);
+        }
+        // go (i + 1) before [name] (tail entries);
+  in
+    go 0;
 
-  entriesAnywhere = tag: pm.dag.entriesBetween tag [ ] [ ];
-  entriesAfter = tag: pm.dag.entriesBetween tag [ ];
-  entriesBefore = tag: before: pm.dag.entriesBetween tag before [ ];
+  entriesAnywhere = tag: pm.dag.entriesBetween tag [] [];
+  entriesAfter = tag: pm.dag.entriesBetween tag [];
+  entriesBefore = tag: before: pm.dag.entriesBetween tag before [];
 }

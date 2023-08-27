@@ -1,9 +1,6 @@
-{ lib, ... }:
-
-with lib;
-
-{
-  meta.maintainers = [ maintainers.sellout ];
+{lib, ...}:
+with lib; {
+  meta.maintainers = [maintainers.sellout];
 
   options.submoduleSupport = {
     enable = mkOption {

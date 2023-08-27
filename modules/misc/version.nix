@@ -1,12 +1,13 @@
-{ config, lib, ... }:
-
-with lib;
-
-let releaseInfo = {
-  release = "23.05";
-  isReleaseBranch = true;
-};
-
+{
+  config,
+  lib,
+  ...
+}:
+with lib; let
+  releaseInfo = {
+    release = "23.05";
+    isReleaseBranch = true;
+  };
 in {
   options = {
     project.stateVersion = mkOption {
@@ -65,8 +66,12 @@ in {
       revision = mkOption {
         internal = true;
         type = types.nullOr types.str;
-        default = let gitRepo = "${toString ./../..}/.git";
-        in if pathIsGitRepo gitRepo then commitIdFromGitRepo gitRepo else null;
+        default = let
+          gitRepo = "${toString ./../..}/.git";
+        in
+          if pathIsGitRepo gitRepo
+          then commitIdFromGitRepo gitRepo
+          else null;
         description = ''
           The Git revision from which this Project Manager configuration was
           built.

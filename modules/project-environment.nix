@@ -1,19 +1,31 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   inherit (config.project) stateVersion;
 
   cfg = config.project;
-
-in
-
-{
-  meta.maintainers = [ maintainers.sellout ];
+in {
+  meta.maintainers = [maintainers.sellout];
 
   options = {
+    project.name = mkOption {
+      type = types.str;
+      defaultText = literalExpression "undefined";
+      example = "my-project";
+      description = "The project’s name (as an identifier).";
+    };
+
+    project.summary = mkOption {
+      type = types.str;
+      defaultText = literalExpression "undefined";
+      example = "Tooling for doing something I want.";
+      description = "A brief (approximately one line) description of the project.";
+    };
+
     project.projectDirectory = mkOption {
       type = types.path;
       defaultText = literalExpression "undefined";
@@ -24,7 +36,7 @@ in
 
     project.shellAliases = mkOption {
       type = with types; attrsOf str;
-      default = { };
+      default = {};
       example = literalExpression ''
         {
           g = "git";
@@ -44,8 +56,11 @@ in
 
     project.sessionVariables = mkOption {
       default = {};
-      type = with types; lazyAttrsOf (oneOf [ str path int float ]);
-      example = { EDITOR = "emacs"; GS_OPTIONS = "-sPAPERSIZE=a4"; };
+      type = with types; lazyAttrsOf (oneOf [str path int float]);
+      example = {
+        EDITOR = "emacs";
+        GS_OPTIONS = "-sPAPERSIZE=a4";
+      };
       description = ''
         Environment variables to always set at login.
 
@@ -90,7 +105,7 @@ in
 
     project.sessionPath = mkOption {
       type = with types; listOf str;
-      default = [ ];
+      default = [];
       example = [
         "$PROJECT_ROOT/.local/bin"
         "\${xdg.configHome}/emacs/bin"
@@ -126,7 +141,7 @@ in
     project.extraOutputsToInstall = mkOption {
       type = types.listOf types.str;
       default = [];
-      example = [ "doc" "info" "devdoc" ];
+      example = ["doc" "info" "devdoc"];
       description = ''
         List of additional package outputs of the packages
         {var}`project.packages` that should be installed into
@@ -205,7 +220,7 @@ in
     project.extraActivationPath = mkOption {
       internal = true;
       type = types.listOf types.package;
-      default = [ ];
+      default = [];
       description = ''
         Extra packages to add to {env}`PATH` within the activation
         script.
@@ -254,30 +269,29 @@ in
       }
     ];
 
-    warnings =
-      let
-        pmRelease = config.project.version.release;
-        nixpkgsRelease = lib.trivial.release;
-        releaseMismatch =
-          config.project.enableNixpkgsReleaseCheck
-          && pmRelease != nixpkgsRelease;
-      in
-        optional releaseMismatch ''
-          You are using
+    warnings = let
+      pmRelease = config.project.version.release;
+      nixpkgsRelease = lib.trivial.release;
+      releaseMismatch =
+        config.project.enableNixpkgsReleaseCheck
+        && pmRelease != nixpkgsRelease;
+    in
+      optional releaseMismatch ''
+        You are using
 
-            Project Manager version ${pmRelease} and
-            Nixpkgs version ${nixpkgsRelease}.
+          Project Manager version ${pmRelease} and
+          Nixpkgs version ${nixpkgsRelease}.
 
-          Using mismatched versions is likely to cause errors and unexpected
-          behavior. It is therefore highly recommended to use a release of
-          Project Manager that corresponds with your chosen release of Nixpkgs.
+        Using mismatched versions is likely to cause errors and unexpected
+        behavior. It is therefore highly recommended to use a release of
+        Project Manager that corresponds with your chosen release of Nixpkgs.
 
-          If you insist then you can disable this warning by adding
+        If you insist then you can disable this warning by adding
 
-            project.enableNixpkgsReleaseCheck = false;
+          project.enableNixpkgsReleaseCheck = false;
 
-          to your configuration.
-        '';
+        to your configuration.
+      '';
 
     # programs.bash.shellAliases = cfg.shellAliases;
     # programs.zsh.shellAliases = cfg.shellAliases;
@@ -287,18 +301,21 @@ in
     project.sessionVariablesPackage = pkgs.writeTextFile {
       name = "pm-session-vars.sh";
       destination = "/etc/profile.d/pm-session-vars.sh";
-      text = ''
-        # Only source this once.
-        if [ -n "$__PM_SESS_VARS_SOURCED" ]; then return; fi
-        export __PM_SESS_VARS_SOURCED=1
+      text =
+        ''
+          # Only source this once.
+          if [ -n "$__PM_SESS_VARS_SOURCED" ]; then return; fi
+          export __PM_SESS_VARS_SOURCED=1
 
-        ${config.lib.shell.exportAll cfg.sessionVariables}
-      '' + lib.optionalString (cfg.sessionPath != [ ]) ''
-        export PATH="$PATH''${PATH:+:}${concatStringsSep ":" cfg.sessionPath}"
-      '' + cfg.sessionVariablesExtra;
+          ${config.lib.shell.exportAll cfg.sessionVariables}
+        ''
+        + lib.optionalString (cfg.sessionPath != []) ''
+          export PATH="$PATH''${PATH:+:}${concatStringsSep ":" cfg.sessionPath}"
+        ''
+        + cfg.sessionVariablesExtra;
     };
 
-    project.packages = [ config.project.sessionVariablesPackage ];
+    project.packages = [config.project.sessionVariablesPackage];
 
     # A dummy entry acting as a boundary between the activation
     # script's "check" and the "write" phases.
@@ -321,75 +338,73 @@ in
     # `project-manager-path` package if it is installed.
     project.activation.installPackages = pm.dag.entryAfter ["writeBoundary"] (
       if config.submoduleSupport.externalPackageInstall
-      then
-        ''
-          if [[ -e $PROJECT_ROOT/.nix-profile/manifest.json ]] ; then
+      then ''
+        if [[ -e $PROJECT_ROOT/.nix-profile/manifest.json ]] ; then
+          nix profile list \
+            | { grep 'project-manager-path$' || test $? = 1; } \
+            | cut -d ' ' -f 4 \
+            | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
+        else
+          if nix-env -q | grep '^project-manager-path$'; then
+            $DRY_RUN_CMD nix-env -e project-manager-path
+          fi
+        fi
+      ''
+      else ''
+        function nixProfileList() {
+          # We attempt to use `--json` first (added in Nix 2.17). Otherwise attempt to
+          # parse the legacy output format.
+          {
+            nix profile list --json 2>/dev/null \
+              | jq -r --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+          } || {
             nix profile list \
-              | { grep 'project-manager-path$' || test $? = 1; } \
-              | cut -d ' ' -f 4 \
-              | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
-          else
-            if nix-env -q | grep '^project-manager-path$'; then
-              $DRY_RUN_CMD nix-env -e project-manager-path
-            fi
-          fi
-        ''
-      else
-        ''
-          function nixProfileList() {
-            # We attempt to use `--json` first (added in Nix 2.17). Otherwise attempt to
-            # parse the legacy output format.
-            {
-              nix profile list --json 2>/dev/null \
-                | jq -r --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
-            } || {
-              nix profile list \
-                | { grep "$1\$" || test $? = 1; } \
-                | cut -d ' ' -f 4
-            }
+              | { grep "$1\$" || test $? = 1; } \
+              | cut -d ' ' -f 4
           }
+        }
 
-          function nixRemoveProfileByName() {
-              nixProfileList "$1" | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
-          }
+        function nixRemoveProfileByName() {
+            nixProfileList "$1" | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
+        }
 
-          function nixReplaceProfile() {
-            local oldNix="$(command -v nix)"
+        function nixReplaceProfile() {
+          local oldNix="$(command -v nix)"
 
-            nixRemoveProfileByName 'project-manager-path'
+          nixRemoveProfileByName 'project-manager-path'
 
-            $DRY_RUN_CMD $oldNix profile install $1
-          }
+          $DRY_RUN_CMD $oldNix profile install $1
+        }
 
-          if [[ -e $PROJECT_ROOT/.nix-profile/manifest.json ]] ; then
-            INSTALL_CMD="nix profile install"
-            INSTALL_CMD_ACTUAL="nixReplaceProfile"
-            LIST_CMD="nix profile list"
-            REMOVE_CMD_SYNTAX='nix profile remove {number | store path}'
-          else
-            INSTALL_CMD="nix-env -i"
-            INSTALL_CMD_ACTUAL="$DRY_RUN_CMD nix-env -i"
-            LIST_CMD="nix-env -q"
-            REMOVE_CMD_SYNTAX='nix-env -e {package name}'
-          fi
+        if [[ -e $PROJECT_ROOT/.nix-profile/manifest.json ]] ; then
+          INSTALL_CMD="nix profile install"
+          INSTALL_CMD_ACTUAL="nixReplaceProfile"
+          LIST_CMD="nix profile list"
+          REMOVE_CMD_SYNTAX='nix profile remove {number | store path}'
+        else
+          INSTALL_CMD="nix-env -i"
+          INSTALL_CMD_ACTUAL="$DRY_RUN_CMD nix-env -i"
+          LIST_CMD="nix-env -q"
+          REMOVE_CMD_SYNTAX='nix-env -e {package name}'
+        fi
 
-          if ! $INSTALL_CMD_ACTUAL ${cfg.path} ; then
-            echo
-            _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
-            exit 1
-          fi
-          unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
-          unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
-        ''
+        if ! $INSTALL_CMD_ACTUAL ${cfg.path} ; then
+          echo
+          _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
+          exit 1
+        fi
+        unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
+        unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
+      ''
     );
 
     # Text containing Bash commands that will initialize the Project Manager Bash
     # library. Most importantly, this will prepare for using translated strings
     # in the `pm-modules` text domain.
-    lib.bash.initProjectManagerLib =
-      let
-        domainDir = pkgs.runCommand "pm-modules-messages" {
-          nativeBuildInputs = [ pkgs.buildPackages.gettext ];
+    lib.bash.initProjectManagerLib = let
+      domainDir =
+        pkgs.runCommand "pm-modules-messages" {
+          nativeBuildInputs = [pkgs.buildPackages.gettext];
         } ''
           mkdir -p "$out"
           # for path in {./po}/*.po; do
@@ -399,42 +414,42 @@ in
           #   msgfmt -o "$out/$lang/LC_MESSAGES/pm-modules.mo" "$path"
           # done
         '';
-      in
-        ''
-          export TEXTDOMAIN=pm-modules
-          export TEXTDOMAINDIR=${domainDir}
-          source ${../lib/bash/project-manager.sh}
-        '';
+    in ''
+      export TEXTDOMAIN=pm-modules
+      export TEXTDOMAINDIR=${domainDir}
+      source ${../lib/bash/project-manager.sh}
+    '';
 
-    project.activationPackage =
-      let
-        mkCmd = res: ''
-            _iNote "Activating %s" "${res.name}"
-            ${res.data}
-          '';
-        sortedCommands = pm.dag.topoSort cfg.activation;
-        activationCmds =
-          if sortedCommands ? result then
-            concatStringsSep "\n" (map mkCmd sortedCommands.result)
-          else
-            abort ("Dependency cycle in activation script: "
-              + builtins.toJSON sortedCommands);
+    project.activationPackage = let
+      mkCmd = res: ''
+        _iNote "Activating %s" "${res.name}"
+        ${res.data}
+      '';
+      sortedCommands = pm.dag.topoSort cfg.activation;
+      activationCmds =
+        if sortedCommands ? result
+        then concatStringsSep "\n" (map mkCmd sortedCommands.result)
+        else
+          abort ("Dependency cycle in activation script: "
+            + builtins.toJSON sortedCommands);
 
-        # Programs that always should be available on the activation
-        # script's PATH.
-        activationBinPaths = lib.makeBinPath (
-          with pkgs; [
-            bash
-            coreutils
-            diffutils           # For `cmp` and `diff`.
-            findutils
-            gettext
-            gnugrep
-            gnused
-            jq
-            ncurses             # For `tput`.
-          ]
-          ++ config.project.extraActivationPath
+      # Programs that always should be available on the activation
+      # script's PATH.
+      activationBinPaths =
+        lib.makeBinPath (
+          with pkgs;
+            [
+              bash
+              coreutils
+              diffutils # For `cmp` and `diff`.
+              findutils
+              gettext
+              gnugrep
+              gnused
+              jq
+              ncurses # For `tput`.
+            ]
+            ++ config.project.extraActivationPath
         )
         + (
           # Add path of the Nix binaries, if a Nix package is configured, then
@@ -442,51 +457,51 @@ in
           # if config.nix.enable && config.nix.package != null then
           #   ":${config.nix.package}/bin"
           # else
-            ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix-env)))"
+          ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix-env)))"
         )
         + optionalString (!cfg.emptyActivationPath) "\${PATH:+:}$PATH";
 
-        activationScript = pkgs.writeShellScript "activation-script" ''
-          set -eu
-          set -o pipefail
+      activationScript = pkgs.writeShellScript "activation-script" ''
+        set -eu
+        set -o pipefail
 
-          cd $PROJECT_ROOT
+        cd $PROJECT_ROOT
 
-          export PATH="${activationBinPaths}"
-          ${config.lib.bash.initProjectManagerLib}
+        export PATH="${activationBinPaths}"
+        ${config.lib.bash.initProjectManagerLib}
 
-          ${builtins.readFile ./lib-bash/activation-init.sh}
+        ${builtins.readFile ./lib-bash/activation-init.sh}
 
-          if [[ ! -v SKIP_SANITY_CHECKS ]]; then
-            checkProjectDirectory ${escapeShellArg config.project.projectDirectory}
-          fi
+        if [[ ! -v SKIP_SANITY_CHECKS ]]; then
+          checkProjectDirectory ${escapeShellArg config.project.projectDirectory}
+        fi
 
-          ${activationCmds}
-        '';
-      in
-        pkgs.runCommand
-          "project-manager-generation"
-          {
-            preferLocalBuild = true;
-          }
-          ''
-            mkdir -p $out
+        ${activationCmds}
+      '';
+    in
+      pkgs.runCommand
+      "project-manager-generation"
+      {
+        preferLocalBuild = true;
+      }
+      ''
+        mkdir -p $out
 
-            echo "${config.project.version.full}" > $out/pm-version
+        echo "${config.project.version.full}" > $out/pm-version
 
-            cp ${activationScript} $out/activate
+        cp ${activationScript} $out/activate
 
-            mkdir $out/bin
-            ln -s $out/activate $out/bin/project-manager-generation
+        mkdir $out/bin
+        ln -s $out/activate $out/bin/project-manager-generation
 
-            substituteInPlace $out/activate \
-              --subst-var-by GENERATION_DIR $out
+        substituteInPlace $out/activate \
+          --subst-var-by GENERATION_DIR $out
 
-            ln -s ${config.project-files} $out/project-files
-            ln -s ${cfg.path} $out/project-path
+        ln -s ${config.project-files} $out/project-files
+        ln -s ${cfg.path} $out/project-path
 
-            ${cfg.extraBuilderCommands}
-          '';
+        ${cfg.extraBuilderCommands}
+      '';
 
     project.path = pkgs.buildEnv {
       name = "project-manager-path";

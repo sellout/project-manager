@@ -1,6 +1,4 @@
-{ lib }:
-
-rec {
+{lib}: rec {
   # Produces a Bourne shell like variable export statement.
   export = n: v: ''export ${n}="${toString v}"'';
 

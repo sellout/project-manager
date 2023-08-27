@@ -1,62 +1,70 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.programs.git;
 
   # create [section "subsection"] keys from "section.subsection" attrset names
-  mkSectionName = name:
-    let
-      containsQuote = strings.hasInfix ''"'' name;
-      sections = splitString "." name;
-      section = head sections;
-      subsections = tail sections;
-      subsection = concatStringsSep "." subsections;
-    in if containsQuote || subsections == [ ] then
-      name
-    else
-      ''${section} "${subsection}"'';
+  mkSectionName = name: let
+    containsQuote = strings.hasInfix ''"'' name;
+    sections = splitString "." name;
+    section = head sections;
+    subsections = tail sections;
+    subsection = concatStringsSep "." subsections;
+  in
+    if containsQuote || subsections == []
+    then name
+    else ''${section} "${subsection}"'';
 
-  mkValueString = v:
-    let
-      escapedV = ''
-        "${
-          replaceStrings [ "\n" "	" ''"'' "\\" ] [ "\\n" "\\t" ''\"'' "\\\\" ] v
-        }"'';
-    in generators.mkValueStringDefault { } (if isString v then escapedV else v);
+  mkValueString = v: let
+    escapedV = ''
+      "${
+        replaceStrings ["\n" "	" ''"'' "\\"] ["\\n" "\\t" ''\"'' "\\\\"] v
+      }"'';
+  in
+    generators.mkValueStringDefault {} (
+      if isString v
+      then escapedV
+      else v
+    );
 
   # generation for multiple ini values
-  mkKeyValue = k: v:
-    let
-      mkKeyValue =
-        generators.mkKeyValueDefault { inherit mkValueString; } " = " k;
-    in concatStringsSep "\n" (map (kv: "	" + mkKeyValue kv) (toList v));
+  mkKeyValue = k: v: let
+    mkKeyValue =
+      generators.mkKeyValueDefault {inherit mkValueString;} " = " k;
+  in
+    concatStringsSep "\n" (map (kv: "	" + mkKeyValue kv) (toList v));
 
   # converts { a.b.c = 5; } to { "a.b".c = 5; } for toINI
   gitFlattenAttrs = let
     recurse = path: value:
-      if isAttrs value then
-        mapAttrsToList (name: value: recurse ([ name ] ++ path) value) value
-      else if length path > 1 then {
+      if isAttrs value
+      then mapAttrsToList (name: value: recurse ([name] ++ path) value) value
+      else if length path > 1
+      then {
         ${concatStringsSep "." (reverseList (tail path))}.${head path} = value;
-      } else {
+      }
+      else {
         ${head path} = value;
       };
-  in attrs: foldl recursiveUpdate { } (flatten (recurse [ ] attrs));
+  in
+    attrs: foldl recursiveUpdate {} (flatten (recurse [] attrs));
 
-  gitToIni = attrs:
-    let toIni = generators.toINI { inherit mkKeyValue mkSectionName; };
-    in toIni (gitFlattenAttrs attrs);
+  gitToIni = attrs: let
+    toIni = generators.toINI {inherit mkKeyValue mkSectionName;};
+  in
+    toIni (gitFlattenAttrs attrs);
 
-  gitIniType = with types;
-    let
-      primitiveType = either str (either bool int);
-      multipleType = either primitiveType (listOf primitiveType);
-      sectionType = attrsOf multipleType;
-      supersectionType = attrsOf (either multipleType sectionType);
-    in attrsOf supersectionType;
+  gitIniType = with types; let
+    primitiveType = either str (either bool int);
+    multipleType = either primitiveType (listOf primitiveType);
+    sectionType = attrsOf multipleType;
+    supersectionType = attrsOf (either multipleType sectionType);
+  in
+    attrsOf supersectionType;
 
   signModule = types.submodule {
     options = {
@@ -68,7 +76,7 @@ let
     };
   };
 
-  includeModule = types.submodule ({ config, ... }: {
+  includeModule = types.submodule ({config, ...}: {
     options = {
       condition = mkOption {
         type = types.nullOr types.str;
@@ -87,7 +95,7 @@ let
 
       contents = mkOption {
         type = types.attrsOf types.anything;
-        default = { };
+        default = {};
         example = literalExpression ''
           {
             user = {
@@ -115,16 +123,14 @@ let
           Nix store name for the git configuration text file,
           when generating the configuration text from nix options.
         '';
-
       };
     };
-    config.path = mkIf (config.contents != { }) (mkDefault
+    config.path = mkIf (config.contents != {}) (mkDefault
       (pkgs.writeText (hm.strings.storeFileName config.contentSuffix)
         (gitToIni config.contents)));
   });
-
 in {
-  meta.maintainers = [ maintainers.sellout ];
+  meta.maintainers = [maintainers.sellout];
 
   options = {
     programs.git = {
@@ -142,9 +148,9 @@ in {
 
       config = mkOption {
         type = gitIniType;
-        default = { };
+        default = {};
         example = {
-          core = { whitespace = "trailing-space,space-before-tab"; };
+          core = {whitespace = "trailing-space,space-before-tab";};
           url."ssh://git@host".insteadOf = "otherhost";
         };
         description = ''
@@ -160,7 +166,7 @@ in {
 
       hooks = mkOption {
         type = types.attrsOf types.path;
-        default = { };
+        default = {};
         example = literalExpression ''
           {
             pre-commit = ./pre-commit-script;
@@ -180,28 +186,28 @@ in {
 
       ignores = mkOption {
         type = types.listOf types.str;
-        default = [ ];
-        example = [ "*~" "*.swp" ];
+        default = [];
+        example = ["*~" "*.swp"];
         description = "List of paths that should be globally ignored.";
       };
 
       ignoreRevs = mkOption {
         type = types.listOf types.str;
-        default = [ ];
-        example = [ "*~" "*.swp" ];
+        default = [];
+        example = ["*~" "*.swp"];
         description = "List of revisions that should be ignored when assigning blame.";
       };
 
       attributes = mkOption {
         type = types.listOf types.str;
-        default = [ ];
-        example = [ "*.pdf diff=pdf" ];
+        default = [];
+        example = ["*.pdf diff=pdf"];
         description = "List of defining attributes set globally.";
       };
 
       includes = mkOption {
         type = types.listOf includeModule;
-        default = [ ];
+        default = [];
         example = literalExpression ''
           [
             { path = "~/path/to/config.inc"; }
@@ -232,16 +238,16 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     {
-      project.packages = [ cfg.package ];
+      project.packages = [cfg.package];
 
       project.file = {
         ".git/config".text = gitToIni cfg.iniContent;
 
-        ".gitignore" = mkIf (cfg.ignores != [ ]) {
+        ".gitignore" = mkIf (cfg.ignores != []) {
           text = concatStringsSep "\n" cfg.ignores + "\n";
         };
 
-        ".gitattributes" = mkIf (cfg.attributes != [ ]) {
+        ".gitattributes" = mkIf (cfg.attributes != []) {
           text = concatStringsSep "\n" cfg.attributes + "\n";
         };
       };
@@ -254,12 +260,13 @@ in {
       };
     })
 
-    (mkIf (cfg.hooks != { }) {
+    (mkIf (cfg.hooks != {}) {
       programs.git.iniContent = {
         core.hooksPath = let
           entries =
-            mapAttrsToList (name: path: { inherit name path; }) cfg.hooks;
-        in toString (pkgs.linkFarm "git-hooks" entries);
+            mapAttrsToList (name: path: {inherit name path;}) cfg.hooks;
+        in
+          toString (pkgs.linkFarm "git-hooks" entries);
       };
     })
 
@@ -267,32 +274,36 @@ in {
       programs.git.iniContent = cfg.config;
     })
 
-    (mkIf (cfg.includes != [ ]) {
+    (mkIf (cfg.includes != []) {
       project.file.".git/config".text = let
         include = i:
           with i;
-          if condition != null then {
-            includeIf.${condition}.path = "${path}";
-          } else {
-            include.path = "${path}";
-          };
-      in mkAfter
-      (concatStringsSep "\n" (map gitToIni (map include cfg.includes)));
+            if condition != null
+            then {
+              includeIf.${condition}.path = "${path}";
+            }
+            else {
+              include.path = "${path}";
+            };
+      in
+        mkAfter
+        (concatStringsSep "\n" (map gitToIni (map include cfg.includes)));
     })
 
     (mkIf cfg.lfs.enable {
-      project.packages = [ pkgs.git-lfs ];
+      project.packages = [pkgs.git-lfs];
 
-      programs.git.iniContent.filter.lfs =
-        let skipArg = optional cfg.lfs.skipSmudge "--skip";
-        in {
-          clean = "git-lfs clean -- %f";
-          process =
-            concatStringsSep " " ([ "git-lfs" "filter-process" ] ++ skipArg);
-          required = true;
-          smudge = concatStringsSep " "
-            ([ "git-lfs" "smudge" ] ++ skipArg ++ [ "--" "%f" ]);
-        };
+      programs.git.iniContent.filter.lfs = let
+        skipArg = optional cfg.lfs.skipSmudge "--skip";
+      in {
+        clean = "git-lfs clean -- %f";
+        process =
+          concatStringsSep " " (["git-lfs" "filter-process"] ++ skipArg);
+        required = true;
+        smudge =
+          concatStringsSep " "
+          (["git-lfs" "smudge"] ++ skipArg ++ ["--" "%f"]);
+      };
     })
   ]);
 }

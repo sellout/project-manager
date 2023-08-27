@@ -1,29 +1,32 @@
-{ pkgs, config, lib, ... }:
-
-with lib;
-
-let
-
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
+with lib; let
   cfg = filterAttrs (n: f: f.enable) config.project.file;
 
   projectDirectory = config.project.projectDirectory;
 
-  fileType = (import lib/file-type.nix {
-    inherit projectDirectory lib pkgs;
-  }).fileType;
+  fileType =
+    (import lib/file-type.nix {
+      inherit projectDirectory lib pkgs;
+    })
+    .fileType;
 
-  sourceStorePath = file:
-    let
-      sourcePath = toString file.source;
-      sourceName = config.lib.strings.storeFileName (baseNameOf sourcePath);
-    in
-      if builtins.hasContext sourcePath
-      then file.source
-      else builtins.path { path = file.source; name = sourceName; };
-
-in
-
-{
+  sourceStorePath = file: let
+    sourcePath = toString file.source;
+    sourceName = config.lib.strings.storeFileName (baseNameOf sourcePath);
+  in
+    if builtins.hasContext sourcePath
+    then file.source
+    else
+      builtins.path {
+        path = file.source;
+        name = sourceName;
+      };
+in {
   options = {
     project.file = mkOption {
       description = "Attribute set of files to link into the project root.";
@@ -39,34 +42,35 @@ in
   };
 
   config = {
-    assertions = [(
-      let
-        dups =
-          attrNames
+    assertions = [
+      (
+        let
+          dups =
+            attrNames
             (filterAttrs (n: v: v > 1)
-            (foldAttrs (acc: v: acc + v) 0
-            (mapAttrsToList (n: v: { ${v.target} = 1; }) cfg)));
-        dupsStr = concatStringsSep ", " dups;
-      in {
-        assertion = dups == [];
-        message = ''
-          Conflicting managed target files: ${dupsStr}
+              (foldAttrs (acc: v: acc + v) 0
+                (mapAttrsToList (n: v: {${v.target} = 1;}) cfg)));
+          dupsStr = concatStringsSep ", " dups;
+        in {
+          assertion = dups == [];
+          message = ''
+            Conflicting managed target files: ${dupsStr}
 
-          This may happen, for example, if you have a configuration similar to
+            This may happen, for example, if you have a configuration similar to
 
-              project.file = {
-                conflict1 = { source = ./foo.nix; target = "baz"; };
-                conflict2 = { source = ./bar.nix; target = "baz"; };
-              }'';
-      })
+                project.file = {
+                  conflict1 = { source = ./foo.nix; target = "baz"; };
+                  conflict2 = { source = ./bar.nix; target = "baz"; };
+                }'';
+        }
+      )
     ];
 
-    lib.file.mkOutOfStoreSymlink = path:
-      let
-        pathStr = toString path;
-        name = pm.strings.storeFileName (baseNameOf pathStr);
-      in
-        pkgs.runCommandLocal name {} ''ln -s ${escapeShellArg pathStr} $out'';
+    lib.file.mkOutOfStoreSymlink = path: let
+      pathStr = toString path;
+      name = pm.strings.storeFileName (baseNameOf pathStr);
+    in
+      pkgs.runCommandLocal name {} ''ln -s ${escapeShellArg pathStr} $out'';
 
     # This verifies that the links we are about to create will not
     # overwrite an existing file.
@@ -76,7 +80,7 @@ in
         # Caveat emptor!
         forcedPaths =
           concatMapStringsSep " " (p: ''"$PROJECT_ROOT"/${escapeShellArg p}'')
-            (mapAttrsToList (n: v: v.target)
+          (mapAttrsToList (n: v: v.target)
             (filterAttrs (n: v: v.force) cfg));
 
         check = pkgs.writeText "check" ''
@@ -132,8 +136,7 @@ in
             exit 1
           fi
         '';
-      in
-      ''
+      in ''
         function checkNewGenCollision() {
           local newGenFiles
           newGenFiles="$(readlink -e "$newGenPath/project-files")"
@@ -228,76 +231,76 @@ in
             fi
           done
         '';
-      in
-        ''
-          function linkNewGen() {
-            _i "Creating project file links in %s" "$PROJECT_ROOT"
+      in ''
+        function linkNewGen() {
+          _i "Creating project file links in %s" "$PROJECT_ROOT"
 
-            local newGenFiles
-            newGenFiles="$(readlink -e "$newGenPath/project-files")"
-            find "$newGenFiles" \( -type f -or -type l \) \
-              -exec bash ${link} "$newGenFiles" {} +
-          }
+          local newGenFiles
+          newGenFiles="$(readlink -e "$newGenPath/project-files")"
+          find "$newGenFiles" \( -type f -or -type l \) \
+            -exec bash ${link} "$newGenFiles" {} +
+        }
 
-          function cleanOldGen() {
-            if [[ ! -v oldGenPath || ! -e "$oldGenPath/project-files" ]] ; then
-              return
-            fi
-
-            _i "Cleaning up orphan links from %s" "$PROJECT_ROOT"
-
-            local newGenFiles oldGenFiles
-            newGenFiles="$(readlink -e "$newGenPath/project-files")"
-            oldGenFiles="$(readlink -e "$oldGenPath/project-files")"
-
-            # Apply the cleanup script on each leaf in the old
-            # generation. The find command below will print the
-            # relative path of the entry.
-            find "$oldGenFiles" '(' -type f -or -type l ')' -printf '%P\0' \
-              | xargs -0 bash ${cleanup} "$newGenFiles"
-          }
-
-          cleanOldGen
-
-          if [[ ! -v oldGenPath || "$oldGenPath" != "$newGenPath" ]] ; then
-            _i "Creating profile generation %s" $newGenNum
-            if [[ -e "$genProfilePath"/manifest.json ]] ; then
-              # Remove all packages from "$genProfilePath"
-              # `nix profile remove '.*' --profile "$genProfilePath"` was not working, so here is a workaround:
-              nix profile list --profile "$genProfilePath" \
-                | cut -d ' ' -f 4 \
-                | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$genProfilePath"
-              $DRY_RUN_CMD nix profile install $VERBOSE_ARG --profile "$genProfilePath" "$newGenPath"
-            else
-              $DRY_RUN_CMD nix-env $VERBOSE_ARG --profile "$genProfilePath" --set "$newGenPath"
-            fi
-
-            $DRY_RUN_CMD nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
-            if [[ -e "$legacyGenGcPath" ]]; then
-              $DRY_RUN_CMD rm $VERBOSE_ARG "$legacyGenGcPath"
-            fi
-          else
-            _i "No change so reusing latest profile generation %s" "$oldGenNum"
+        function cleanOldGen() {
+          if [[ ! -v oldGenPath || ! -e "$oldGenPath/project-files" ]] ; then
+            return
           fi
 
-          linkNewGen
-        ''
+          _i "Cleaning up orphan links from %s" "$PROJECT_ROOT"
+
+          local newGenFiles oldGenFiles
+          newGenFiles="$(readlink -e "$newGenPath/project-files")"
+          oldGenFiles="$(readlink -e "$oldGenPath/project-files")"
+
+          # Apply the cleanup script on each leaf in the old
+          # generation. The find command below will print the
+          # relative path of the entry.
+          find "$oldGenFiles" '(' -type f -or -type l ')' -printf '%P\0' \
+            | xargs -0 bash ${cleanup} "$newGenFiles"
+        }
+
+        cleanOldGen
+
+        if [[ ! -v oldGenPath || "$oldGenPath" != "$newGenPath" ]] ; then
+          _i "Creating profile generation %s" $newGenNum
+          if [[ -e "$genProfilePath"/manifest.json ]] ; then
+            # Remove all packages from "$genProfilePath"
+            # `nix profile remove '.*' --profile "$genProfilePath"` was not working, so here is a workaround:
+            nix profile list --profile "$genProfilePath" \
+              | cut -d ' ' -f 4 \
+              | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$genProfilePath"
+            $DRY_RUN_CMD nix profile install $VERBOSE_ARG --profile "$genProfilePath" "$newGenPath"
+          else
+            $DRY_RUN_CMD nix-env $VERBOSE_ARG --profile "$genProfilePath" --set "$newGenPath"
+          fi
+
+          $DRY_RUN_CMD nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
+          if [[ -e "$legacyGenGcPath" ]]; then
+            $DRY_RUN_CMD rm $VERBOSE_ARG "$legacyGenGcPath"
+          fi
+        else
+          _i "No change so reusing latest profile generation %s" "$oldGenNum"
+        fi
+
+        linkNewGen
+      ''
     );
 
     project.activation.checkFilesChanged = pm.dag.entryBefore ["linkGeneration"] (
       let
         projectDirArg = escapeShellArg projectDirectory;
-      in ''
-        function _cmp() {
-          if [[ -d $1 && -d $2 ]]; then
-            diff -rq "$1" "$2" &> /dev/null
-          else
-            cmp --quiet "$1" "$2"
-          fi
-        }
-        declare -A changedFiles
-      '' + concatMapStrings (v:
-        let
+      in
+        ''
+          function _cmp() {
+            if [[ -d $1 && -d $2 ]]; then
+              diff -rq "$1" "$2" &> /dev/null
+            else
+              cmp --quiet "$1" "$2"
+            fi
+          }
+          declare -A changedFiles
+        ''
+        + concatMapStrings (v: let
           sourceArg = escapeShellArg (sourceStorePath v);
           targetArg = escapeShellArg v.target;
         in ''
@@ -305,9 +308,9 @@ in
             && changedFiles[${targetArg}]=0 \
             || changedFiles[${targetArg}]=1
         '') (filter (v: v.onChange != "") (attrValues cfg))
-      + ''
-        unset -f _cmp
-      ''
+        + ''
+          unset -f _cmp
+        ''
     );
 
     project.activation.onFilesChange = pm.dag.entryAfter ["linkGeneration"] (
@@ -325,85 +328,91 @@ in
 
     # Symlink directories and files that have the right execute bit.
     # Copy files that need their execute bit changed.
-    project-files = pkgs.runCommandLocal
+    project-files =
+      pkgs.runCommandLocal
       "project-manager-files"
       {
-        nativeBuildInputs = [ pkgs.xorg.lndir ];
+        nativeBuildInputs = [pkgs.xorg.lndir];
       }
       (''
-        mkdir -p $out
+          mkdir -p $out
 
-        # Needed in case /nix is a symbolic link.
-        realOut="$(realpath -m "$out")"
+          # Needed in case /nix is a symbolic link.
+          realOut="$(realpath -m "$out")"
 
-        function insertFile() {
-          local source="$1"
-          local relTarget="$2"
-          local executable="$3"
-          local recursive="$4"
+          function insertFile() {
+            local source="$1"
+            local relTarget="$2"
+            local executable="$3"
+            local recursive="$4"
 
-          # If the target already exists then we have a collision. Note, this
-          # should not happen due to the assertion found in the 'files' module.
-          # We therefore simply log the conflict and otherwise ignore it, mainly
-          # to make the `files-target-config` test work as expected.
-          if [[ -e "$realOut/$relTarget" ]]; then
-            echo "File conflict for file '$relTarget'" >&2
-            return
-          fi
-
-          # Figure out the real absolute path to the target.
-          local target
-          target="$(realpath -m "$realOut/$relTarget")"
-
-          # Target path must be within $PROJECT_ROOT.
-          if [[ ! $target == $realOut* ]] ; then
-            echo "Error installing file '$relTarget' outside \$PROJECT_ROOT" >&2
-            exit 1
-          fi
-
-          mkdir -p "$(dirname "$target")"
-          if [[ -d $source ]]; then
-            if [[ $recursive ]]; then
-              mkdir -p "$target"
-              lndir -silent "$source" "$target"
-            else
-              ln -s "$source" "$target"
+            # If the target already exists then we have a collision. Note, this
+            # should not happen due to the assertion found in the 'files' module.
+            # We therefore simply log the conflict and otherwise ignore it, mainly
+            # to make the `files-target-config` test work as expected.
+            if [[ -e "$realOut/$relTarget" ]]; then
+              echo "File conflict for file '$relTarget'" >&2
+              return
             fi
-          else
-            [[ -x $source ]] && isExecutable=1 || isExecutable=""
 
-            # Link the file into the project file directory if possible,
-            # i.e., if the executable bit of the source is the same we
-            # expect for the target. Otherwise, we copy the file and
-            # set the executable bit to the expected value.
-            if [[ $executable == inherit || $isExecutable == $executable ]]; then
-              ln -s "$source" "$target"
-            else
-              cp "$source" "$target"
+            # Figure out the real absolute path to the target.
+            local target
+            target="$(realpath -m "$realOut/$relTarget")"
 
-              if [[ $executable == inherit ]]; then
-                # Don't change file mode if it should match the source.
-                :
-              elif [[ $executable ]]; then
-                chmod +x "$target"
+            # Target path must be within $PROJECT_ROOT.
+            if [[ ! $target == $realOut* ]] ; then
+              echo "Error installing file '$relTarget' outside \$PROJECT_ROOT" >&2
+              exit 1
+            fi
+
+            mkdir -p "$(dirname "$target")"
+            if [[ -d $source ]]; then
+              if [[ $recursive ]]; then
+                mkdir -p "$target"
+                lndir -silent "$source" "$target"
               else
-                chmod -x "$target"
+                ln -s "$source" "$target"
+              fi
+            else
+              [[ -x $source ]] && isExecutable=1 || isExecutable=""
+
+              # Link the file into the project file directory if possible,
+              # i.e., if the executable bit of the source is the same we
+              # expect for the target. Otherwise, we copy the file and
+              # set the executable bit to the expected value.
+              if [[ $executable == inherit || $isExecutable == $executable ]]; then
+                ln -s "$source" "$target"
+              else
+                cp "$source" "$target"
+
+                if [[ $executable == inherit ]]; then
+                  # Don't change file mode if it should match the source.
+                  :
+                elif [[ $executable ]]; then
+                  chmod +x "$target"
+                else
+                  chmod -x "$target"
+                fi
               fi
             fi
-          fi
-        }
-      '' + concatStrings (
-        mapAttrsToList (n: v: ''
-          insertFile ${
-            escapeShellArgs [
-              (sourceStorePath v)
-              v.target
-              (if v.executable == null
-               then "inherit"
-               else toString v.executable)
-              (toString v.recursive)
-            ]}
-        '') cfg
-      ));
+          }
+        ''
+        + concatStrings (
+          mapAttrsToList (n: v: ''
+            insertFile ${
+              escapeShellArgs [
+                (sourceStorePath v)
+                v.target
+                (
+                  if v.executable == null
+                  then "inherit"
+                  else toString v.executable
+                )
+                (toString v.recursive)
+              ]
+            }
+          '')
+          cfg
+        ));
   };
 }

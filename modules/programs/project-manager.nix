@@ -1,13 +1,13 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.programs.project-manager;
-
 in {
-  meta.maintainers = [ maintainers.sellout ];
+  meta.maintainers = [maintainers.sellout];
 
   options = {
     programs.project-manager = {
@@ -28,7 +28,6 @@ in {
   };
 
   config = mkIf (cfg.enable && !config.submoduleSupport.enable) {
-    project.packages =
-      [ (pkgs.callPackage ../../project-manager { inherit (cfg) path; }) ];
+    project.packages = [(pkgs.callPackage ../../project-manager {inherit (cfg) path;})];
   };
 }
