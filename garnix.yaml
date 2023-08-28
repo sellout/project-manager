@@ -1,7 +1,1 @@
-builds:
-  exclude:
-    # TODO: Remove once garnix-io/garnix#285 is fixed.
-    - "homeConfigurations.x86_64-darwin-project-manager-example"
-  include:
-    - "*.*"
-    - "*.*.*"
+{"builds":{"exclude":["homeConfigurations.x86_64-darwin-project-manager-example"],"include":["*.*","*.*.*"]}}

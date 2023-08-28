@@ -76,9 +76,7 @@
       };
 
       devShells.default = pkgs.mkShell {
-        inputsFrom =
-          builtins.attrValues inputs.self.checks.${system}
-          ++ builtins.attrValues inputs.self.packages.${system};
+        inputsFrom = builtins.attrValues inputs.self.packages.${system};
       };
       # devShells = let
       #   pkgs = inputs.nixpkgs.legacyPackages.${system};
