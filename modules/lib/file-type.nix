@@ -117,6 +117,18 @@ in {
               link.
             '';
           };
+
+          persistence = mkOption {
+            type = types.str; # TODO: Make this stricter.
+            default = "repository";
+            description = ''
+              How we store the file. The options are “store” (symlink into the
+              worktree), “worktree” (copy into the worktree), and “repository”
+              (copy into the worktree and commit). The first two will also be
+              added to the project’s .gitignore, while the last will instead be
+              added to .gitattributes with a “linguist-generated” attribute.
+            '';
+          };
         };
 
         config = {

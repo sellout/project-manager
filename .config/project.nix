@@ -3,44 +3,53 @@
     ## Manual file creation, for things that aren’t managed yet (and for modules
     ## to add files).
     file = {
-      ".dir-locals.el".text = ''
-        ((nil
-          (fill-column . 80)
-          (indent-tabs-mode . nil)
-          (projectile-project-configure-cmd . "nix flake update")
-          (sentence-end-double-space . nil)))
-      '';
-      ".editorconfig".text = ''
-        ### This configures basic cross-editor formatting.
-        ###
-        ### See https://editorconfig.org/ for more info, and to see if your editor
-        ### requires a plugin to take advantage of it.
+      ".dir-locals.el" = {
+        persistence = "store";
+        text = ''
+          ((nil
+            (fill-column . 80)
+            (indent-tabs-mode . nil)
+            (projectile-project-configure-cmd . "nix flake update")
+            (sentence-end-double-space . nil)))
+        '';
+      };
+      ".editorconfig" = {
+        persistence = "store";
+        text = ''
+          ### This configures basic cross-editor formatting.
+          ###
+          ### See https://editorconfig.org/ for more info, and to see if your editor
+          ### requires a plugin to take advantage of it.
 
-        root = true
+          root = true
 
-        [*]
-        charset = utf-8
-        end_of_line = lf
-        indent_size = 2
-        indent_style = space
-        insert_final_newline = true
-        trim_trailing_whitespace = true
-        ## for shfmt
-        binary_next_line = true
-        space_redirects = true
-        switch_case_indent = true
+          [*]
+          charset = utf-8
+          end_of_line = lf
+          indent_size = 2
+          indent_style = space
+          insert_final_newline = true
+          trim_trailing_whitespace = true
+          ## for shfmt
+          binary_next_line = true
+          space_redirects = true
+          switch_case_indent = true
 
-        [*.{diff,patch}]
-        trim_trailing_whitespace = false
+          [*.{diff,patch}]
+          trim_trailing_whitespace = false
 
-        [*.{el,lisp}]
-        ## Lisps have a fairly consistent indentation style that doesn’t collapse well
-        ## to a single value, so we let the editor do what it wants here.
-        indent_size = unset
-      '';
-      ".envrc".text = ''
-        use flake
-      '';
+          [*.{el,lisp}]
+          ## Lisps have a fairly consistent indentation style that doesn’t collapse well
+          ## to a single value, so we let the editor do what it wants here.
+          indent_size = unset
+        '';
+      };
+      ".envrc" = {
+        persistence = "store";
+        text = ''
+          use flake
+        '';
+      };
       ".github/settings.yml".text = ''
         # These settings are synced to GitHub by https://probot.github.io/apps/settings/
 
@@ -105,19 +114,15 @@
               restrictions:
                 apps: []
       '';
-      ".gitignore".text = ''
-        /.direnv/
+      ".shellcheckrc" = {
+        persistence = "store";
+        text = ''
+          ## -*- mode: sh -*-
 
-        # Nix build
-        /result
-        /source
-      '';
-      ".shellcheckrc".text = ''
-        ## -*- mode: sh -*-
-
-        # Unicode quotes are good, and Shellcheck gets this wrong a lot.
-        disable=SC1111,SC1112
-      '';
+          # Unicode quotes are good, and Shellcheck gets this wrong a lot.
+          disable=SC1111,SC1112
+        '';
+      };
       "garnix.yaml".text = ''
         builds:
           exclude:
@@ -156,9 +161,10 @@
       # default is determined by whether there is a .git file/dir (and whether
       # it’s a file (worktree) or dir determines other things – like where hooks
       # are installed.
-      # enable = true;
+      enable = true;
       # automatically added to by
       attributes = [
+        "/.gitattributes linguist-generated"
       ];
       config = {
         commit.template = {
@@ -173,7 +179,12 @@
         # };
       };
       ignores = [
+        "/.direnv/"
+        "/.gitignore"
 
+        # Nix build
+        "/result"
+        "/source"
       ];
       ignoreRevs = [
       ];

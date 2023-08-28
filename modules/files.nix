@@ -94,6 +94,10 @@ in {
 
           newGenFiles="$1"
           shift
+          declare -A persistence=( )
+          while read -r var value; do
+            persistence[$var]=$value
+          done < "$newGenFiles/pm-metadata"
           for sourcePath in "$@" ; do
             relativePath="''${sourcePath#$newGenFiles/}"
             targetPath="$PROJECT_ROOT/$relativePath"
@@ -109,8 +113,9 @@ in {
             if [[ -n $forced ]]; then
               $VERBOSE_ECHO "Skipping collision check for $targetPath"
             elif [[ -e "$targetPath" \
+                && ''${persistence[$relativePath]} == store \
                 && ! "$(readlink "$targetPath")" == $projectFilePattern ]] ; then
-              # The target file already exists and it isn't a symlink owned by Project Manager.
+              # The target file already exists and it isn't a symlink owned by Project Manager (but _should_ be a symlink).
               if cmp -s "$sourcePath" "$targetPath"; then
                 # First compare the files' content. If they're equal, we're fine.
                 warnEcho "Existing file '$targetPath' is in the way of '$sourcePath', will be skipped since they are the same"
@@ -174,8 +179,13 @@ in {
         link = pkgs.writeShellScript "link" ''
           newGenFiles="$1"
           shift
+          declare -A persistence=( )
+          while read -r var value; do
+            persistence[$var]=$value
+          done < "$newGenFiles/pm-metadata"
           for sourcePath in "$@" ; do
             relativePath="''${sourcePath#$newGenFiles/}"
+            [[ $relativePath == pm-metadata ]] && continue
             targetPath="$PROJECT_ROOT/$relativePath"
             if [[ -e "$targetPath" && ! -L "$targetPath" && -n "$PROJECT_MANAGER_BACKUP_EXT" ]] ; then
               # The target exists, back it up
@@ -183,14 +193,20 @@ in {
               $DRY_RUN_CMD mv $VERBOSE_ARG "$targetPath" "$backup" || errorEcho "Moving '$targetPath' failed!"
             fi
 
-            if [[ -e "$targetPath" && ! -L "$targetPath" ]] && cmp -s "$sourcePath" "$targetPath" ; then
+            if [[ -e "$targetPath" && ! -L "$targetPath" && ''${persistence[$relativePath]} != store ]] && cmp -s "$sourcePath" "$targetPath" ; then
               # The target exists but is identical – don't do anything.
               $VERBOSE_ECHO "Skipping '$targetPath' as it is identical to '$sourcePath'"
             else
               # Place that symlink, --force
               # This can still fail if the target is a directory, in which case we bail out.
               $DRY_RUN_CMD mkdir -p $VERBOSE_ARG "$(dirname "$targetPath")"
-              $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath" || exit 1
+              if [[ ''${persistence[$relativePath]} == store ]]; then
+                $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath" || exit 1
+              else
+                $DRY_RUN_CMD ln -Tf $VERBOSE_ARG "$sourcePath" "$targetPath" 2>/dev/null \
+                  || $DRY_RUN_CMD cp -T --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath" \
+                  || exit 1
+              fi
             fi
           done
         '';
@@ -345,6 +361,11 @@ in {
             local relTarget="$2"
             local executable="$3"
             local recursive="$4"
+            local persistence="$5"
+
+            ## TOOD: There should be a safer place for this (i.e., if there is a
+            ##       real file called `pm-metadata`, we’ll mess it up).
+            echo "$relTarget $persistence" >> $realOut/pm-metadata
 
             # If the target already exists then we have a collision. Note, this
             # should not happen due to the assertion found in the 'files' module.
@@ -409,6 +430,7 @@ in {
                   else toString v.executable
                 )
                 (toString v.recursive)
+                v.persistence
               ]
             }
           '')

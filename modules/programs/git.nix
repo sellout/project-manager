@@ -238,17 +238,29 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     {
-      project.packages = [cfg.package];
+      ## TODO: This will conflict until we properly scope it to devShell or whatever.
+      # project.packages = [cfg.package];
 
       project.file = {
-        ".git/config".text = gitToIni cfg.iniContent;
+        ## FIXME: Before enabling this, we might need to figure out how to not
+        ##        overwrite the one that’s there already.
+        # ".git/config".text = gitToIni cfg.iniContent;
 
+        ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
+        ##        actually be a copy, but can be added to itself, so we don’t
+        ##        need to commit it.
         ".gitignore" = mkIf (cfg.ignores != []) {
-          text = concatStringsSep "\n" cfg.ignores + "\n";
+          persistence = "worktree";
+          text = concatStringsSep "\n" (["/.gitignore"] ++ cfg.ignores) + "\n";
         };
 
         ".gitattributes" = mkIf (cfg.attributes != []) {
-          text = concatStringsSep "\n" cfg.attributes + "\n";
+          ## TODO: This might not require this level of persistence for all
+          ##       forges. For GitHub, this is the right default … at least as
+          ##       long as there are some other files with
+          ##      `persistence = "repository"`.
+          persistence = "repository";
+          text = concatStringsSep "\n" (["/.gitattributes"] ++ cfg.attributes) + "\n";
         };
       };
     }
