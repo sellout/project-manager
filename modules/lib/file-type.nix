@@ -4,18 +4,9 @@
   pkgs,
 }: let
   inherit (lib) hasPrefix pm literalExpression mkDefault mkIf mkOption removePrefix types;
-in {
-  # Constructs a type suitable for a `project.file` like option. The
-  # target path may be either absolute or relative, in which case it
-  # is relative the `basePath` argument (which itself must be an
-  # absolute path).
-  #
-  # Arguments:
-  #   - opt            the name of the option, for self-references
-  #   - basePathDesc   docbook compatible description of the base path
-  #   - basePath       the file base path
-  fileType = opt: basePathDesc: basePath:
-    types.attrsOf (types.submodule (
+in rec {
+  fileContents = opt: basePathDesc: basePath:
+    (types.submodule (
       {
         name,
         config,
@@ -143,4 +134,16 @@ in {
         };
       }
     ));
+
+  # Constructs a type suitable for a `project.file` like option. The
+  # target path may be either absolute or relative, in which case it
+  # is relative the `basePath` argument (which itself must be an
+  # absolute path).
+  #
+  # Arguments:
+  #   - opt            the name of the option, for self-references
+  #   - basePathDesc   docbook compatible description of the base path
+  #   - basePath       the file base path
+  fileType = opt: basePathDesc: basePath:
+    types.attrsOf (fileContents opt basePathDesc basePath);
 }

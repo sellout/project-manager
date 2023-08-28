@@ -44,12 +44,6 @@
           indent_size = unset
         '';
       };
-      ".envrc" = {
-        persistence = "store";
-        text = ''
-          use flake
-        '';
-      };
       ".github/settings.yml".text = ''
         # These settings are synced to GitHub by https://probot.github.io/apps/settings/
 
@@ -151,12 +145,11 @@
     summary = "Home Manager, but for repos.";
   };
   programs = {
-    # direnv = {
-    #   envrc = {
-    #     commit = false;
-    #     contents = "use flake";
-    #   };
-    # };
+    direnv = {
+      auto-allow = true;
+      enable = true;
+      envrc.text = "use flake";
+    };
     git = {
       # default is determined by whether there is a .git file/dir (and whether
       # it’s a file (worktree) or dir determines other things – like where hooks

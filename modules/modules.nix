@@ -20,7 +20,7 @@ with lib; let
       # ./misc/vte.nix
       # ./programs/bash.nix
       # ./programs/darcs.nix
-      # ./programs/direnv.nix
+      ./programs/direnv.nix
       # ./programs/emacs.nix
       # ./programs/fish.nix
       # ./programs/gh.nix
