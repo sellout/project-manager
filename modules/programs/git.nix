@@ -249,18 +249,26 @@ in {
         ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
         ##        actually be a copy, but can be added to itself, so we don’t
         ##        need to commit it.
-        ".gitignore" = mkIf (cfg.ignores != []) {
+        ".gitignore" = {
           persistence = "worktree";
-          text = concatStringsSep "\n" (["/.gitignore"] ++ cfg.ignores) + "\n";
+          text =
+            concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target)
+              (filterAttrs (n: v: v.persistence != "repository") config.project.file)
+              ++ cfg.ignores)
+            + "\n";
         };
 
-        ".gitattributes" = mkIf (cfg.attributes != []) {
+        ".gitattributes" = {
           ## TODO: This might not require this level of persistence for all
           ##       forges. For GitHub, this is the right default … at least as
           ##       long as there are some other files with
           ##      `persistence = "repository"`.
           persistence = "repository";
-          text = concatStringsSep "\n" (["/.gitattributes"] ++ cfg.attributes) + "\n";
+          text =
+            concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target + " linguist-generated")
+              (filterAttrs (n: v: v.persistence == "repository") config.project.file)
+              ++ cfg.attributes)
+            + "\n";
         };
       };
     }

@@ -163,9 +163,6 @@
       # are installed.
       enable = true;
       # automatically added to by
-      attributes = [
-        "/.gitattributes linguist-generated"
-      ];
       config = {
         commit.template = {
           contents = "";
@@ -180,7 +177,6 @@
       };
       ignores = [
         "/.direnv/"
-        "/.gitignore"
 
         # Nix build
         "/result"
