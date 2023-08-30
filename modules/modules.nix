@@ -11,7 +11,7 @@ with lib; let
       ./files.nix
       # ./misc/dconf.nix
       # ./misc/debug.nix
-      # ./misc/editorconfig.nix
+      ./misc/editorconfig.nix
       ./misc/lib.nix
       ./misc/news.nix
       # ./misc/specialisation.nix
