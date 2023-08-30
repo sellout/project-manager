@@ -26,6 +26,29 @@ in {
       description = "A brief (approximately one line) description of the project.";
     };
 
+    project.authors = mkOption {
+      type = types.nonEmptyListOf types.attrs;
+      defaultText = literalExpression "undefined";
+      example = "[lib.maintainers.sellout]";
+      description = ''
+        Authors of this project. See
+        https://github.com/NixOS/nixpkgs/tree/master/maintainers for the
+        structure.
+      '';
+    };
+
+    project.maintainers = mkOption {
+      type = types.nonEmptyListOf types.attrs;
+      default = cfg.authors;
+      defaultText = literalExpression "config.project.authors";
+      example = "[lib.maintainers.sellout]";
+      description = ''
+        Current maintainers of this project. See
+        https://github.com/NixOS/nixpkgs/tree/master/maintainers for the
+        structure.
+      '';
+    };
+
     project.license = mkOption {
       type = types.str;
       defaultText = literalExpression "undefined";

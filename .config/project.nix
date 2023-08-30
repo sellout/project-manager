@@ -1,7 +1,8 @@
-{pkgs, ...}: {
+{lib, pkgs, ...}: {
   project = {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
+    authors = [lib.maintainers.sellout];
     license = "MIT"; # Induced by this being basically a fork of Home Manager
     ## Packages to install in the devShells that reference projectConfiguration.
     packages = [
