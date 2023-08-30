@@ -26,6 +26,12 @@ in {
       description = "A brief (approximately one line) description of the project.";
     };
 
+    project.license = mkOption {
+      type = types.str;
+      defaultText = literalExpression "undefined";
+      description = "An SPDX license expression, see https://spdx.org/licenses/.";
+    };
+
     project.projectDirectory = mkOption {
       type = types.str;
       default = "./.";

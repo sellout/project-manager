@@ -134,6 +134,7 @@
         nix.enabled = true;
       };
     };
+    license = "MIT"; # Induced by this being basically a fork of Home Manager
     name = "project-manager";
     ## Packages to install in the devShells that reference projectConfiguration.
     packages = [
