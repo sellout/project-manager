@@ -39,6 +39,7 @@ with lib; let
       # ./programs/zellij.nix
       # ./programs/zsh.nix
       ./project-environment.nix
+      ./services/garnix.nix
       # ./services/git-sync.nix
       # ./services/lorri.nix
       (pkgs.path + "/nixos/modules/misc/assertions.nix")

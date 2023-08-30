@@ -224,8 +224,6 @@ in {
             targetPath="$PROJECT_ROOT/$relativePath"
             if [[ -e "$newGenFiles/$relativePath" ]] ; then
               $VERBOSE_ECHO "Checking $targetPath: exists"
-            elif [[ ! "$(readlink "$targetPath")" == $projectFilePattern ]] ; then
-              warnEcho "Path '$targetPath' does not link into a Project Manager generation. Skipping delete."
             else
               $VERBOSE_ECHO "Checking $targetPath: gone (deleting)"
               $DRY_RUN_CMD rm $VERBOSE_ARG "$targetPath"

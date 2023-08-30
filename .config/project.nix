@@ -120,14 +120,6 @@
           disable=SC1111,SC1112
         '';
       };
-      "garnix.yaml".text = pkgs.lib.generators.toYAML {} {
-        builds = {
-          # TODO: Remove once garnix-io/garnix#285 is fixed.
-          exclude =
-            ["homeConfigurations.x86_64-darwin-${config.project.name}-example"];
-          include = ["*.*" "*.*.*"];
-        };
-      };
       "renovate.json".text = pkgs.lib.generators.toJSON {} {
         "$schema" = "https://docs.renovatebot.com/renovate-schema.json";
         extends = ["config:base"];
@@ -178,16 +170,23 @@
       ];
     };
   };
-  # services = {
-  #   garnix = {
-  #   };
-  #   github = {
-  #     apps = {
-  #       renovate = {};
-  #       settings = {};
-  #     };
-  #     pages = "";
-  #     workflows = {};
-  #   };
-  # };
+  services = {
+    garnix = {
+      enable = true;
+      builds = {
+        # TODO: Remove once garnix-io/garnix#285 is fixed.
+        exclude =
+          ["homeConfigurations.x86_64-darwin-${config.project.name}-example"];
+        include = ["*.*" "*.*.*"];
+      };
+    };
+    # github = {
+    #   apps = {
+    #     renovate = {};
+    #     settings = {};
+    #   };
+    #   pages = "";
+    #   workflows = {};
+    # };
+  };
 }
