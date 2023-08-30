@@ -5,6 +5,9 @@ PATH=@DEP_PATH@${PATH:+:}$PATH
 
 set -euo pipefail
 
+## TODO: This should search more broadly.
+export PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+
 export TEXTDOMAIN=project-manager
 export TEXTDOMAINDIR=@OUT@/share/locale
 
@@ -301,9 +304,6 @@ function doInit() {
 { config, pkgs, ... }:
 
 {
-  # Project Manager needs a bit of information about you and the paths it should
-  # manage.
-  project.projectDirectory = "$PROJECT_ROOT";
 $xdgVars
   # This value determines the Project Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Project Manager release

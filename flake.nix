@@ -79,6 +79,14 @@
 
       devShells.default = pkgs.mkShell {
         inputsFrom = builtins.attrValues inputs.self.packages.${system};
+
+        nativeBuildInputs = [
+          inputs.self.packages.${system}.project-manager
+        ];
+
+        shellHook = ''
+          project-manager switch --flake .#${system}
+        '';
       };
       # devShells = let
       #   pkgs = inputs.nixpkgs.legacyPackages.${system};

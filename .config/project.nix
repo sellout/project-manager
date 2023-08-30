@@ -146,7 +146,6 @@
     packages = [
       pkgs.nil
     ];
-    projectDirectory = /Users/greg/Projects/community/project-manager/main;
     summary = "Home Manager, but for repos.";
   };
   programs = {

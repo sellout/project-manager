@@ -27,9 +27,10 @@ in {
     };
 
     project.projectDirectory = mkOption {
-      type = types.path;
-      defaultText = literalExpression "undefined";
-      apply = toString;
+      type = types.str;
+      default = "./.";
+      internal = true;
+      defaultText = literalExpression "$PROJECT_ROOT";
       example = "./.";
       description = "The project’s root directory relative to this file.";
     };
@@ -465,7 +466,8 @@ in {
         set -eu
         set -o pipefail
 
-        cd $PROJECT_ROOT
+        ## TODO: Is this needed here?
+        # cd $PROJECT_ROOT
 
         export PATH="${activationBinPaths}"
         ${config.lib.bash.initProjectManagerLib}
