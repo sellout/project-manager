@@ -1,9 +1,10 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.programs.direnv;
 
   projectDirectory = config.project.projectDirectory;
@@ -13,9 +14,8 @@ let
       inherit projectDirectory lib pkgs;
     })
     .fileContents;
-
 in {
-  meta.maintainers = [ maintainers.sellout ];
+  meta.maintainers = [maintainers.sellout];
 
   options.programs.direnv = {
     enable = mkEnableOption "direnv, the environment switcher";
@@ -54,9 +54,14 @@ in {
       ${pkgs.direnv}/bin/direnv allow
     '');
 
-    project.file.".envrc" = cfg.envrc // {
-      target = ".envrc";
-      persistence = if cfg.commit-envrc then "repository" else "store";
-    };
+    project.file.".envrc" =
+      cfg.envrc
+      // {
+        target = ".envrc";
+        persistence =
+          if cfg.commit-envrc
+          then "repository"
+          else "store";
+      };
   };
 }

@@ -54,6 +54,8 @@
               indent_size = null;
             };
           };
+          ## TODO: This should be populated automatically
+          settings.global.excludes = ["garnix.yaml" "renovate.json"];
         })
         .config
         .build;
@@ -91,9 +93,7 @@
           inherit pkgs;
 
           modules =
-            [
-              ./.config/project.nix
-            ]
+            [./.config/project.nix]
             ++ (
               if builtins.pathExists userConfig
               then [userConfig]

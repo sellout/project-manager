@@ -33,9 +33,11 @@ Granted, after generation, those config files still exist in those locations, bu
 ## Usage
 
 For now, after cloning, etc. run
+
 ```bash
 project-manager switch --flake .
 ```
+
 to regenerate all the files you need.
 
 For this to do anything, you need to add a `projectConfigurations.${system}` output to your flake. This project has one itself, and you can view the contents in [.config/project.nix](./.config/project.nix).
