@@ -29,7 +29,7 @@ with lib; let
       # ./programs/git-credential-oauth.nix
       ./programs/git.nix
       # ./programs/just.nix
-      # ./programs/mercurial.nix
+      ./programs/mercurial.nix
       # ./programs/neovim.nix
       # ./programs/nushell.nix
       ./programs/project-manager.nix
