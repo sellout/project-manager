@@ -15,6 +15,10 @@
 
   outputs = inputs:
     {
+      overlays.default = final: prev: {
+        project-manager = inputs.self.packages.${final.system}.project-manager;
+      };
+
       lib = {
         projectManagerConfiguration = {
           modules ? [],
@@ -34,7 +38,10 @@
     }
     // inputs.flake-utils.lib.eachSystem inputs.flake-utils.lib.defaultSystems
     (system: let
-      pkgs = import inputs.nixpkgs {inherit system;};
+      pkgs = import inputs.nixpkgs {
+        inherit system;
+        overlays = [inputs.self.overlays.default];
+      };
 
       format =
         (inputs.treefmt-nix.lib.evalModule pkgs {
@@ -80,9 +87,7 @@
       devShells.default = pkgs.mkShell {
         inputsFrom = builtins.attrValues inputs.self.packages.${system};
 
-        nativeBuildInputs = [
-          inputs.self.packages.${system}.project-manager
-        ];
+        nativeBuildInputs = [pkgs.project-manager];
 
         shellHook = ''
           project-manager switch --flake .#${system}

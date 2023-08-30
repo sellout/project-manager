@@ -42,6 +42,25 @@ to regenerate all the files you need.
 
 For this to do anything, you need to add a `projectConfigurations.${system}` output to your flake. This project has one itself, and you can view the contents in [.config/project.nix](./.config/project.nix).
 
+### experimental
+
+For more automated integration, you can add something like
+```nix
+{
+  let
+    pkgs = import nixpkgs {
+      overlays = [inputs.project-manager.overlays.default];
+    };
+  in
+    devShells.default = pkgs.mkShell {
+      nativeBuildInputs = [pkgs.project-manager];
+      shellHook = ''
+        project-manager switch --flake .#${system}
+      '';
+}
+```
+but that will definitely be changing in future.
+
 ## Credit
 
 This is more than inspired by Home Manager, it’s basically a hacked-up copy (for now). That should change to _depend on_ Home Manager for what it can and to do everything else its own way. But this is a pre-pre-alpha at the moment, so it’s hack city.
