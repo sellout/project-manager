@@ -45,6 +45,7 @@ For this to do anything, you need to add a `projectConfigurations.${system}` out
 ### experimental
 
 For more automated integration, you can add something like
+
 ```nix
 {
   let
@@ -59,6 +60,7 @@ For more automated integration, you can add something like
       '';
 }
 ```
+
 but that will definitely be changing in future.
 
 ## Credit

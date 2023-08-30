@@ -69,8 +69,8 @@ in {
             syntax: glob
           ''
           + concatStringsSep "\n" (mapAttrsToList (n: v: v.target)
-                (filterAttrs (n: v: v.persistence != "repository") config.project.file)
-                ++ cfg.ignores)
+            (filterAttrs (n: v: v.persistence != "repository") config.project.file)
+            ++ cfg.ignores)
           + "\n"
           + ''
             syntax: regexp
