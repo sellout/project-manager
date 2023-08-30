@@ -116,10 +116,7 @@ in {
                 && ''${persistence[$relativePath]} == store \
                 && ! "$(readlink "$targetPath")" == $projectFilePattern ]] ; then
               # The target file already exists and it isn't a symlink owned by Project Manager (but _should_ be a symlink).
-              if cmp -s "$sourcePath" "$targetPath"; then
-                # First compare the files' content. If they're equal, we're fine.
-                warnEcho "Existing file '$targetPath' is in the way of '$sourcePath', will be skipped since they are the same"
-              elif [[ ! -L "$targetPath" && -n "$PROJECT_MANAGER_BACKUP_EXT" ]] ; then
+              if [[ ! -L "$targetPath" && -n "$PROJECT_MANAGER_BACKUP_EXT" ]] ; then
                 # Next, try to move the file to a backup location if configured and possible
                 backup="$targetPath.$PROJECT_MANAGER_BACKUP_EXT"
                 if [[ -e "$backup" ]]; then

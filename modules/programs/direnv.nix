@@ -61,7 +61,9 @@ in {
         persistence =
           if cfg.commit-envrc
           then "repository"
-          else "store";
+          else
+            ## I would prefer this to be `"store"`, but direnv/direnv#1160.
+            "worktree";
       };
   };
 }
