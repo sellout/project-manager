@@ -241,37 +241,74 @@ in {
       ## TODO: This will conflict until we properly scope it to devShell or whatever.
       # project.packages = [cfg.package];
 
-      project.file = let
-        persistence = v:
-          if
-            (
-              if v.commit-by-default == null
-              then config.project.commit-by-default
-              else v.commit-by-default
-            )
-          then "repository"
-          else v.minimum-persistence;
-      in {
-        ## FIXME: Before enabling this, we might need to figure out how to not
-        ##        overwrite the one that’s there already.
-        # ".git/config".text = gitToIni cfg.iniContent;
+      project = {
+        activation.updateGitStatus = pm.dag.entryAfter ["linkGeneration"] (let
+          updateStatus = pkgs.writeText "updateStatus" ''
+            ${config.lib.bash.initProjectManagerLib}
 
-        ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
-        ##        actually be a copy, but can be added to itself, so we don’t
-        ##        need to commit it.
-        ".gitignore" = {
-          minimum-persistence = "worktree";
-          broken-symlink = true;
-          text =
-            concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target)
-              (filterAttrs (n: v: persistence v == "worktree") config.project.file)
-              ++ cfg.ignores)
-            + "\n";
-        };
+            # A symbolic link whose target path matches this pattern will be
+            # considered part of a Project Manager generation.
+            projectFilePattern="$(readlink -e ${escapeShellArg builtins.storeDir})/*-project-manager-files/*"
 
-        ".gitattributes" = {
-          minimum-persistence = "worktree";
-          text = concatStringsSep "\n" cfg.attributes + "\n";
+            newGenFiles="$1"
+            shift
+            declare -A persistence=( )
+            while read -r var value; do
+              persistence[$var]=$value
+            done < "$newGenFiles/pm-metadata"
+            cd $PROJECT_ROOT
+            for sourcePath in "$@" ; do
+              relativePath="''${sourcePath#$newGenFiles/}"
+              if [[ ''${persistence[$relativePath]} == repository ]]; then
+                ${pkgs.git}/bin/git add --intent-to-add "$relativePath"
+              else
+                ${pkgs.git}/bin/git rm --cached --ignore-unmatch "$relativePath"
+              fi
+            done
+          '';
+        in ''
+          function updateGitStatuses() {
+            local newGenFiles
+            newGenFiles="$(readlink -e "$newGenPath/project-files")"
+            find "$newGenFiles" \( -type f -or -type l \) \
+                -exec bash ${updateStatus} "$newGenFiles" {} +
+          }
+
+          updateGitStatuses || exit 1
+        '');
+
+        file = let
+          persistence = v:
+            if
+              (
+                if v.commit-by-default == null
+                then config.project.commit-by-default
+                else v.commit-by-default
+              )
+            then "repository"
+            else v.minimum-persistence;
+        in {
+          ## FIXME: Before enabling this, we might need to figure out how to not
+          ##        overwrite the one that’s there already.
+          # ".git/config".text = gitToIni cfg.iniContent;
+
+          ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
+          ##        actually be a copy, but can be added to itself, so we don’t
+          ##        need to commit it.
+          ".gitignore" = {
+            minimum-persistence = "worktree";
+            broken-symlink = true;
+            text =
+              concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target)
+                (filterAttrs (n: v: persistence v == "worktree") config.project.file)
+                ++ cfg.ignores)
+              + "\n";
+          };
+
+          ".gitattributes" = {
+            minimum-persistence = "worktree";
+            text = concatStringsSep "\n" cfg.attributes + "\n";
+          };
         };
       };
     }
