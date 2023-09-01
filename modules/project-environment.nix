@@ -11,22 +11,22 @@ with lib; let
 in {
   meta.maintainers = [maintainers.sellout];
 
-  options = {
-    project.name = mkOption {
+  options.project = {
+    name = mkOption {
       type = types.str;
       defaultText = literalExpression "undefined";
       example = "my-project";
       description = "The project’s name (as an identifier).";
     };
 
-    project.summary = mkOption {
+    summary = mkOption {
       type = types.str;
       defaultText = literalExpression "undefined";
       example = "Tooling for doing something I want.";
       description = "A brief (approximately one line) description of the project.";
     };
 
-    project.authors = mkOption {
+    authors = mkOption {
       type = types.nonEmptyListOf types.attrs;
       defaultText = literalExpression "undefined";
       example = "[lib.maintainers.sellout]";
@@ -37,7 +37,7 @@ in {
       '';
     };
 
-    project.maintainers = mkOption {
+    maintainers = mkOption {
       type = types.nonEmptyListOf types.attrs;
       default = cfg.authors;
       defaultText = literalExpression "config.project.authors";
@@ -49,13 +49,13 @@ in {
       '';
     };
 
-    project.license = mkOption {
+    license = mkOption {
       type = types.str;
       defaultText = literalExpression "undefined";
       description = "An SPDX license expression, see https://spdx.org/licenses/.";
     };
 
-    project.projectDirectory = mkOption {
+    projectDirectory = mkOption {
       type = types.str;
       default = "./.";
       internal = true;
@@ -64,7 +64,18 @@ in {
       description = "The project’s root directory relative to this file.";
     };
 
-    project.shellAliases = mkOption {
+    commit-by-default = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Whether all files in this project should default to being committed.
+        This can be useful if you have contributors that don’t use Nix and
+        expect everything to live directly in the repo (e.g., Open Source
+        projects where you don’t know the contributors in advance).
+      '';
+    };
+
+    shellAliases = mkOption {
       type = with types; attrsOf str;
       default = {};
       example = literalExpression ''
@@ -84,7 +95,7 @@ in {
       '';
     };
 
-    project.sessionVariables = mkOption {
+    sessionVariables = mkOption {
       default = {};
       type = with types; lazyAttrsOf (oneOf [str path int float]);
       example = {
@@ -124,7 +135,7 @@ in {
       '';
     };
 
-    project.sessionVariablesPackage = mkOption {
+    sessionVariablesPackage = mkOption {
       type = types.package;
       internal = true;
       description = ''
@@ -133,7 +144,7 @@ in {
       '';
     };
 
-    project.sessionPath = mkOption {
+    sessionPath = mkOption {
       type = with types; listOf str;
       default = [];
       example = [
@@ -152,7 +163,7 @@ in {
       '';
     };
 
-    project.sessionVariablesExtra = mkOption {
+    sessionVariablesExtra = mkOption {
       type = types.lines;
       default = "";
       internal = true;
@@ -162,13 +173,13 @@ in {
       '';
     };
 
-    project.packages = mkOption {
+    packages = mkOption {
       type = types.listOf types.package;
       default = [];
       description = "The set of packages to appear in the user environment.";
     };
 
-    project.extraOutputsToInstall = mkOption {
+    extraOutputsToInstall = mkOption {
       type = types.listOf types.str;
       default = [];
       example = ["doc" "info" "devdoc"];
@@ -179,12 +190,12 @@ in {
       '';
     };
 
-    project.path = mkOption {
+    path = mkOption {
       internal = true;
       description = "The derivation installing the user packages.";
     };
 
-    project.emptyActivationPath = mkOption {
+    emptyActivationPath = mkOption {
       internal = true;
       type = types.bool;
       default = true;
@@ -198,7 +209,7 @@ in {
       '';
     };
 
-    project.activation = mkOption {
+    activation = mkOption {
       type = pm.types.dagOf types.str;
       default = {};
       example = literalExpression ''
@@ -241,13 +252,13 @@ in {
       '';
     };
 
-    project.activationPackage = mkOption {
+    activationPackage = mkOption {
       internal = true;
       type = types.package;
       description = "The package containing the complete activation script.";
     };
 
-    project.extraActivationPath = mkOption {
+    extraActivationPath = mkOption {
       internal = true;
       type = types.listOf types.package;
       default = [];
@@ -257,7 +268,7 @@ in {
       '';
     };
 
-    project.extraBuilderCommands = mkOption {
+    extraBuilderCommands = mkOption {
       type = types.lines;
       default = "";
       internal = true;
@@ -266,7 +277,7 @@ in {
       '';
     };
 
-    project.extraProfileCommands = mkOption {
+    extraProfileCommands = mkOption {
       type = types.lines;
       default = "";
       internal = true;
@@ -275,7 +286,7 @@ in {
       '';
     };
 
-    project.enableNixpkgsReleaseCheck = mkOption {
+    enableNixpkgsReleaseCheck = mkOption {
       type = types.bool;
       default = true;
       description = ''
@@ -511,7 +522,7 @@ in {
       '';
     in
       pkgs.runCommand
-      "project-manager-generation"
+      "project-manager-generation-for-${config.project.name}"
       {
         preferLocalBuild = true;
       }

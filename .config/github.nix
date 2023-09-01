@@ -1,98 +1,95 @@
 {
   config,
-  pkgs,
   ...
 }: {
-  project.file.".github/settings.yml".text = pkgs.lib.generators.toYAML {} {
-    # These settings are synced to GitHub by https://probot.github.io/apps/settings/
+  services.github = {
+    enable = true;
 
-    # See https://docs.github.com/en/rest/reference/repos#update-a-repository for all available settings.
-    repository = {
-      name = config.project.name;
-      description = config.project.summary;
-      # homepage = "https://example.github.io/";
-      topics = ["development" "nix-flakes"];
-      private = false;
-      has_issues = true;
-      has_projects = false;
-      has_wiki = true;
-      has_downloads = false;
-      default_branch = "main";
-      allow_squash_merge = false;
-      allow_merge_commit = true;
-      allow_rebase_merge = false;
-      delete_branch_on_merge = true;
-      merge_commit_title = "PR_TITLE";
-      merge_commit_message = "PR_BODY";
-      enable_automated_security_fixes = true;
-      enable_vulnerability_alerts = true;
+    settings = {
+      # These settings are synced to GitHub by https://probot.github.io/apps/settings/
+
+      # See https://docs.github.com/en/rest/reference/repos#update-a-repository for all available settings.
+      repository = {
+        name = config.project.name;
+        description = config.project.summary;
+        # homepage = "https://example.github.io/";
+        topics = ["development" "nix-flakes"];
+        private = false;
+        has_issues = true;
+        has_projects = false;
+        has_wiki = true;
+        has_downloads = false;
+        default_branch = "main";
+        allow_squash_merge = false;
+        allow_merge_commit = true;
+        allow_rebase_merge = false;
+        delete_branch_on_merge = true;
+        merge_commit_title = "PR_TITLE";
+        merge_commit_message = "PR_BODY";
+        enable_automated_security_fixes = true;
+        enable_vulnerability_alerts = true;
+      };
+
+      labels = [
+        {
+          name = "bug";
+          color = "#d73a4a";
+          description = "Something isn’t working";
+        }
+        {
+          name = "documentation";
+          color = "#0075ca";
+          description = "Improvements or additions to documentation";
+        }
+        {
+          name = "enhancement";
+          color = "#a2eeef";
+          description = "New feature or request";
+        }
+        {
+          name = "good first issue";
+          color = "#7057ff";
+          description = "Good for newcomers";
+        }
+        {
+          name = "help wanted";
+          color = "#008672";
+          description = "Extra attention is needed";
+        }
+        {
+          name = "question";
+          color = "#d876e3";
+          description = "Further information is requested";
+        }
+      ];
+
+      branches = [
+        {
+          name = "main";
+          # https://docs.github.com/en/rest/branches/branch-protection?apiVersion=2022-11-28#update-branch-protection
+          protection = {
+            required_pull_request_reviews = null;
+            required_status_checks = {
+              strict = false;
+              contexts = [
+                "check format [aarch64-darwin]"
+                "check format [aarch64-linux]"
+                "check format [x86_64-linux]"
+                "devShell default [aarch64-darwin]"
+                "devShell default [aarch64-linux]"
+                "devShell default [x86_64-linux]"
+              ];
+            };
+            enforce_admins = true;
+            required_linear_history = false;
+            allow_force_pushes = false;
+            restrictions.apps = [];
+          };
+        }
+      ];
     };
 
-    labels = [
-      {
-        name = "bug";
-        color = "#d73a4a";
-        description = "Something isn’t working";
-      }
-      {
-        name = "documentation";
-        color = "#0075ca";
-        description = "Improvements or additions to documentation";
-      }
-      {
-        name = "enhancement";
-        color = "#a2eeef";
-        description = "New feature or request";
-      }
-      {
-        name = "good first issue";
-        color = "#7057ff";
-        description = "Good for newcomers";
-      }
-      {
-        name = "help wanted";
-        color = "#008672";
-        description = "Extra attention is needed";
-      }
-      {
-        name = "question";
-        color = "#d876e3";
-        description = "Further information is requested";
-      }
-    ];
-
-    branches = [
-      {
-        name = "main";
-        # https://docs.github.com/en/rest/branches/branch-protection?apiVersion=2022-11-28#update-branch-protection
-        protection = {
-          required_pull_request_reviews = null;
-          required_status_checks = {
-            strict = false;
-            contexts = [
-              "check format [aarch64-darwin]"
-              "check format [aarch64-linux]"
-              "check format [x86_64-linux]"
-              "devShell default [aarch64-darwin]"
-              "devShell default [aarch64-linux]"
-              "devShell default [x86_64-linux]"
-            ];
-          };
-          enforce_admins = true;
-          required_linear_history = false;
-          allow_force_pushes = false;
-          restrictions.apps = [];
-        };
-      }
-    ];
+    # pages = "";
+    # workflows = {};
   };
-
-  # services.github = {
-  #   apps = {
-  #     renovate = {};
-  #     settings = {};
-  #   };
-  #   pages = "";
-  #   workflows = {};
-  # };
 }

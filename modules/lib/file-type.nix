@@ -108,15 +108,42 @@ in rec {
           '';
         };
 
-        persistence = mkOption {
+        minimum-persistence = mkOption {
           type = types.str; # TODO: Make this stricter.
           default = "repository";
           description = ''
-            How we store the file. The options are “store” (symlink into the
-            worktree), “worktree” (copy into the worktree), and “repository”
-            (copy into the worktree and commit). The first two will also be
-            added to the project’s .gitignore, while the last will instead be
-            added to .gitattributes with a “linguist-generated” attribute.
+            How we store the file. The options are “store” (file will be
+            referenced by the worktree on demand), “worktree” (persist the file
+            in the worktree), and “repository” (commit the file in the
+            worktree). The second will also be added to the project’s .gitignore,
+            while the last will instead be added to .gitattributes with a
+            “linguist-generated” attribute.
+          '';
+        };
+
+        broken-symlink = mkOption {
+          type = types.bool;
+          default = false;
+          description = ''
+            This option is only relevant when `minimum-persistence` isn’t
+            “repository”. It indicates whether or not the file can be referenced
+            with a symlink. If this is true, then the file will not be symlinked
+            into the worktree, but will be represented with either a hard link
+            or a copy. Hard links are preferred over symlinks in some contexts
+            anyway, but then the store is on a different volume from the
+            worktree, hard links aren’t viable.
+          '';
+        };
+
+        commit-by-default = mkOption {
+          type = types.nullOr types.bool;
+          default = null; # config.project.commit-by-default;
+          description = ''
+            Whether to accept the `minimum-persistence` value (`false`) or to
+            force the persistence to “repository” (`true`). The latter is useful
+            when you want to use a file outside of its standard use case. E.g.,
+            `.gitattributes` sets this to true when github is enabled, so that
+            the `lingist-generated` attribute can be processed by GitHub.
           '';
         };
       };

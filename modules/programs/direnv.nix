@@ -58,12 +58,10 @@ in {
       cfg.envrc
       // {
         target = ".envrc";
-        persistence =
-          if cfg.commit-envrc
-          then "repository"
-          else
-            ## I would prefer this to be `"store"`, but direnv/direnv#1160.
-            "worktree";
+        minimum-persistence = "worktree";
+        ## See direnv/direnv#1160.
+        broken-symlink = true;
+        commit-by-default = cfg.commit-envrc;
       };
   };
 }

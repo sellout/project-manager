@@ -31,7 +31,24 @@ in {
     project.file = mkOption {
       description = "Attribute set of files to link into the project root.";
       default = {};
-      type = fileType "project.file" "" projectDirectory;
+      type =
+        fileType "project.file" "" projectDirectory
+        // {
+          # persistence = mkOption {
+          #   internal = true;
+          #   type = types.str;
+          #   default =
+          #     if config.project.file.${name}.commit-by-default
+          #     then "repository"
+          #     else config.project.file.${name}.minimum-persistence;
+          #   example = "store";
+          #   description = ''
+          #     The accumulation of the various options that affect persistence,
+          #     this is the final persistence level that will be used to represent
+          #     this file.
+          #   '';
+          # };
+        };
     };
 
     project-files = mkOption {
@@ -113,7 +130,7 @@ in {
             if [[ -n $forced ]]; then
               $VERBOSE_ECHO "Skipping collision check for $targetPath"
             elif [[ -e "$targetPath" \
-                && ''${persistence[$relativePath]} == store \
+                && ''${persistence[$relativePath]} == worktree \
                 && ! "$(readlink "$targetPath")" == $projectFilePattern ]] ; then
               # The target file already exists and it isn't a symlink owned by Project Manager (but _should_ be a symlink).
               if [[ ! -L "$targetPath" && -n "$PROJECT_MANAGER_BACKUP_EXT" ]] ; then
@@ -190,20 +207,17 @@ in {
               $DRY_RUN_CMD mv $VERBOSE_ARG "$targetPath" "$backup" || errorEcho "Moving '$targetPath' failed!"
             fi
 
-            if [[ -e "$targetPath" && ! -L "$targetPath" && ''${persistence[$relativePath]} != store ]] && cmp -s "$sourcePath" "$targetPath" ; then
+            if [[ -e "$targetPath" && ! -L "$targetPath" ]] && cmp -s "$sourcePath" "$targetPath" ; then
               # The target exists but is identical – don't do anything.
               $VERBOSE_ECHO "Skipping '$targetPath' as it is identical to '$sourcePath'"
             else
-              # Place that symlink, --force
-              # This can still fail if the target is a directory, in which case we bail out.
-              $DRY_RUN_CMD mkdir -p $VERBOSE_ARG "$(dirname "$targetPath")"
-              if [[ ''${persistence[$relativePath]} == store ]]; then
-                $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath" || exit 1
-              else
-                $DRY_RUN_CMD ln -Tf $VERBOSE_ARG "$sourcePath" "$targetPath" 2>/dev/null \
-                  || $DRY_RUN_CMD cp -T --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath" \
-                  || exit 1
-              fi
+              ## Try a symlink (if allowed), then a hard link, then a copy
+              ([[ ''${persistence[$relativePath]} == worktree && ! ''${broken_symlink[$relativePath]} ]] \
+                  && $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath") \
+                || ([[ ''${persistence[$relativePath]} != store ]] \
+                      && ($DRY_RUN_CMD ln -Tf $VERBOSE_ARG "$sourcePath" "$targetPath" 2>/dev/null \
+                          || $DRY_RUN_CMD cp -T --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath" \
+                          || exit 1))
             fi
           done
         '';
@@ -341,7 +355,7 @@ in {
     # Copy files that need their execute bit changed.
     project-files =
       pkgs.runCommandLocal
-      "project-manager-files"
+      "project-manager-files-for-${config.project.name}"
       {
         nativeBuildInputs = [pkgs.xorg.lndir];
       }
@@ -425,7 +439,16 @@ in {
                   else toString v.executable
                 )
                 (toString v.recursive)
-                v.persistence
+                (
+                  if
+                    (
+                      if v.commit-by-default == null
+                      then config.project.commit-by-default
+                      else v.commit-by-default
+                    )
+                  then "repository"
+                  else v.minimum-persistence
+                )
               ]
             }
           '')

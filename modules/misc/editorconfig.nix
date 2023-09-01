@@ -45,7 +45,7 @@ in {
 
   config = mkIf (cfg.enable && cfg.settings != {}) {
     project.file.".editorconfig" = {
-      persistence = "store";
+      minimum-persistence = "worktree";
       text = let
         renderedSettings = generators.toINIWithGlobalSection {} {
           globalSection = {root = true;};

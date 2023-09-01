@@ -241,7 +241,17 @@ in {
       ## TODO: This will conflict until we properly scope it to devShell or whatever.
       # project.packages = [cfg.package];
 
-      project.file = {
+      project.file = let
+        persistence = v:
+          if
+            (
+              if v.commit-by-default == null
+              then config.project.commit-by-default
+              else v.commit-by-default
+            )
+          then "repository"
+          else v.minimum-persistence;
+      in {
         ## FIXME: Before enabling this, we might need to figure out how to not
         ##        overwrite the one that’s there already.
         # ".git/config".text = gitToIni cfg.iniContent;
@@ -250,25 +260,18 @@ in {
         ##        actually be a copy, but can be added to itself, so we don’t
         ##        need to commit it.
         ".gitignore" = {
-          persistence = "worktree";
+          minimum-persistence = "worktree";
+          broken-symlink = true;
           text =
             concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target)
-              (filterAttrs (n: v: v.persistence != "repository") config.project.file)
+              (filterAttrs (n: v: persistence v == "worktree") config.project.file)
               ++ cfg.ignores)
             + "\n";
         };
 
         ".gitattributes" = {
-          ## TODO: This might not require this level of persistence for all
-          ##       forges. For GitHub, this is the right default … at least as
-          ##       long as there are some other files with
-          ##      `persistence = "repository"`.
-          persistence = "repository";
-          text =
-            concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target + " linguist-generated")
-              (filterAttrs (n: v: v.persistence == "repository") config.project.file)
-              ++ cfg.attributes)
-            + "\n";
+          minimum-persistence = "worktree";
+          text = concatStringsSep "\n" cfg.attributes + "\n";
         };
       };
     }

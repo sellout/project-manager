@@ -1,6 +1,6 @@
 {...}: {
   project.file.".shellcheckrc" = {
-    persistence = "store";
+    minimum-persistence = "worktree";
     text = ''
       ## -*- mode: sh -*-
 

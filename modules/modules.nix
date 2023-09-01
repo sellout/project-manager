@@ -40,6 +40,7 @@ with lib; let
       # ./programs/zsh.nix
       ./project-environment.nix
       ./services/garnix.nix
+      ./services/github.nix
       # ./services/git-sync.nix
       # ./services/lorri.nix
       (pkgs.path + "/nixos/modules/misc/assertions.nix")

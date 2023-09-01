@@ -1,10 +1,6 @@
 {...}: {
-  imports = [
-    ./editorconfig.nix
-  ];
-
   project.file.".dir-locals.el" = {
-    persistence = "store";
+    minimum-persistence = "worktree";
     text = ''
       ((nil
         (fill-column . 80)
