@@ -16,6 +16,7 @@
     ## tooling
     ./direnv.nix
     ./git.nix
+    ./mustache.nix
     ./shellcheck.nix
     ## services
     ./garnix.nix

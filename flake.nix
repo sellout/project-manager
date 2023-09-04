@@ -13,11 +13,19 @@
     sandbox = true;
   };
 
-  outputs = inputs:
+  outputs = inputs: let
+    pname = "project-manager";
+  in
     {
       overlays.default = final: prev: {
         project-manager = inputs.self.packages.${final.system}.project-manager;
       };
+
+      homeConfigurations =
+        builtins.listToAttrs
+        (builtins.map
+          (inputs.flaky.lib.homeConfigurations.example pname inputs.self [])
+          inputs.flake-utils.lib.defaultSystems);
 
       lib = {
         projectManagerConfiguration = {
@@ -43,56 +51,34 @@
         overlays = [inputs.self.overlays.default];
       };
 
-      format =
-        (inputs.treefmt-nix.lib.evalModule pkgs {
-          projectRootFile = "flake.nix";
-          programs = {
-            ## Nix formatter
-            alejandra.enable = true;
-            ## Shell linter
-            # shellcheck.enable = true;
-            ## Web/JSON/Markdown/TypeScript/YAML formatter
-            prettier.enable = true;
-            ## Shell formatter
-            shfmt = {
-              enable = true;
-              ## NB: This has to be unset to allow the .editorconfig
-              ##     settings to be used. See numtide/treefmt-nix#96.
-              indent_size = null;
-            };
-          };
-          ## TODO: This should be populated automatically
-          settings.global.excludes = ["garnix.yaml" "renovate.json"];
-        })
-        .config
-        .build;
+      format = inputs.flaky.lib.format pkgs {
+        ## TODO: This should be populated automatically
+        settings.global.excludes = ["garnix.yaml" "renovate.json"];
+      };
     in {
       packages = let
-        pkgs = inputs.nixpkgs.legacyPackages.${system};
         releaseInfo = inputs.nixpkgs.lib.importJSON ./release.json;
         # docs = import ./docs {
         #   inherit pkgs;
         #   inherit (releaseInfo) release isReleaseBranch;
         # };
-        pmPkg = pkgs.callPackage ./project-manager {path = toString ./.;};
       in {
-        default = pmPkg;
-        project-manager = pmPkg;
+        default = inputs.self.packages.${system}.project-manager;
+        project-manager =
+          pkgs.callPackage ./project-manager {path = toString ./.;};
 
         # docs-html = docs.manual.html;
         # docs-json = docs.options.json;
         # docs-manpages = docs.manPages;
       };
 
-      devShells.default = pkgs.mkShell {
-        inputsFrom = builtins.attrValues inputs.self.packages.${system};
-
-        nativeBuildInputs = [pkgs.project-manager];
-
-        shellHook = ''
+      devShells.default =
+        inputs.flaky.lib.devShells.default pkgs inputs.self [
+          pkgs.project-manager
+        ] ''
           project-manager switch --flake .#${system}
         '';
-      };
+
       # devShells = let
       #   pkgs = inputs.nixpkgs.legacyPackages.${system};
       #   tests = import ./tests {inherit pkgs;};
@@ -114,20 +100,29 @@
             );
         };
 
+      checks.format = format.check inputs.self;
+
       formatter = format.wrapper;
     });
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
 
+    flaky = {
+      inputs = {
+        flake-utils.follows = "flake-utils";
+        home-manager.follows = "home-manager";
+        nixpkgs.follows = "nixpkgs";
+      };
+      url = "github:sellout/flaky";
+    };
+
     ## Used to piggy-back on module definitions
-    home-manager.url = "github:nix-community/home-manager/release-23.05";
+    home-manager = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:nix-community/home-manager/release-23.05";
+    };
 
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
-
-    treefmt-nix = {
-      inputs.nixpkgs.follows = "nixpkgs";
-      url = "github:numtide/treefmt-nix";
-    };
   };
 }

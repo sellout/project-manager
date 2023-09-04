@@ -512,7 +512,7 @@ in {
         export PATH="${activationBinPaths}"
         ${config.lib.bash.initProjectManagerLib}
 
-        ${builtins.readFile ./lib-bash/activation-init.sh}
+        ${builtins.readFile ./lib-bash/activation-init.bash}
 
         if [[ ! -v SKIP_SANITY_CHECKS ]]; then
           checkProjectDirectory ${escapeShellArg config.project.projectDirectory}
