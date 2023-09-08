@@ -17,16 +17,6 @@
     pname = "project-manager";
   in
     {
-      overlays.default = final: prev: {
-        project-manager = inputs.self.packages.${final.system}.project-manager;
-      };
-
-      homeConfigurations =
-        builtins.listToAttrs
-        (builtins.map
-          (inputs.flaky.lib.homeConfigurations.example pname inputs.self [])
-          inputs.flake-utils.lib.defaultSystems);
-
       lib = {
         projectManagerConfiguration = {
           modules ? [],
@@ -36,13 +26,25 @@
           check ? true,
         }:
           import ./modules {
-            inherit pkgs lib check extraSpecialArgs;
+            inherit check extraSpecialArgs lib pkgs;
             configuration = {...}: {
               imports =
                 modules ++ [{programs.project-manager.path = toString ./.;}];
             };
+            modules = builtins.attrValues inputs.self.projectModules;
           };
       };
+
+      overlays.default = final: prev: {
+        project-manager = inputs.self.packages.${final.system}.project-manager;
+      };
+
+      ## All of the modules included in Project Manager. You generally don’t
+      ## need to use this directly, as these modules are loaded by default.
+      ##
+      ## NB: Project Manager also loads some modules inherited from nixpkgs.
+      ##     Those are not yet included in this set.
+      projectModules = import ./modules/modules.nix;
     }
     // inputs.flake-utils.lib.eachSystem inputs.flake-utils.lib.defaultSystems
     (system: let
@@ -111,16 +113,9 @@
     flaky = {
       inputs = {
         flake-utils.follows = "flake-utils";
-        home-manager.follows = "home-manager";
         nixpkgs.follows = "nixpkgs";
       };
       url = "github:sellout/flaky";
-    };
-
-    ## Used to piggy-back on module definitions
-    home-manager = {
-      inputs.nixpkgs.follows = "nixpkgs";
-      url = "github:nix-community/home-manager/release-23.05";
     };
 
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";

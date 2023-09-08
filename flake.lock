@@ -68,9 +68,7 @@
         "flake-utils": [
           "flake-utils"
         ],
-        "home-manager": [
-          "home-manager"
-        ],
+        "home-manager": "home-manager",
         "nixpkgs": [
           "nixpkgs"
         ],
@@ -93,6 +91,7 @@
     "home-manager": {
       "inputs": {
         "nixpkgs": [
+          "flaky",
           "nixpkgs"
         ]
       },
@@ -131,7 +130,6 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "flaky": "flaky",
-        "home-manager": "home-manager",
         "nixpkgs": "nixpkgs"
       }
     },
