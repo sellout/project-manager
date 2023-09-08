@@ -18,8 +18,6 @@
       # };
     };
     ignores = [
-      "/.direnv/"
-
       # Nix build
       "/result"
       "/source"

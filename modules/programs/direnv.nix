@@ -50,18 +50,23 @@ in {
   config = mkIf cfg.enable {
     # project.packages = [ pkgs.direnv ];
 
-    project.activation.direnv = mkIf cfg.auto-allow (pm.dag.entryAfter ["onFilesChange"] ''
-      ${pkgs.direnv}/bin/direnv allow
-    '');
+    programs.git.ignores = ["/.direnv/"];
+    programs.mercurial.ignoresRooted = [".direnv/**"];
 
-    project.file.".envrc" =
-      cfg.envrc
-      // {
-        target = ".envrc";
-        minimum-persistence = "worktree";
-        ## See direnv/direnv#1160.
-        broken-symlink = true;
-        commit-by-default = cfg.commit-envrc;
-      };
+    project = {
+      activation.direnv = mkIf cfg.auto-allow (pm.dag.entryAfter ["onFilesChange"] ''
+        ${pkgs.direnv}/bin/direnv allow
+      '');
+
+      file.".envrc" =
+        cfg.envrc
+        // {
+          target = ".envrc";
+          minimum-persistence = "worktree";
+          ## See direnv/direnv#1160.
+          broken-symlink = true;
+          commit-by-default = cfg.commit-envrc;
+        };
+    };
   };
 }

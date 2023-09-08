@@ -50,6 +50,13 @@ in {
         example = ["^.*~$" "^.*\\.swp$"];
         description = "List of regular expressions for files to be globally ignored.";
       };
+
+      ignoresRooted = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        example = ["^.*~$" "^.*\\.swp$"];
+        description = "Similar to programs.mercurial.ignores, but these are rooted.";
+      };
     };
   };
 
@@ -76,6 +83,11 @@ in {
             syntax: regexp
           ''
           + concatStringsSep "\n" cfg.ignoresRegexp
+          + "\n"
+          + ''
+            syntax: rootglob
+          ''
+          + concatStringsSep "\n" cfg.ignoresRooted
           + "\n";
       };
     }
