@@ -26,6 +26,22 @@
         "type": "github"
       }
     },
+    "flake-schemas": {
+      "locked": {
+        "lastModified": 1693615451,
+        "narHash": "sha256-rrZipq8J+g+LFWMC0+M0R8+NnZoDdrLHDahcvxh8mgA=",
+        "owner": "DeterminateSystems",
+        "repo": "flake-schemas",
+        "rev": "cfd7826aabef39c337eb79053d0253f446c1c817",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DeterminateSystems",
+        "ref": "support-nixos-modules",
+        "repo": "flake-schemas",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -128,6 +144,7 @@
     },
     "root": {
       "inputs": {
+        "flake-schemas": "flake-schemas",
         "flake-utils": "flake-utils",
         "flaky": "flaky",
         "nixpkgs": "nixpkgs"
