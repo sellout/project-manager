@@ -20,6 +20,15 @@ in {
   options.programs.direnv = {
     enable = mkEnableOption "direnv, the environment switcher";
 
+    package = mkOption {
+      type = types.package;
+      default = pkgs.direnv;
+      defaultText = literalExpression "pkgs.direnv";
+      description = ''
+        Direnv package to install.
+      '';
+    };
+
     auto-allow = mkOption {
       type = types.bool;
       default = false;
@@ -48,7 +57,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # project.packages = [ pkgs.direnv ];
+    project.packages = [ cfg.package ];
 
     programs.git.ignores = ["/.direnv/"];
     programs.mercurial.ignoresRooted = [".direnv/**"];

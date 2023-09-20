@@ -574,7 +574,7 @@ function doBuild() {
         || return
     fi
 
-    presentNews
+    # presentNews
 }
 
 function doSwitch() {
@@ -602,7 +602,7 @@ function doSwitch() {
             && "$generation/activate" || return
     fi
 
-    presentNews
+    # presentNews
 }
 
 function doListGens() {
@@ -717,13 +717,13 @@ function buildNews() {
     local readIdsFile
     readIdsFile=$(newsReadIdsFile)
 
-    nix-instantiate \
-        --no-build-output --strict \
-        --eval '<project-manager/project-manager/build-news.nix>' \
-        --arg newsJsonFile "$newsJsonFile" \
-        --arg newsReadIdsFile "$readIdsFile" \
-        "${extraArgs[@]}" \
-        > "$newsNixFile"
+    # nix-instantiate \
+    #     --no-build-output --strict \
+    #     --eval '<project-manager/project-manager/build-news.nix>' \
+    #     --arg newsJsonFile "$newsJsonFile" \
+    #     --arg newsReadIdsFile "$readIdsFile" \
+    #     "${extraArgs[@]}" \
+    #     > "$newsNixFile"
 }
 
 function doShowNews() {

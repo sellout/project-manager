@@ -104,12 +104,7 @@
         # docs-manpages = docs.manPages;
       };
 
-      devShells.default =
-        inputs.flaky.lib.devShells.default pkgs inputs.self [
-          pkgs.project-manager
-        ] ''
-          project-manager switch --flake .#${system}
-        '';
+      devShells.default = inputs.self.projectConfigurations.${system}.devShell;
 
       # devShells = let
       #   pkgs = inputs.nixpkgs.legacyPackages.${system};

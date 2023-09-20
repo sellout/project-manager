@@ -71,6 +71,8 @@ in {
 
   activationPackage = module.config.project.activationPackage;
 
+  devShell = module.config.project.devShell;
+
   newsDisplay = rawModule.config.news.display;
   newsEntries = lib.sort (a: b: a.time > b.time) (
     lib.filter (a: a.condition) rawModule.config.news.entries

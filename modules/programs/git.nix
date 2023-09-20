@@ -310,6 +310,8 @@ in {
             text = concatStringsSep "\n" cfg.attributes + "\n";
           };
         };
+
+        packages = [cfg.package];
       };
     }
 

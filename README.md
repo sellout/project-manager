@@ -44,26 +44,25 @@ to regenerate all the files you need.
 
 For this to do anything, you need to add a `projectConfigurations.${system}` output to your flake. This project has one itself, and you can view the contents in [.config/project.nix](./.config/project.nix).
 
-### experimental
+### configuration attributes
 
-For more automated integration, you can add something like
+Once you define your `projectConfigurations`, there are a number of helpful attributes to take advantage of
+
+#### `activationPackage`
+
+Rarely used directly, this is the derivation behind `project-manager build` and `switch`. It’s what sets up your generated environment.
+
+#### ``devShell`
+
+A shell derivation that provides everything configured in your project configuration.
+
+The following will set it up as the default shell. it can also be overridden to use as a basis of various shells.
 
 ```nix
 {
-  let
-    pkgs = import nixpkgs {
-      overlays = [inputs.project-manager.overlays.default];
-    };
-  in
-    devShells.default = pkgs.mkShell {
-      nativeBuildInputs = [pkgs.project-manager];
-      shellHook = ''
-        project-manager switch --flake .#${system}
-      '';
+  devShells.default = self.projectConfigurations.${system}.devShell;
 }
 ```
-
-but that will definitely be changing in future.
 
 ## Concepts
 
