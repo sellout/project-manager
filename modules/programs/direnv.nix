@@ -57,7 +57,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    project.packages = [ cfg.package ];
+    project.packages = [cfg.package];
 
     programs.git.ignores = ["/.direnv/"];
     programs.mercurial.ignoresRooted = [".direnv/**"];

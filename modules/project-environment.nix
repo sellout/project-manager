@@ -476,7 +476,7 @@ in {
       nativeBuildInputs =
         cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
       shellHook = cfg.extraProfileCommands;
-       meta = {
+      meta = {
         description = "A shell provided by Project Manager.";
       };
     };

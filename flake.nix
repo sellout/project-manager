@@ -19,19 +19,19 @@
     {
       ## This output’s schema may be in flux. See NixOS/nix#8892.
       schemas = let
-        mkChildren = children: { inherit children; };
+        mkChildren = children: {inherit children;};
       in
-        inputs.flake-schemas.schemas // {
+        inputs.flake-schemas.schemas
+        // {
           projectConfigurations = {
             version = 1;
             doc = ''
               The `projectConfigurations` flake output defines project configurations.
             '';
-            inventory = output: mkChildren (builtins.mapAttrs (system: project:
-              {
-                what = "Project Manager configuration for this flake’s project";
-                derivation = project.config.activationPackage;
-              }) output);
+            inventory = output: mkChildren (builtins.mapAttrs (system: project: {
+              what = "Project Manager configuration for this flake’s project";
+              derivation = project.config.activationPackage;
+            }) output);
           };
 
           projectModules = {
@@ -40,10 +40,9 @@
               Defines “project modules” analogous to `nixosModules` or
               `homeModules`, but scoped to a single project (often some VCS repo).
             '';
-            inventory = output: mkChildren (builtins.mapAttrs (moduleName: module:
-              {
-                what = "Project Manager module";
-              }) output);
+            inventory = output: mkChildren (builtins.mapAttrs (moduleName: module: {
+              what = "Project Manager module";
+            }) output);
           };
         };
 
