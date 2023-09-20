@@ -37,7 +37,7 @@ Granted, after generation, those config files still exist in those locations, bu
 For now, after cloning, etc. run
 
 ```bash
-project-manager switch --flake .
+project-manager switch
 ```
 
 to regenerate all the files you need.

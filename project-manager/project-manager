@@ -144,44 +144,9 @@ function setProjectManagerPathVariables() {
 }
 
 function setFlakeAttribute() {
-    if [[ -z $FLAKE_ARG && ! -v PROJECT_MANAGER_CONFIG ]]; then
-        local configHome="${XDG_CONFIG_HOME:-$HOME/.config}"
-        local pmConfigHome="$configHome/project-manager"
-        local nixpkgsConfigHome="$configHome/nixpkgs"
-
-        local configFlake
-
-        if [[ -e "$pmConfigHome/flake.nix" ]]; then
-            configFlake="$pmConfigHome/flake.nix"
-        fi
-
-        if [[ -v configFlake ]]; then
-            FLAKE_ARG="path:$(dirname "$(readlink -f "$configFlake")")"
-        fi
-    fi
-
-    if [[ -n "$FLAKE_ARG" ]]; then
-        local flake="${FLAKE_ARG%#*}"
-        case $FLAKE_ARG in
-            *#*)
-                local name="${FLAKE_ARG#*#}"
-                ;;
-            *)
-                local name="$USER"
-                # Check both long and short hostnames; long first to preserve
-                # pre-existing behaviour in case both happen to be defined.
-                for n in "$USER@$(hostname)" "$USER@$(hostname -s)"; do
-                    if [[ "$(nix eval "$flake#projectConfigurations" --apply "x: x ? \"$n\"")" == "true" ]]; then
-                        name="$n"
-                        if [[ -v VERBOSE ]]; then
-                            echo "Using flake projectConfiguration for $name"
-                        fi
-                    fi
-                done
-                ;;
-        esac
-        export FLAKE_CONFIG_URI="$flake#projectConfigurations.\"$name\""
-    fi
+    local flake="."
+    local name="$(nix eval --expr 'builtins.currentSystem' --impure --raw)"
+    export FLAKE_CONFIG_URI="$flake#projectConfigurations.$name"
 }
 
 function doInspectOption() {
@@ -373,8 +338,6 @@ EOF
     if [[ ! -v withFlake ]]; then
         PROJECT_MANAGER_CONFIG="$confFile"
     else
-        FLAKE_ARG="$confDir"
-
         if [[ -e $flakeFile ]]; then
             _i 'The file %s already exists, leaving it unchanged...' "$flakeFile"
         else
@@ -386,7 +349,7 @@ EOF
             mkdir -p "$confDir"
             cat > "$flakeFile" <<EOF
 {
-  description = "Project Manager configuration of $USER";
+  description = "Project Manager configuration for ${basename "$PWD"}";
 
   inputs = {
     # Specify the source of Project Manager and Nixpkgs.
@@ -402,7 +365,7 @@ EOF
       system = "$nixSystem";
       pkgs = nixpkgs.legacyPackages.\${system};
     in {
-      projectConfigurations."$USER" = project-manager.lib.projectManagerConfiguration {
+      projectConfigurations.\${system} = project-manager.lib.projectManagerConfiguration {
         inherit pkgs;
 
         # Specify your project configuration modules here, for example,
@@ -830,8 +793,6 @@ function doHelp() {
     echo "  -A ATTRIBUTE      Optional attribute that selects a configuration"
     echo "                    expression in the configuration file."
     echo "  -I PATH           Add a path to the Nix expression search path."
-    echo "  --flake flake-uri Use Project Manager configuration at flake-uri"
-    echo "                    Default is '~/.config/project-manager'."
     echo "  -b EXT            Move existing files to new path rather than fail."
     echo "  -v                Verbose output"
     echo "  -n                Do a dry run, only prints what actions would be taken"
@@ -901,7 +862,6 @@ PROJECT_MANAGER_CONFIG_ATTRIBUTE=""
 PASSTHROUGH_OPTS=()
 COMMAND=""
 COMMAND_ARGS=()
-FLAKE_ARG=""
 
 setProjectManagerPathVariables
 
@@ -926,10 +886,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         -f|--file)
             PROJECT_MANAGER_CONFIG="$1"
-            shift
-            ;;
-        --flake)
-            FLAKE_ARG="$1"
             shift
             ;;
         --recreate-lock-file|--no-update-lock-file|--no-write-lock-file|--no-registries|--commit-lock-file|--refresh)
