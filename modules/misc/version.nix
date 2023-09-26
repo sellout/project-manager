@@ -15,7 +15,7 @@ in {
         "23.05"
         "23.11"
       ];
-      description = ''
+      description = lib.mdDoc ''
         It is occasionally necessary for Project Manager to change
         configuration defaults in a way that is incompatible with
         stateful data. This could, for example, include switching the

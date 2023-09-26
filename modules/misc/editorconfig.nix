@@ -13,21 +13,22 @@ with lib; let
 
   iniFormat = pkgs.formats.ini {};
 in {
-  meta.maintainers = with maintainers; [loicreynier];
+  meta.maintainers = with maintainers; [sellout];
 
   options.editorconfig = {
-    enable = mkEnableOption "EditorConfig project configuration file";
+    enable =
+      mkEnableOption (lib.mdDoc "EditorConfig project configuration file");
 
     settings = mkOption {
       type = iniFormat.type;
       default = {};
-      description = ''
+      description = lib.mdDoc ''
         Configuration written to {file}`$PROJECT_ROOT/.editorconfig`.
         `root = true` is automatically added to the file,
         it must not be added here.
         See <https://editorconfig.org> for documentation.
       '';
-      example = literalExpression ''
+      example = lib.literalMD ''
         {
           "*" = {
             charset = "utf-8";

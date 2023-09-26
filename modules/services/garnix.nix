@@ -10,16 +10,16 @@ in {
   meta.maintainers = [maintainers.sellout];
 
   options.services.garnix = {
-    enable = mkEnableOption "Garnix CI configuration";
+    enable = mkEnableOption (lib.mdDoc "Garnix CI configuration");
 
     builds = mkOption {
       type = lib.types.nullOr lib.types.attrs;
       default = null;
-      description = ''
+      description = lib.mdDoc ''
         Configuration written to {file}`$PROJECT_ROOT/garnix.yaml`.
         See <https://garnix.io/docs/yaml_config> for documentation.
       '';
-      example = literalExpression ''
+      example = lib.literalMD ''
         {
           "*" = {
             charset = "utf-8";

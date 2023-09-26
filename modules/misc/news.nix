@@ -55,7 +55,7 @@ in {
       display = mkOption {
         type = types.enum ["silent" "notify" "show"];
         default = "notify";
-        description = ''
+        description = lib.mdDoc ''
           How unread and relevant news should be presented when
           running {command}`project-manager build` and
           {command}`project-manager switch`.

@@ -11,25 +11,25 @@ with lib; let
 in {
   options = {
     programs.mercurial = {
-      enable = mkEnableOption "Mercurial";
+      enable = mkEnableOption (lib.mdDoc "Mercurial");
 
       package = mkOption {
         type = types.package;
         default = pkgs.mercurial;
-        defaultText = literalExpression "pkgs.mercurial";
-        description = "Mercurial package to install.";
+        defaultText = lib.literalMD "pkgs.mercurial";
+        description = lib.mdDoc "Mercurial package to install.";
       };
 
       aliases = mkOption {
         type = types.attrsOf types.anything;
         default = {};
-        description = "Mercurial aliases to define.";
+        description = lib.mdDoc "Mercurial aliases to define.";
       };
 
       extraConfig = mkOption {
         type = types.either (types.attrsOf types.anything) types.lines;
         default = {};
-        description = "Additional configuration to add.";
+        description = lib.mdDoc "Additional configuration to add.";
       };
 
       iniContent = mkOption {
@@ -41,21 +41,27 @@ in {
         type = types.listOf types.str;
         default = [];
         example = ["*~" "*.swp"];
-        description = "List of globs for files to be globally ignored.";
+        description = lib.mdDoc ''
+          List of globs for files to be globally ignored.
+        '';
       };
 
       ignoresRegexp = mkOption {
         type = types.listOf types.str;
         default = [];
         example = ["^.*~$" "^.*\\.swp$"];
-        description = "List of regular expressions for files to be globally ignored.";
+        description = lib.mdDoc ''
+          List of regular expressions for files to be globally ignored.
+        '';
       };
 
       ignoresRooted = mkOption {
         type = types.listOf types.str;
         default = [];
         example = ["^.*~$" "^.*\\.swp$"];
-        description = "Similar to programs.mercurial.ignores, but these are rooted.";
+        description = lib.mdDoc ''
+          Similar to programs.mercurial.ignores, but these are rooted.
+        '';
       };
     };
   };

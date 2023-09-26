@@ -18,13 +18,13 @@ in {
   meta.maintainers = [maintainers.sellout];
 
   options.programs.direnv = {
-    enable = mkEnableOption "direnv, the environment switcher";
+    enable = mkEnableOption (lib.mdDoc "direnv, the environment switcher");
 
     package = mkOption {
       type = types.package;
       default = pkgs.direnv;
-      defaultText = literalExpression "pkgs.direnv";
-      description = ''
+      defaultText = lib.literalMD "pkgs.direnv";
+      description = lib.mdDoc ''
         Direnv package to install.
       '';
     };
@@ -32,7 +32,7 @@ in {
     auto-allow = mkOption {
       type = types.bool;
       default = false;
-      description = ''
+      description = lib.mdDoc ''
         Whether running project-manager will implicitly run `direnv allow` for
         the user.
       '';
@@ -41,7 +41,7 @@ in {
     commit-envrc = mkOption {
       type = types.bool;
       default = true;
-      description = ''
+      description = lib.mdDoc ''
         Whether .envrc should be committed to the repo or only available
         locally. If this is false, then users will have to run `project-manager`
         before direnv will work.
@@ -49,8 +49,8 @@ in {
     };
 
     envrc = mkOption {
-      type = fileContents "programs.direnv.envrc" "" projectDirectory;
-      description = ''
+      type = fileContents "programs.direnv" "" projectDirectory "envrc";
+      description = lib.mdDoc ''
         The .envrc file. The `target` is ignored.
       '';
     };

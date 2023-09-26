@@ -5,7 +5,7 @@
 }: let
   inherit (lib) hasPrefix pm literalExpression mkDefault mkIf mkOption removePrefix types;
 in rec {
-  fileContents = opt: basePathDesc: basePath: (types.submodule (
+  fileContents = opt: basePathDesc: basePath: nameStr: (types.submodule (
     {
       name,
       config,
@@ -15,11 +15,12 @@ in rec {
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = ''
+          description = lib.mdDoc ''
             Whether this file should be generated. This option allows specific
             files to be disabled.
           '';
         };
+
         target = mkOption {
           type = types.str;
           apply = p: let
@@ -29,8 +30,8 @@ in rec {
               else "${basePath}/${p}";
           in
             removePrefix (projectDirectory + "/") absPath;
-          defaultText = literalExpression "name";
-          description = ''
+          defaultText = lib.literalMD "name";
+          description = lib.mdDoc ''
             Path to target file relative to ${basePathDesc}.
           '';
         };
@@ -38,18 +39,18 @@ in rec {
         text = mkOption {
           default = null;
           type = types.nullOr types.lines;
-          description = ''
+          description = lib.mdDoc ''
             Text of the file. If this option is null then
-            [](#opt-${opt}._name_.source)
+            [](#opt-${opt}.${nameStr}.source)
             must be set.
           '';
         };
 
         source = mkOption {
           type = types.path;
-          description = ''
+          description = lib.mdDoc ''
             Path of the source file or directory. If
-            [](#opt-${opt}._name_.text)
+            [](#opt-${opt}.${nameStr}.text)
             is non-null then this option will automatically point to a file
             containing that text.
           '';
@@ -58,7 +59,7 @@ in rec {
         executable = mkOption {
           type = types.nullOr types.bool;
           default = null;
-          description = ''
+          description = lib.mdDoc ''
             Set the execute bit. If `null`, defaults to the mode
             of the {var}`source` file or to `false`
             for files created through the {var}`text` option.
@@ -68,7 +69,7 @@ in rec {
         recursive = mkOption {
           type = types.bool;
           default = false;
-          description = ''
+          description = lib.mdDoc ''
             If the file source is a directory, then this option
             determines whether the directory should be recursively
             linked to the target location. This option has no effect
@@ -85,7 +86,7 @@ in rec {
         onChange = mkOption {
           type = types.lines;
           default = "";
-          description = ''
+          description = lib.mdDoc ''
             Shell commands to run when file has changed between
             generations. The script will be run
             *after* the new files have been linked
@@ -100,7 +101,7 @@ in rec {
           type = types.bool;
           default = false;
           visible = false;
-          description = ''
+          description = lib.mdDoc ''
             Whether the target path should be unconditionally replaced
             by the managed file source. Warning, this will silently
             delete the target regardless of whether it is a file or
@@ -111,7 +112,7 @@ in rec {
         minimum-persistence = mkOption {
           type = types.str; # TODO: Make this stricter.
           default = "repository";
-          description = ''
+          description = lib.mdDoc ''
             How we store the file. The options are “store” (file will be
             referenced by the worktree on demand), “worktree” (persist the file
             in the worktree), and “repository” (commit the file in the
@@ -124,7 +125,7 @@ in rec {
         broken-symlink = mkOption {
           type = types.bool;
           default = false;
-          description = ''
+          description = lib.mdDoc ''
             This option is only relevant when `minimum-persistence` isn’t
             “repository”. It indicates whether or not the file can be referenced
             with a symlink. If this is true, then the file will not be symlinked
@@ -138,7 +139,7 @@ in rec {
         commit-by-default = mkOption {
           type = types.nullOr types.bool;
           default = null; # config.project.commit-by-default;
-          description = ''
+          description = lib.mdDoc ''
             Whether to accept the `minimum-persistence` value (`false`) or to
             force the persistence to “repository” (`true`). The latter is useful
             when you want to use a file outside of its standard use case. E.g.,
@@ -171,5 +172,5 @@ in rec {
   #   - basePathDesc   docbook compatible description of the base path
   #   - basePath       the file base path
   fileType = opt: basePathDesc: basePath:
-    types.attrsOf (fileContents opt basePathDesc basePath);
+    types.attrsOf (fileContents opt basePathDesc basePath "_name_");
 }

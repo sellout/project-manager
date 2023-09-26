@@ -14,23 +14,25 @@ in {
   options.project = {
     name = mkOption {
       type = types.str;
-      defaultText = literalExpression "undefined";
+      defaultText = lib.literalMD "undefined";
       example = "my-project";
-      description = "The project’s name (as an identifier).";
+      description = lib.mdDoc "The project’s name (as an identifier).";
     };
 
     summary = mkOption {
       type = types.str;
-      defaultText = literalExpression "undefined";
+      defaultText = lib.literalMD "undefined";
       example = "Tooling for doing something I want.";
-      description = "A brief (approximately one line) description of the project.";
+      description = lib.mdDoc ''
+        A brief (approximately one line) description of the project.
+      '';
     };
 
     authors = mkOption {
       type = types.nonEmptyListOf types.attrs;
-      defaultText = literalExpression "undefined";
+      defaultText = lib.literalMD "undefined";
       example = "[lib.maintainers.sellout]";
-      description = ''
+      description = lib.mdDoc ''
         Authors of this project. See
         https://github.com/NixOS/nixpkgs/tree/master/maintainers for the
         structure.
@@ -40,9 +42,9 @@ in {
     maintainers = mkOption {
       type = types.nonEmptyListOf types.attrs;
       default = cfg.authors;
-      defaultText = literalExpression "config.project.authors";
+      defaultText = lib.literalMD "config.project.authors";
       example = "[lib.maintainers.sellout]";
-      description = ''
+      description = lib.mdDoc ''
         Current maintainers of this project. See
         https://github.com/NixOS/nixpkgs/tree/master/maintainers for the
         structure.
@@ -51,23 +53,27 @@ in {
 
     license = mkOption {
       type = types.str;
-      defaultText = literalExpression "undefined";
-      description = "An SPDX license expression, see https://spdx.org/licenses/.";
+      defaultText = lib.literalMD "undefined";
+      description = lib.mdDoc ''
+        An SPDX license expression, see https://spdx.org/licenses/.
+      '';
     };
 
     projectDirectory = mkOption {
       type = types.str;
       default = "./.";
       internal = true;
-      defaultText = literalExpression "$PROJECT_ROOT";
+      defaultText = lib.literalMD "$PROJECT_ROOT";
       example = "./.";
-      description = "The project’s root directory relative to this file.";
+      description = lib.mdDoc ''
+        The project’s root directory relative to this file.
+      '';
     };
 
     commit-by-default = mkOption {
       type = types.bool;
       default = false;
-      description = ''
+      description = lib.mdDoc ''
         Whether all files in this project should default to being committed.
         This can be useful if you have contributors that don’t use Nix and
         expect everything to live directly in the repo (e.g., Open Source
@@ -78,21 +84,20 @@ in {
     shellAliases = mkOption {
       type = with types; attrsOf str;
       default = {};
-      example = literalExpression ''
+      example = lib.literalMD ''
         {
           g = "git";
           "..." = "cd ../..";
         }
       '';
-      description = ''
+      description = lib.mdDoc ''
         An attribute set that maps aliases (the top level attribute names
         in this option) to command strings or directly to build outputs.
-
-        This option should only be used to manage simple aliases that are
-        compatible across all shells. If you need to use a shell specific
-        feature then make sure to use a shell specific option, for example
-        [](#opt-programs.bash.shellAliases) for Bash.
       '';
+        # This option should only be used to manage simple aliases that are
+        # compatible across all shells. If you need to use a shell specific
+        # feature then make sure to use a shell specific option, for example
+        # [](#opt-programs.bash.shellAliases) for Bash.
     };
 
     sessionVariables = mkOption {
@@ -102,7 +107,7 @@ in {
         EDITOR = "emacs";
         GS_OPTIONS = "-sPAPERSIZE=a4";
       };
-      description = ''
+      description = lib.mdDoc ''
         Environment variables to always set at login.
 
         The values may refer to other environment variables using
@@ -138,7 +143,7 @@ in {
     sessionVariablesPackage = mkOption {
       type = types.package;
       internal = true;
-      description = ''
+      description = lib.mdDoc ''
         The package containing the
         {file}`pm-session-vars.sh` file.
       '';
@@ -152,7 +157,7 @@ in {
         "\${xdg.configHome}/emacs/bin"
         ".git/safe/../../bin"
       ];
-      description = ''
+      description = lib.mdDoc ''
         Extra directories to add to {env}`PATH`.
 
         These directories are added to the {env}`PATH` variable in a
@@ -167,7 +172,7 @@ in {
       type = types.lines;
       default = "";
       internal = true;
-      description = ''
+      description = lib.mdDoc ''
         Extra configuration to add to the
         {file}`pm-session-vars.sh` file.
       '';
@@ -176,14 +181,16 @@ in {
     packages = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = "The set of packages to appear in the user environment.";
+      description = lib.mdDoc ''
+        The set of packages to appear in the user environment.
+      '';
     };
 
     extraOutputsToInstall = mkOption {
       type = types.listOf types.str;
       default = [];
       example = ["doc" "info" "devdoc"];
-      description = ''
+      description = lib.mdDoc ''
         List of additional package outputs of the packages
         {var}`project.packages` that should be installed into
         the user environment.
@@ -194,8 +201,8 @@ in {
       internal = true;
       type = types.bool;
       default = true;
-      defaultText = literalExpression "true";
-      description = ''
+      defaultText = lib.literalMD "true";
+      description = lib.mdDoc ''
         Whether the activation script should start with an empty
         {env}`PATH` variable. When `false` then the
         user's {env}`PATH` will be accessible in the script. It is
@@ -207,7 +214,7 @@ in {
     activation = mkOption {
       type = pm.types.dagOf types.str;
       default = {};
-      example = literalExpression ''
+      example = lib.literalMD ''
         {
           myActivationAction = lib.pm.dag.entryAfter ["writeBoundary"] '''
             $DRY_RUN_CMD ln -s $VERBOSE_ARG \
@@ -215,7 +222,7 @@ in {
           ''';
         }
       '';
-      description = ''
+      description = lib.mdDoc ''
         The activation scripts blocks to run when activating a Project
         Manager generation. Any entry here should be idempotent,
         meaning running twice or more times produces the same result
@@ -250,13 +257,15 @@ in {
     activationPackage = mkOption {
       internal = true;
       type = types.package;
-      description = "The package containing the complete activation script.";
+      description = lib.mdDoc ''
+        The package containing the complete activation script.
+      '';
     };
 
     devShell = mkOption {
       internal = true;
       type = types.package;
-      description = ''
+      description = lib.mdDoc ''
         Package providing a shell with all the tooling declared in the project
         config.
       '';
@@ -266,7 +275,7 @@ in {
       internal = true;
       type = types.listOf types.package;
       default = [];
-      description = ''
+      description = lib.mdDoc ''
         Extra packages to add to {env}`PATH` within the activation
         script.
       '';
@@ -276,7 +285,7 @@ in {
       type = types.lines;
       default = "";
       internal = true;
-      description = ''
+      description = lib.mdDoc ''
         Extra commands to run in the Project Manager generation builder.
       '';
     };
@@ -285,7 +294,7 @@ in {
       type = types.lines;
       default = "";
       internal = true;
-      description = ''
+      description = lib.mdDoc ''
         Extra commands to run in the Project Manager profile builder.
       '';
     };
@@ -293,7 +302,7 @@ in {
     enableNixpkgsReleaseCheck = mkOption {
       type = types.bool;
       default = true;
-      description = ''
+      description = lib.mdDoc ''
         Determines whether to check for release version mismatch between Project
         Manager and Nixpkgs. Using mismatched versions is likely to cause errors
         and unexpected behavior. It is therefore highly recommended to use a

@@ -1,0 +1,121 @@
+[[ch-nix-flakes]]
+== Nix Flakes
+
+:nixos-wiki-flakes: https://nixos.wiki/wiki/Flakes
+
+Project Manager is compatible with {nixos-wiki-flakes}[Nix Flakes]. But
+please be aware that the support it is still experimental and may
+change in backwards incompatible ways.
+
+Just like in the standard installation you can use the Project Manager
+flake in three ways:
+
+1. Using the standalone `project-manager` tool. For platforms other than
+NixOS and Darwin, this is the only available choice. It is also
+recommended for people on NixOS or Darwin that want to manage their
+project directory independently of the system as a whole. See
+<<sec-flakes-standalone>> for instructions on how to perform this
+installation.
+
+[[sec-flakes-prerequisites]]
+=== Prerequisites
+
+* Install Nix 2.4 or later, or have it in `nix-shell`.
+
+* Enable experimental features `nix-command` and `flakes`.
++
+** When using NixOS, add the following to your `configuration.nix` and rebuild your system.
++
+[source,nix]
+nix = {
+  package = pkgs.nixFlakes;
+  extraOptions = ''
+    experimental-features = nix-command flakes
+  '';
+};
++
+** If you are not using NixOS, add the following to `nix.conf` (located at `~/.config/nix/` or `/etc/nix/nix.conf`).
++
+[source,bash]
+experimental-features = nix-command flakes
++
+You may need to restart the Nix daemon with, for example, `sudo systemctl restart nix-daemon.service`.
++
+** Alternatively, you can enable flakes on a per-command basis with the following additional flags to `nix` and `project-manager`:
++
+[source,console]
+----
+$ nix --extra-experimental-features "nix-command flakes" <sub-commands>
+$ project-manager --extra-experimental-features "nix-command flakes" <sub-commands>
+----
+
+* Prepare your Project Manager configuration (`project.nix`).
++
+Unlike the channel-based setup,
+`project.nix` will be evaluated when the flake is built,
+so it must be present before bootstrap of Project Manager from the flake.
+See <<sec-usage-configuration>> for introduction about
+writing a Project Manager configuration.
+
+[[sec-flakes-standalone]]
+=== Standalone setup
+
+To prepare an initial Project Manager configuration for your logged in user,
+you can run the Project Manager `init` command directly from its flake.
+
+For example, if you are using the unstable version of Nixpkgs or NixOS,
+then to generate and activate a basic configuration run the command
+
+[source,console]
+$ nix run project-manager/master -- init --switch
+
+For Nixpkgs or NixOS version 23.05 run
+
+[source,console]
+$ nix run project-manager/release-23.05 -- init --switch
+
+This will generate a `flake.nix` and a `project.nix` file in
+`~/.config/project-manager`, creating the directory if it does not exist.
+
+If you omit the `--switch` option then the activation will not happen.
+This is useful if you want to inspect and edit the configuration before activating it.
+
+[source,console]
+----
+$ nix run project-manager/$branch -- init
+$ # Edit files in ~/.config/project-manager
+$ nix run project-manager/$branch -- init --switch
+----
+
+Where `$branch` is one of `master` or `release-23.05`.
+
+After the initial activation has completed successfully then building
+and activating your flake-based configuration is as simple as
+
+[source,console]
+$ project-manager switch
+
+It is possible to override the default configuration directory, if you want.
+For example,
+
+[source,console]
+----
+$ nix run project-manager/$branch -- init --switch ~/hmconf
+$ # And after the initial activation.
+$ project-manager switch --flake ~/hmconf
+----
+
+[NOTE]
+====
+The flake inputs are not automatically updated by Project Manager.
+You need to use the standard `nix flake update` command for that.
+
+If you only want to update a single flake input,
+then the command `nix flake lock --update-input <input>` can be used.
+
+You can also pass flake-related options
+such as `--recreate-lock-file` or `--update-input <input>`
+to `project-manager` when building or switching,
+and these options will be forwarded to `nix build`.
+See the {nixos-wiki-flakes}[NixOS Wiki page] for details.
+====

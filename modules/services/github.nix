@@ -8,9 +8,13 @@ in {
   meta.maintainers = [lib.maintainers.sellout];
 
   options.services.github = {
-    enable = lib.mkEnableOption "GitHub";
+    enable = lib.mkEnableOption (lib.mdDoc "GitHub");
 
     settings = lib.mkOption {
+      description = lib.mdDoc ''
+        Declarative GitHub settings, as provided by [Probot’s Settings
+        app](https://probot.github.io/apps/settings/).
+      '';
       type = lib.types.attrs;
       default = {};
     };

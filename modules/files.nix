@@ -29,7 +29,9 @@ with lib; let
 in {
   options = {
     project.file = mkOption {
-      description = "Attribute set of files to link into the project root.";
+      description = lib.mdDoc ''
+        Attribute set of files to link into the project root.
+      '';
       default = {};
       type =
         fileType "project.file" "" projectDirectory
@@ -54,7 +56,9 @@ in {
     project-files = mkOption {
       type = types.package;
       internal = true;
-      description = "Package to contain all project files";
+      description = lib.mdDoc ''
+        Package to contain all project files
+      '';
     };
   };
 
@@ -133,6 +137,7 @@ in {
               # The target exists but is identical – don't do anything.
               $VERBOSE_ECHO "Skipping '$targetPath' as it is identical to '$sourcePath'"
             else
+              mkdir -p $(dirname "$relativePath")
               ## Try a symlink (if allowed), then a hard link, then a copy
               ([[ ''${persistence[$relativePath]} == worktree && ! ''${broken_symlink[$relativePath]} ]] \
                   && $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath") \

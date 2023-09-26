@@ -11,13 +11,13 @@ in {
 
   options = {
     programs.project-manager = {
-      enable = mkEnableOption "Project Manager";
+      enable = mkEnableOption (lib.mdDoc "Project Manager");
 
       path = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "$PROJECT_ROOT/devel/project-manager";
-        description = ''
+        description = lib.mdDoc ''
           The default path to use for Project Manager. When
           `null`, then the {file}`project-manager`
           channel and {file}`$PROJECT_ROOT/.config/nixpkgs/project-manager`
