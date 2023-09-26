@@ -1,4 +1,5 @@
 /.gitattributes linguist-generated
 /.github/settings.yml linguist-generated
 /garnix.yaml linguist-generated
+/.github/workflows/pages.yml linguist-generated
 /renovate.json linguist-generated

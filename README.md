@@ -4,6 +4,8 @@
 
 Like [Home Manager](https://nix-community.github.io/home-manager/), but for repositories.
 
+See [the manual](https://sellout.github.io/project-manager/).
+
 ## What?
 
 Project Manager helps tame the various configurations that clutter every repository. After a while, you end up with files scattered around, unrelated to anything, that are used by various tools or online services to support your project.

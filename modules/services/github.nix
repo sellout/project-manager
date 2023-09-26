@@ -1,9 +1,19 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   cfg = config.services.github;
+
+  projectDirectory = config.project.projectDirectory;
+
+  fileType =
+    (import ../lib/file-type.nix {
+      inherit projectDirectory lib pkgs;
+    })
+    .fileType;
+
 in {
   meta.maintainers = [lib.maintainers.sellout];
 
@@ -17,6 +27,18 @@ in {
       '';
       type = lib.types.attrs;
       default = {};
+    };
+
+    workflow = lib.mkOption {
+      description = lib.mdDoc ''
+        Attribute set of GitHub workflows.
+      '';
+      default = {};
+      type =
+        fileType
+          "services.github.workflow"
+          ""
+          (projectDirectory + "/.github/workflows");
     };
   };
 
@@ -52,6 +74,6 @@ in {
       ".github/settings.yml".text =
         lib.mkIf (cfg.settings != {})
         (lib.generators.toYAML {} cfg.settings);
-    };
+    } // cfg.workflow;
   });
 }
