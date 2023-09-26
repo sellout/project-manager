@@ -29,6 +29,7 @@
   # ./programs/zellij.nix
   # ./programs/zsh.nix
   project-environment = ./project-environment.nix;
+  flakehub = ./services/flakehub.nix;
   garnix = ./services/garnix.nix;
   github = ./services/github.nix;
   # ./services/git-sync.nix
@@ -36,4 +37,3 @@
 }
 # // optional useNixpkgsModule ./misc/nixpkgs.nix
 # // optional (!useNixpkgsModule) ./misc/nixpkgs-disabled.nix
-
