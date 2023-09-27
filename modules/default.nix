@@ -18,11 +18,10 @@
 
   extendedLib = import ./lib/stdlib-extended.nix lib;
 
-  pmModules =
-    import ./all-modules.nix {
-      inherit check modules pkgs;
-      lib = extendedLib;
-    };
+  pmModules = import ./all-modules.nix {
+    inherit check modules pkgs;
+    lib = extendedLib;
+  };
 
   rawModule = extendedLib.evalModules {
     modules = [configuration] ++ pmModules;

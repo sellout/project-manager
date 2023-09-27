@@ -94,10 +94,10 @@ in {
         An attribute set that maps aliases (the top level attribute names
         in this option) to command strings or directly to build outputs.
       '';
-        # This option should only be used to manage simple aliases that are
-        # compatible across all shells. If you need to use a shell specific
-        # feature then make sure to use a shell specific option, for example
-        # [](#opt-programs.bash.shellAliases) for Bash.
+      # This option should only be used to manage simple aliases that are
+      # compatible across all shells. If you need to use a shell specific
+      # feature then make sure to use a shell specific option, for example
+      # [](#opt-programs.bash.shellAliases) for Bash.
     };
 
     sessionVariables = mkOption {

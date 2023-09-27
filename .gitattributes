@@ -1,3 +1,4 @@
+/.editorconfig linguist-generated
 /.gitattributes linguist-generated
 /.github/settings.yml linguist-generated
 /.github/workflows/flakehub-publish.yml linguist-generated

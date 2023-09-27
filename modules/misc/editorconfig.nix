@@ -46,7 +46,11 @@ in {
 
   config = mkIf (cfg.enable && cfg.settings != {}) {
     project.file.".editorconfig" = {
-      minimum-persistence = "worktree";
+      ## TODO: This needs to be committed so that it affects the format `check`.
+      ##       However, it should really be linked into there from the store
+      ##       instead, and this should be “worktree” so that editors can find
+      ##       it.
+      minimum-persistence = "repository";
       text = let
         renderedSettings = generators.toINIWithGlobalSection {} {
           globalSection = {root = true;};

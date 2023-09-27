@@ -13,7 +13,6 @@
       inherit projectDirectory lib pkgs;
     })
     .fileType;
-
 in {
   meta.maintainers = [lib.maintainers.sellout];
 
@@ -36,9 +35,9 @@ in {
       default = {};
       type =
         fileType
-          "services.github.workflow"
-          ""
-          (projectDirectory + "/.github/workflows");
+        "services.github.workflow"
+        ""
+        (projectDirectory + "/.github/workflows");
     };
   };
 
@@ -67,13 +66,15 @@ in {
         generatedAndCommitted;
     };
 
-    project.file = {
-      ## This should always have at least one `linguist-generated` entry (for
-      ## .gitattributes itself), so we always commit.
-      ".gitattributes".commit-by-default = true;
-      ".github/settings.yml".text =
-        lib.mkIf (cfg.settings != {})
-        (lib.generators.toYAML {} cfg.settings);
-    } // cfg.workflow;
+    project.file =
+      {
+        ## This should always have at least one `linguist-generated` entry (for
+        ## .gitattributes itself), so we always commit.
+        ".gitattributes".commit-by-default = true;
+        ".github/settings.yml".text =
+          lib.mkIf (cfg.settings != {})
+          (lib.generators.toYAML {} cfg.settings);
+      }
+      // cfg.workflow;
   });
 }
