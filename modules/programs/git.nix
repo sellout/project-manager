@@ -269,7 +269,7 @@ in {
             declare -A persistence=( )
             while read -r var value; do
               persistence[$var]=$value
-            done < "$newGenFiles/pm-metadata"
+            done < "$newGenFiles/pm-metadata/persistence"
             cd $PROJECT_ROOT
             for sourcePath in "$@" ; do
               relativePath="''${sourcePath#$newGenFiles/}"

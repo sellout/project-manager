@@ -122,10 +122,14 @@ in {
           declare -A persistence=( )
           while read -r var value; do
             persistence[$var]=$value
-          done < "$newGenFiles/pm-metadata"
+          done < "$newGenFiles/pm-metadata/persistence"
+          declare -A broken_symlink=( )
+          while read -r var value; do
+            broken_symlink[$var]=$value
+          done < "$newGenFiles/pm-metadata/broken_symlink"
           for sourcePath in "$@" ; do
             relativePath="''${sourcePath#$newGenFiles/}"
-            [[ $relativePath == pm-metadata ]] && continue
+            [[ $relativePath =~ pm-metadata ]] && continue
             targetPath="$PROJECT_ROOT/$relativePath"
             if [[ -e "$targetPath" && ! -L "$targetPath" && -n "$PROJECT_MANAGER_BACKUP_EXT" ]] ; then
               # The target exists, back it up
@@ -291,6 +295,7 @@ in {
 
           # Needed in case /nix is a symbolic link.
           realOut="$(realpath -m "$out")"
+          mkdir -p "$realOut/pm-metadata"
 
           function insertFile() {
             local source="$1"
@@ -298,10 +303,12 @@ in {
             local executable="$3"
             local recursive="$4"
             local persistence="$5"
+            local broken_symlink="$6"
 
             ## TOOD: There should be a safer place for this (i.e., if there is a
             ##       real file called `pm-metadata`, we’ll mess it up).
-            echo "$relTarget $persistence" >> $realOut/pm-metadata
+            echo "$relTarget $persistence" >> $realOut/pm-metadata/persistence
+            echo "$relTarget $broken_symlink" >> $realOut/pm-metadata/broken_symlink
 
             # If the target already exists then we have a collision. Note, this
             # should not happen due to the assertion found in the 'files' module.
@@ -376,6 +383,7 @@ in {
                   then "repository"
                   else v.minimum-persistence
                 )
+                v.broken-symlink
               ]
             }
           '')
