@@ -1,11 +1,6 @@
-{...}: {
+{
   project.file.".shellcheckrc" = {
     minimum-persistence = "worktree";
-    text = ''
-      ## -*- mode: sh -*-
-
-      # Unicode quotes are good, and Shellcheck gets this wrong a lot.
-      disable=SC1111,SC1112
-    '';
+    source = ./shellcheckrc;
   };
 }

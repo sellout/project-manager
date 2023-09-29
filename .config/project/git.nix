@@ -1,4 +1,4 @@
-{...}: {
+{
   programs.git = {
     # default is determined by whether there is a .git file/dir (and whether
     # it’s a file (worktree) or dir determines other things – like where hooks

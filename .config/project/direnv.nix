@@ -1,4 +1,4 @@
-{...}: {
+{
   programs.direnv = {
     enable = true;
     auto-allow = true;
