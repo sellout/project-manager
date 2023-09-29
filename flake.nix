@@ -66,6 +66,24 @@
             };
             modules = builtins.attrValues inputs.self.projectModules;
           };
+
+        ## Takes the same arguments as `configuration`, but
+        ## defaults to loading configuration from ./.config/project and
+        ## ./.config/project/user.
+        defaultConfiguration = src: {modules ? [], ...}@args: let
+          config = src + /.config/project;
+          userConfig = config + /user;
+        in
+          inputs.self.lib.configuration
+            (args // {
+              modules =
+                modules
+                ++ [config]
+                ++ (
+                  if builtins.pathExists userConfig
+                  then [userConfig]
+                  else []);
+            });
       };
 
       overlays.default = final: prev: {
@@ -114,21 +132,8 @@
       # in
       #   tests.run;
 
-      projectConfigurations = let
-        config = ./.config/project;
-        userConfig = config + /user;
-      in
-        inputs.self.lib.configuration {
-          inherit pkgs;
-
-          modules =
-            [config]
-            ++ (
-              if builtins.pathExists userConfig
-              then [userConfig]
-              else []
-            );
-        };
+      projectConfigurations =
+        inputs.self.lib.defaultConfiguration ./. {inherit pkgs;};
 
       checks.format = format.check inputs.self;
 
