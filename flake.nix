@@ -51,7 +51,7 @@
         };
 
       lib = {
-        projectManagerConfiguration = {
+        configuration = {
           modules ? [],
           pkgs,
           lib ? pkgs.lib,
@@ -118,7 +118,7 @@
         config = ./.config/project;
         userConfig = config + /user;
       in
-        inputs.self.lib.projectManagerConfiguration {
+        inputs.self.lib.configuration {
           inherit pkgs;
 
           modules =
