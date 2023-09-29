@@ -115,13 +115,14 @@
       #   tests.run;
 
       projectConfigurations = let
-        userConfig = ./.config/user/project.nix;
+        config = ./.config/project;
+        userConfig = config + /user;
       in
         inputs.self.lib.projectManagerConfiguration {
           inherit pkgs;
 
           modules =
-            [./.config/project.nix]
+            [config]
             ++ (
               if builtins.pathExists userConfig
               then [userConfig]

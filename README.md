@@ -28,7 +28,7 @@ Since the dawn of Unix epoch, configuration languages have grown to become progr
 
 ### decluttered repositories
 
-Project Manager encourages you to put configuration in `$PROJECT_ROOT/.config` (akin to the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)). But you don’t have to – you can put them anywhere you like. The organization is up to you.
+Project Manager encourages you to put configuration in `$PROJECT_ROOT/.config/project/` (akin to the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)). But you don’t have to – you can put it anywhere you like. The organization is up to you.
 
 Other config files generally need to be in particular locations that the tools know to look in, and rarely do all of those places fit together in a coherent repo.
 
@@ -44,7 +44,7 @@ project-manager switch
 
 to regenerate all the files you need.
 
-For this to do anything, you need to add a `projectConfigurations.${system}` output to your flake. This project has one itself, and you can view the contents in [.config/project.nix](./.config/project.nix).
+For this to do anything, you need to add a `projectConfigurations.${system}` output to your flake. This project has one itself, and you can view the contents in [.config/project](./.config/project/default.nix).
 
 ### configuration attributes
 
