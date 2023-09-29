@@ -54,23 +54,21 @@ Once you define your `projectConfigurations`, there are a number of helpful attr
 
 Rarely used directly, this is the derivation behind `project-manager build` and `switch`. It’s what sets up your generated environment.
 
-#### ``devShell`
+#### `devShell`
 
 A shell derivation that provides everything configured in your project configuration.
 
 The following will set it up as the default shell. it can also be overridden to use as a basis of various shells.
 
 ```nix
-{
-  devShells.default = self.projectConfigurations.${system}.devShell;
-}
+devShells.default = self.projectConfigurations.${system}.devShell;
 ```
 
 ## Concepts
 
 ### persistence
 
-One of the ideas underlying the decluttering here is that of “persistence”._How_ do different files persist? There are four levels, from strongest to weakest:
+One of the ideas underlying the decluttering here is that of “persistence”. _How_ do different files persist? There are three levels, from strongest to weakest:
 
 #### repository
 
