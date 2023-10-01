@@ -14,7 +14,7 @@
         name = config.project.name;
         description = config.project.summary;
         # homepage = "https://example.github.io/";
-        topics = ["development" "nix-flakes"];
+        topics = ["development" "hacktoberfest" "nix-flakes"];
         private = false;
         has_issues = true;
         has_projects = false;
@@ -53,6 +53,11 @@
           description = "Good for newcomers";
         }
         {
+          name = "hacktoberfest-accepted";
+          color = "#ff7518"; # pumpkin
+          description = "Indicates acceptance for Hacktoberfest criteria, even if not merged yet";
+        }
+        {
           name = "help wanted";
           color = "#008672";
           description = "Extra attention is needed";
@@ -61,6 +66,11 @@
           name = "question";
           color = "#d876e3";
           description = "Further information is requested";
+        }
+        {
+          name = "spam";
+          color = "#ffc0cb"; #pink
+          description = "Topic created in bad faith. Services like Hacktoberfest use this to identify bad actors.";
         }
       ];
 
@@ -91,7 +101,7 @@
     };
 
     workflow."pages.yml".text = lib.generators.toYAML {} {
-      name = "Deploy  modules & generated docs to Pages";
+      name = "Deploy generated docs to Pages";
       on = {
         # Runs on pushes targeting the default branch
         push.branches = ["main"];
