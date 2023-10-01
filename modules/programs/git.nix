@@ -291,17 +291,7 @@ in {
           updateGitStatuses || exit 1
         '');
 
-        file = let
-          persistence = v:
-            if
-              (
-                if v.commit-by-default == null
-                then config.project.commit-by-default
-                else v.commit-by-default
-              )
-            then "repository"
-            else v.minimum-persistence;
-        in {
+        file = {
           ## FIXME: Before enabling this, we might need to figure out how to not
           ##        overwrite the one that’s there already.
           # ".git/config".text = gitToIni cfg.iniContent;
@@ -314,7 +304,7 @@ in {
             broken-symlink = true;
             text =
               concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target)
-                (filterAttrs (n: v: persistence v == "worktree") config.project.file)
+                (filterAttrs (n: v: v.persistence == "worktree") config.project.file)
                 ++ cfg.ignores)
               + "\n";
           };

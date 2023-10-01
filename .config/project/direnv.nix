@@ -3,6 +3,8 @@
     enable = true;
     auto-allow = true;
     commit-envrc = false;
-    envrc.text = "use flake";
+    envrc.text = ''
+      use flake
+    '';
   };
 }

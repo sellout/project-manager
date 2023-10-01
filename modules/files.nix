@@ -12,6 +12,7 @@ with lib; let
   fileType =
     (import lib/file-type.nix {
       inherit projectDirectory lib pkgs;
+      commit-by-default = config.project.commit-by-default;
     })
     .fileType;
 
@@ -33,24 +34,7 @@ in {
         Attribute set of files to link into the project root.
       '';
       default = {};
-      type =
-        fileType "project.file" "" projectDirectory
-        // {
-          # persistence = mkOption {
-          #   internal = true;
-          #   type = types.str;
-          #   default =
-          #     if config.project.file.${name}.commit-by-default
-          #     then "repository"
-          #     else config.project.file.${name}.minimum-persistence;
-          #   example = "store";
-          #   description = ''
-          #     The accumulation of the various options that affect persistence,
-          #     this is the final persistence level that will be used to represent
-          #     this file.
-          #   '';
-          # };
-        };
+      type = fileType "project.file" "" projectDirectory;
     };
 
     project-files = mkOption {
@@ -373,16 +357,7 @@ in {
                   else toString v.executable
                 )
                 (toString v.recursive)
-                (
-                  if
-                    (
-                      if v.commit-by-default == null
-                      then config.project.commit-by-default
-                      else v.commit-by-default
-                    )
-                  then "repository"
-                  else v.minimum-persistence
-                )
+                v.persistence
                 v.broken-symlink
               ]
             }

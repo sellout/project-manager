@@ -11,6 +11,7 @@
   fileType =
     (import ../lib/file-type.nix {
       inherit projectDirectory lib pkgs;
+      commit-by-default = config.project.commit-by-default;
     })
     .fileType;
 in {
@@ -42,17 +43,8 @@ in {
   };
 
   config = lib.mkIf cfg.enable (let
-    persistence = v:
-      if
-        (
-          if v.commit-by-default == null
-          then config.project.commit-by-default
-          else v.commit-by-default
-        )
-      then "repository"
-      else v.minimum-persistence;
     generatedAndCommitted =
-      lib.filterAttrs (n: v: persistence v == "repository") config.project.file;
+      lib.filterAttrs (n: v: v.persistence == "repository") config.project.file;
   in {
     programs.git = {
       ## TODO: This probably isn’t right – just because the user users git

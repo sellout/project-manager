@@ -12,6 +12,7 @@ with lib; let
   fileContents =
     (import ../lib/file-type.nix {
       inherit projectDirectory lib pkgs;
+      commit-by-default = config.project.commit-by-default;
     })
     .fileContents;
 in {
@@ -43,8 +44,8 @@ in {
       default = true;
       description = lib.mdDoc ''
         Whether .envrc should be committed to the repo or only available
-        locally. If this is false, then users will have to run `project-manager`
-        before direnv will work.
+        locally. If this is false, then users will have to run
+        `project-manager switch` before direnv will work.
       '';
     };
 

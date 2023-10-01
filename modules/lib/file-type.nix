@@ -1,4 +1,5 @@
 {
+  commit-by-default,
   projectDirectory,
   lib,
   pkgs,
@@ -147,6 +148,19 @@ in rec {
             the `lingist-generated` attribute can be processed by GitHub.
           '';
         };
+
+        persistence = mkOption {
+          internal = true;
+          type = types.str; # TODO: Make this stricter.
+          description = lib.mdDoc ''
+            How we store the file. The options are “store” (file will be
+            referenced by the worktree on demand), “worktree” (persist the file
+            in the worktree), and “repository” (commit the file in the
+            worktree). The second will also be added to the project’s .gitignore,
+            while the last will instead be added to .gitattributes with a
+            “linguist-generated” attribute.
+          '';
+        };
       };
 
       config = {
@@ -157,6 +171,16 @@ in rec {
             executable = config.executable == true; # can be null
             name = pm.strings.storeFileName name;
           })
+        );
+        persistence = lib.mkForce (
+          if
+            (
+              if config.commit-by-default == null
+              then commit-by-default
+              else config.commit-by-default
+            )
+          then "repository"
+          else config.minimum-persistence
         );
       };
     }
