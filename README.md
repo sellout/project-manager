@@ -54,6 +54,20 @@ Once you define your `projectConfigurations`, there are a number of helpful attr
 
 Rarely used directly, this is the derivation behind `project-manager build` and `switch`. It’s what sets up your generated environment.
 
+#### `checks`
+
+Project manager provides various checks based on your configuration. E.g.,
+- `checks.formatter` verifies that a Project Manager-configured formatter (see below) agrees with the current state of the code and
+- `checks.project-manager-files` verifies that the “repository”-persisted files are all up-to-date.
+
+You can pick and choose, or just include them all via something like
+
+```nix
+checks = self.projectConfigurations.${system}.checks self // {
+  ## more checks
+};
+```
+
 #### `devShell`
 
 A shell derivation that provides everything configured in your project configuration.
@@ -62,6 +76,14 @@ The following will set it up as the default shell. it can also be overridden to 
 
 ```nix
 devShells.default = self.projectConfigurations.${system}.devShell;
+```
+
+#### `formatter`
+
+You can choose to configure the formatter through Project Manager. (see [the treefmt module](./modules/programs/treefmt.nix) for an example. One benefit of doing it this way is that you get a check included.
+
+```nix
+formatter = self.projectConfigurations.${system}.formatter;
 ```
 
 ## Concepts

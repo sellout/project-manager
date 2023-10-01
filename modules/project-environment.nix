@@ -262,12 +262,39 @@ in {
       '';
     };
 
+    checkFunctions = mkOption {
+      type = types.attrsOf (types.functionTo types.package);
+      default = {};
+      description = lib.mdDoc ''
+        A function that accepts the current flake (`self`) and returns attrset
+        of checks to be applied for the current system.
+      '';
+    };
+
+    checks = mkOption {
+      internal = true;
+      type = types.functionTo types.attrs;
+      default = {};
+      description = lib.mdDoc ''
+        A function that accepts the current flake (`self`) and returns attrset
+        of checks to be applied for the current system.
+      '';
+    };
+
     devShell = mkOption {
       internal = true;
       type = types.package;
       description = lib.mdDoc ''
         Package providing a shell with all the tooling declared in the project
         config.
+      '';
+    };
+
+    formatter = mkOption {
+      type = types.package;
+      description = lib.mdDoc ''
+        Package to use as the flake’s formatter. This needs to be assigned to
+        the flake’s formatter output.
       '';
     };
 
@@ -479,6 +506,8 @@ in {
 
         ${cfg.extraBuilderCommands}
       '';
+
+    project.checks = self: lib.mapAttrs (k: v: v self) cfg.checkFunctions;
 
     project.devShell = pkgs.mkShell {
       inherit (pkgs) system;

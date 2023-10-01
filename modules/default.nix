@@ -46,7 +46,11 @@ in {
 
   activationPackage = module.config.project.activationPackage;
 
+  checks = module.config.project.checks;
+
   devShell = module.config.project.devShell;
+
+  formatter = module.config.project.formatter;
 
   newsDisplay = rawModule.config.news.display;
   newsEntries = lib.sort (a: b: a.time > b.time) (

@@ -18,6 +18,7 @@
     ./git.nix
     ./mustache.nix
     ./shellcheck.nix
+    ./treefmt.nix
     ## services
     ./flakehub.nix
     ./garnix.nix

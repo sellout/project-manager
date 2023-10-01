@@ -62,7 +62,13 @@
             inherit check extraSpecialArgs lib pkgs;
             configuration = {...}: {
               imports =
-                modules ++ [{programs.project-manager.path = toString ./.;}];
+                modules
+                ++ [
+                  {
+                    _module.args.treefmt-nix = inputs.treefmt-nix;
+                    programs.project-manager.path = toString ./.;
+                  }
+                ];
             };
             modules = builtins.attrValues inputs.self.projectModules;
           };
@@ -70,19 +76,21 @@
         ## Takes the same arguments as `configuration`, but
         ## defaults to loading configuration from ./.config/project and
         ## ./.config/project/user.
-        defaultConfiguration = src: {modules ? [], ...}@args: let
+        defaultConfiguration = src: {modules ? [], ...} @ args: let
           config = src + /.config/project;
           userConfig = config + /user;
         in
           inputs.self.lib.configuration
-            (args // {
+          (args
+            // {
               modules =
                 modules
                 ++ [config]
                 ++ (
                   if builtins.pathExists userConfig
                   then [userConfig]
-                  else []);
+                  else []
+                );
             });
       };
 
@@ -102,11 +110,6 @@
       pkgs = import inputs.nixpkgs {
         inherit system;
         overlays = [inputs.self.overlays.default];
-      };
-
-      format = inputs.flaky.lib.format pkgs {
-        ## TODO: This should be populated automatically
-        settings.global.excludes = ["garnix.yaml" "renovate.json"];
       };
     in {
       packages = let
@@ -135,9 +138,9 @@
       projectConfigurations =
         inputs.self.lib.defaultConfiguration ./. {inherit pkgs;};
 
-      checks.format = format.check inputs.self;
+      checks = inputs.self.projectConfigurations.${system}.checks inputs.self;
 
-      formatter = format.wrapper;
+      formatter = inputs.self.projectConfigurations.${system}.formatter;
     });
 
   inputs = {
@@ -149,10 +152,16 @@
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
+        treefmt-nix.follows = "treefmt-nix";
       };
       url = "github:sellout/flaky";
     };
 
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
+
+    treefmt-nix = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:numtide/treefmt-nix";
+    };
   };
 }
