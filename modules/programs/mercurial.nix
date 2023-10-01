@@ -68,7 +68,7 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     {
-      # home.packages = [cfg.package];
+      project.packages = [cfg.package];
 
       project.file.".hg/hgrc" = {
         persistence = "store";
