@@ -123,8 +123,7 @@
         docs-html = docs.manual.html;
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
-        project-manager =
-          pkgs.callPackage ./project-manager {path = toString ./.;};
+        project-manager = pkgs.callPackage ./project-manager {};
       };
 
       devShells.default = inputs.self.projectConfigurations.${system}.devShell;

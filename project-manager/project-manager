@@ -106,19 +106,6 @@ function setConfigFile() {
     fi
 }
 
-function setProjectManagerNixPath() {
-    local path="@PROJECT_MANAGER_PATH@"
-
-    if [[ -n "$path" ]] ; then
-        if [[ -e "$path" || "$path" =~ ^https?:// ]] ; then
-            EXTRA_NIX_PATH+=("project-manager=$path")
-            return
-        else
-            _iWarn 'Project Manager not found at %s.' "$path"
-        fi
-    fi
-}
-
 # Sets some useful Project Manager related paths as global read-only variables.
 function setProjectManagerPathVariables() {
     declare -r globalNixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
@@ -953,8 +940,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-setProjectManagerNixPath
 
 if [[ -z $COMMAND ]]; then
     doHelp >&2

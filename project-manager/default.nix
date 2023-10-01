@@ -13,14 +13,7 @@
   unixtools,
   # used for pkgs.path for nixos-option
   pkgs,
-  # Path to use as the Project Manager channel.
-  path ? null,
 }: let
-  pathStr =
-    if path == null
-    then ""
-    else path;
-
   nixos-option =
     pkgs.nixos-option
     or (callPackage
@@ -31,7 +24,7 @@ in
     nativeBuildInputs = [gettext];
     meta = with lib; {
       mainProgram = "project-manager";
-      description = "A user environment configurator";
+      description = "A project environment configurator";
       maintainers = [maintainers.sellout];
       platforms = platforms.unix;
       license = licenses.mit;
@@ -55,7 +48,6 @@ in
       ]
     }" \
       --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.sh}' \
-      --subst-var-by PROJECT_MANAGER_PATH '${pathStr}' \
       --subst-var-by OUT "$out"
 
     install -D -m755 ${./completion.bash} \
