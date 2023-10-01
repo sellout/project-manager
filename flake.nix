@@ -148,15 +148,6 @@
 
     flake-utils.url = "github:numtide/flake-utils";
 
-    flaky = {
-      inputs = {
-        flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs";
-        treefmt-nix.follows = "treefmt-nix";
-      };
-      url = "github:sellout/flaky";
-    };
-
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
 
     treefmt-nix = {
