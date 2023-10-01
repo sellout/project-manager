@@ -298,6 +298,40 @@ in {
       '';
     };
 
+    filterRepositoryPersistedExcept = mkOption {
+      internal = true;
+      type = types.functionTo (types.functionTo (types.functionTo types.bool));
+      description = lib.mdDoc ''
+        Remove repository-persisted files from some `src`, except for those
+        listed in `exceptions`.
+      '';
+    };
+
+    filterRepositoryPersisted = mkOption {
+      internal = true;
+      type = types.functionTo (types.functionTo types.bool);
+      description = lib.mdDoc ''
+        Remove all repository-persisted files from some `src`.
+      '';
+    };
+
+    cleanRepositoryPersistedExcept = mkOption {
+      internal = true;
+      type = types.functionTo (types.functionTo types.attrs);
+      description = lib.mdDoc ''
+        Remove repository-persisted files from some `src`, except for those
+        listed in `exceptions`.
+      '';
+    };
+
+    cleanRepositoryPersisted = mkOption {
+      internal = true;
+      type = types.functionTo types.attrs;
+      description = lib.mdDoc ''
+        Remove all repository-persisted files from some `src`.
+      '';
+    };
+
     extraActivationPath = mkOption {
       internal = true;
       type = types.listOf types.package;
@@ -507,16 +541,29 @@ in {
         ${cfg.extraBuilderCommands}
       '';
 
-    project.checks = self: lib.mapAttrs (k: v: v self) cfg.checkFunctions;
+    project = {
+      checks = self: lib.mapAttrs (k: v: v self) cfg.checkFunctions;
 
-    project.devShell = pkgs.mkShell {
-      inherit (pkgs) system;
-      nativeBuildInputs =
-        cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
-      shellHook = cfg.extraProfileCommands;
-      meta = {
-        description = "A shell provided by Project Manager.";
+      devShell = pkgs.mkShell {
+        inherit (pkgs) system;
+        nativeBuildInputs =
+          cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
+        shellHook = cfg.extraProfileCommands;
+        meta = {
+          description = "A shell provided by Project Manager.";
+        };
       };
+
+      filterRepositoryPersistedExcept = exceptions: _type: name:
+        !(lib.elem name (lib.mapAttrsToList (_k: v: v.target) cfg.file))
+        || lib.elem name exceptions;
+      filterRepositoryPersisted = cfg.filterRepositoryPersistedExcept [];
+      cleanRepositoryPersistedExcept = exceptions: src:
+        lib.cleanSourceWith {
+          inherit src;
+          filter = cfg.filterRepositoryPersistedExcept exceptions;
+        };
+      cleanRepositoryPersisted = cfg.cleanRepositoryPersistedExcept [];
     };
   };
 }
