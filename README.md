@@ -57,6 +57,7 @@ Rarely used directly, this is the derivation behind `project-manager build` and 
 #### `checks`
 
 Project manager provides various checks based on your configuration. E.g.,
+
 - `checks.formatter` verifies that a Project Manager-configured formatter (see below) agrees with the current state of the code and
 - `checks.project-manager-files` verifies that the “repository”-persisted files are all up-to-date.
 
