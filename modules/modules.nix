@@ -35,6 +35,7 @@
   github = ./services/github.nix;
   # ./services/git-sync.nix
   # ./services/lorri.nix
+  renovate = ./services/renovate.nix;
 }
 # // optional useNixpkgsModule ./misc/nixpkgs.nix
 # // optional (!useNixpkgsModule) ./misc/nixpkgs-disabled.nix

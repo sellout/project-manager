@@ -23,9 +23,10 @@
     ./flakehub.nix
     ./garnix.nix
     ./github.nix
-    ./renovate.nix
     ## editors
     ./editorconfig.nix
     ./emacs.nix
   ];
+
+  services.renovate.enable = true;
 }
