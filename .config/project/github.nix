@@ -14,7 +14,8 @@
         name = config.project.name;
         description = config.project.summary;
         homepage = "https://sellout.github.io/${config.project.name}";
-        topics = ["development" "hacktoberfest" "nix-flakes"];
+        topics =
+          lib.concatStringsSep ", " ["development" "hacktoberfest" "nix-flakes"];
         private = false;
         has_issues = true;
         has_projects = false;
