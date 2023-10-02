@@ -22,10 +22,6 @@
    </arg>
 
    <arg choice="plain">
-    instantiate
-   </arg>
-
-   <arg choice="plain">
     edit
    </arg>
 
@@ -43,10 +39,6 @@
 
    <arg choice="plain">
     news
-   </arg>
-
-   <arg choice="plain">
-    option <replaceable>option.name</replaceable>
    </arg>
 
    <arg choice="plain">
@@ -253,16 +245,6 @@
     </varlistentry>
     <varlistentry>
      <term>
-      <option>instantiate</option>
-     </term>
-     <listitem>
-      <para>
-       Instantiate the configuration and print the resulting derivation.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>
       <option>edit</option>
      </term>
      <listitem>
@@ -314,18 +296,6 @@
      <listitem>
       <para>
        Show news entries in a pager.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>
-      <option>option <replaceable>option.name</replaceable></option>
-     </term>
-     <listitem>
-      <para>
-       Inspect the given option name in the project configuration, like <citerefentry>
-       <refentrytitle>nixos-option</refentrytitle>
-       <manvolnum>8</manvolnum> </citerefentry>.
       </para>
      </listitem>
     </varlistentry>

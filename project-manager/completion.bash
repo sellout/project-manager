@@ -276,7 +276,7 @@ _project-manager_xdg-get-cache-home () {
 
 ##################################################
 
-_hm_subcommands=( "help" "edit" "option" "build" "init" "instantiate" "switch" "generations" "remove-generations" "expire-generations" "packages" "news" "uninstall" )
+_hm_subcommands=( "help" "edit" "build" "init" "switch" "generations" "remove-generations" "expire-generations" "packages" "news" "uninstall" )
 declare -ra _hm_subcommands
 
 # Finds the active sub-command, if any.

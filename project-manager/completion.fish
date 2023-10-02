@@ -25,9 +25,7 @@ end
 ### SubCommands
 complete -c project-manager -n "__fish_use_subcommand" -f -a "help" -d "Print project-manager help"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "edit" -d "Open the project configuration in $EDITOR"
-complete -c project-manager -n "__fish_use_subcommand" -f -a "option" -d "Inspect configuration option"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "build" -d "Build configuration into result directory"
-complete -c project-manager -n "__fish_use_subcommand" -f -a "instantiate" -d "Instantiate the configuration and print the resulting derivation"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "switch" -d "Build and activate configuration"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "generations" -d "List all project environment generations"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "packages" -d "List all packages installed in project-manager-path"
