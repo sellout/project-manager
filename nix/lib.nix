@@ -1,4 +1,8 @@
-{self, treefmt-nix}: {
+{
+  bash-strict-mode,
+  self,
+  treefmt-nix,
+}: {
   configuration = {
     modules ? [],
     pkgs,
@@ -13,6 +17,7 @@
           modules
           ++ [
             {
+              _module.args.bash-strict-mode = bash-strict-mode;
               _module.args.treefmt-nix = treefmt-nix;
               programs.project-manager.path = toString ../.;
             }

@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/bin/env strict-bash
+# shellcheck shell=bash
 
 #
 # This file contains a number of utilities for use by the project-manager tool and

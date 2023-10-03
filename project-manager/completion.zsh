@@ -5,7 +5,6 @@ local state ret=1
 _arguments \
   '-A[attribute]:ATTRIBUTE:()' \
   '-I[search path]:PATH:_files -/' \
-  '-b[backup files]:EXT:()' \
   '--cores[cores]:NUM:()' \
   '--debug[debug]' \
   '--impure[impure]' \

@@ -1,4 +1,5 @@
 {
+  bash-strict-mode,
   config,
   lib,
   pkgs,
@@ -518,33 +519,33 @@ in {
         ${activationCmds}
       '';
     in
-      pkgs.runCommand
-      "project-manager-generation-for-${config.project.name}"
-      {
-        preferLocalBuild = true;
-      }
-      ''
-        mkdir -p $out
+      bash-strict-mode.lib.checkedDrv pkgs (pkgs.runCommand
+        "project-manager-generation-for-${config.project.name}"
+        {
+          preferLocalBuild = true;
+        }
+        ''
+          mkdir -p $out
 
-        echo "${config.project.version.full}" > $out/pm-version
+          echo "${config.project.version.full}" > $out/pm-version
 
-        cp ${activationScript} $out/activate
+          cp ${activationScript} $out/activate
 
-        mkdir $out/bin
-        ln -s $out/activate $out/bin/project-manager-generation
+          mkdir $out/bin
+          ln -s $out/activate $out/bin/project-manager-generation
 
-        substituteInPlace $out/activate \
-          --subst-var-by GENERATION_DIR $out
+          substituteInPlace $out/activate \
+            --subst-var-by GENERATION_DIR $out
 
-        ln -s ${config.project-files} $out/project-files
+          ln -s ${config.project-files} $out/project-files
 
-        ${cfg.extraBuilderCommands}
-      '';
+          ${cfg.extraBuilderCommands}
+        '');
 
     project = {
       checks = self: lib.mapAttrs (k: v: v self) cfg.checkFunctions;
 
-      devShell = pkgs.mkShell {
+      devShell = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
         inherit (pkgs) system;
         nativeBuildInputs =
           cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
@@ -552,7 +553,7 @@ in {
         meta = {
           description = "A shell provided by Project Manager.";
         };
-      };
+      });
 
       filterRepositoryPersistedExcept = exceptions: _type: name:
         !(lib.elem name (lib.mapAttrsToList (_k: v: v.target) cfg.file))

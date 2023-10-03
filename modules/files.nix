@@ -101,6 +101,27 @@ in {
     project.activation.linkGeneration = pm.dag.entryAfter ["writeBoundary"] (
       let
         link = pkgs.writeShellScript "link" ''
+          ## TODO: Extract this to be used by other scripts.
+          function create_reference() {
+            sourcePath="$1"
+            relativePath="$2"
+            targetPath="$PROJECT_ROOT/$relativePath"
+            if [[ -e "$targetPath" && ! -L "$targetPath" ]] && cmp -s "$sourcePath" "$targetPath" ; then
+              # The target exists but is identical – don’t do anything.
+              $VERBOSE_ECHO "Skipping '$relativePath' as it is identical to '$sourcePath'"
+            else
+              mkdir -p $(dirname "$relativePath")
+              ## Try a symlink (if allowed), then a hard link, then a copy
+              ([[ ''${persistence[$relativePath]} == worktree && ! ''${broken_symlink[$relativePath]} ]] \
+                  && $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath") \
+                || ([[ ''${persistence[$relativePath]} != store ]] \
+                      && ($DRY_RUN_CMD ln -Tf $VERBOSE_ARG "$sourcePath" "$targetPath" 2>/dev/null \
+                          || $DRY_RUN_CMD cp -T --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath" \
+                          || ($VERBOSE_ECHO "failed to create “$targetPath”" && exit 1))) \
+                || true
+            fi
+          }
+
           newGenFiles="$1"
           shift
           declare -A persistence=( )
@@ -112,28 +133,9 @@ in {
             broken_symlink[$var]=$value
           done < "$newGenFiles/pm-metadata/broken_symlink"
           for sourcePath in "$@" ; do
-            relativePath="''${sourcePath#$newGenFiles/}"
-            [[ $relativePath =~ pm-metadata ]] && continue
-            targetPath="$PROJECT_ROOT/$relativePath"
-            if [[ -e "$targetPath" && ! -L "$targetPath" && -n "$PROJECT_MANAGER_BACKUP_EXT" ]] ; then
-              # The target exists, back it up
-              backup="$targetPath.$PROJECT_MANAGER_BACKUP_EXT"
-              $DRY_RUN_CMD mv $VERBOSE_ARG "$targetPath" "$backup" || errorEcho "Moving '$targetPath' failed!"
-            fi
-
-            if [[ -e "$targetPath" && ! -L "$targetPath" ]] && cmp -s "$sourcePath" "$targetPath" ; then
-              # The target exists but is identical – don't do anything.
-              $VERBOSE_ECHO "Skipping '$targetPath' as it is identical to '$sourcePath'"
-            else
-              mkdir -p $(dirname "$relativePath")
-              ## Try a symlink (if allowed), then a hard link, then a copy
-              ([[ ''${persistence[$relativePath]} == worktree && ! ''${broken_symlink[$relativePath]} ]] \
-                  && $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath") \
-                || ([[ ''${persistence[$relativePath]} != store ]] \
-                      && ($DRY_RUN_CMD ln -Tf $VERBOSE_ARG "$sourcePath" "$targetPath" 2>/dev/null \
-                          || $DRY_RUN_CMD cp -T --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath" \
-                          || exit 1))
-            fi
+            targetPath="''${sourcePath#$newGenFiles/}"
+            [[ $targetPath =~ pm-metadata ]] && continue
+            create_reference "$sourcePath" "$targetPath"
           done
         '';
 
@@ -152,7 +154,7 @@ in {
               $VERBOSE_ECHO "Checking $targetPath: exists"
             else
               $VERBOSE_ECHO "Checking $targetPath: gone (deleting)"
-              $DRY_RUN_CMD rm $VERBOSE_ARG "$targetPath"
+              $DRY_RUN_CMD rm $VERBOSE_ARG "$targetPath" || true
 
               # Recursively delete empty parent directories.
               targetDir="$(dirname "$relativePath")"
@@ -295,11 +297,11 @@ in {
             echo "$relTarget $broken_symlink" >> $realOut/pm-metadata/broken_symlink
 
             # If the target already exists then we have a collision. Note, this
-            # should not happen due to the assertion found in the 'files' module.
+            # should not happen due to the assertion found in the “files” module.
             # We therefore simply log the conflict and otherwise ignore it, mainly
             # to make the `files-target-config` test work as expected.
             if [[ -e "$realOut/$relTarget" ]]; then
-              echo "File conflict for file '$relTarget'" >&2
+              echo "File conflict for file “$relTarget”" >&2
               return
             fi
 
@@ -309,7 +311,7 @@ in {
 
             # Target path must be within $PROJECT_ROOT.
             if [[ ! $target == $realOut* ]] ; then
-              echo "Error installing file '$relTarget' outside \$PROJECT_ROOT" >&2
+              echo "Error installing file “$relTarget” outside \$PROJECT_ROOT" >&2
               exit 1
             fi
 
@@ -334,7 +336,7 @@ in {
                 cp "$source" "$target"
 
                 if [[ $executable == inherit ]]; then
-                  # Don't change file mode if it should match the source.
+                  # Don’t change file mode if it should match the source.
                   :
                 elif [[ $executable ]]; then
                   chmod +x "$target"

@@ -20,7 +20,9 @@
       ## This output’s schema may be in flux. See NixOS/nix#8892.
       schemas = inputs.flake-schemas.schemas // import ./nix/schemas.nix;
 
-      lib = import ./nix/lib.nix {inherit (inputs) self treefmt-nix;};
+      lib = import ./nix/lib.nix {
+        inherit (inputs) bash-strict-mode self treefmt-nix;
+      };
 
       overlays.default = final: prev: {
         project-manager = inputs.self.packages.${final.system}.project-manager;
@@ -71,6 +73,14 @@
     });
 
   inputs = {
+    bash-strict-mode = {
+      inputs = {
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs";
+      };
+      url = "github:sellout/bash-strict-mode";
+    };
+
     flake-schemas.url = "github:DeterminateSystems/flake-schemas/support-nixos-modules";
 
     flake-utils.url = "github:numtide/flake-utils";

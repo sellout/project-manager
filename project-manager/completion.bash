@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env strict-bash
 
 ##################################################
 
@@ -99,7 +99,6 @@
 
 # « project-manager » Options:
 #
-#   -b EXT
 #   -f FILE
 #   --file FILE
 #   -A ATTRIBUTE
@@ -122,7 +121,6 @@
 #   -A ATTRIBUTE Optional attribute that selects a configuration
 #                expression in the configuration file.
 #   -I PATH      Add a path to the Nix expression search path.
-#   -b EXT       Move existing files to new path rather than fail.
 #   -v           Verbose output
 #   -n           Do a dry run, only prints what actions would be taken
 #   -h           Print this help
@@ -297,7 +295,7 @@ _project-manager_subcommand() {
 _project-manager_completions ()
 {
     local Options
-    Options=( "-f" "--file" "-b" "-A" "-I" "-h" "--help" "-n" "--dry-run" "-v" \
+    Options=( "-f" "--file" "-A" "-I" "-h" "--help" "-n" "--dry-run" "-v" \
               "--verbose" "--cores" "--debug" "--impure" "--keep-failed" \
               "--keep-going" "-j" "--max-jobs" "--no-substitute" "--no-out-link" \
               "-L" "--print-build-logs" \

@@ -272,6 +272,7 @@ in {
             done < "$newGenFiles/pm-metadata/persistence"
             cd $PROJECT_ROOT
             for sourcePath in "$@" ; do
+              [[ $sourcePath =~ pm-metadata ]] && continue
               relativePath="''${sourcePath#$newGenFiles/}"
               if [[ ''${persistence[$relativePath]} == repository ]]; then
                 ${pkgs.git}/bin/git add --intent-to-add "$relativePath"
