@@ -14,8 +14,7 @@
         name = config.project.name;
         description = config.project.summary;
         homepage = "https://sellout.github.io/${config.project.name}";
-        topics =
-          lib.concatStringsSep ", " ["development" "hacktoberfest" "nix-flakes"];
+        topics = ["development" "hacktoberfest" "nix-flakes"];
         private = false;
         has_issues = true;
         has_projects = false;
@@ -75,9 +74,8 @@
         }
       ];
 
-      branches = [
-        {
-          name = "main";
+      branches = {
+        main = {
           # https://docs.github.com/en/rest/branches/branch-protection?apiVersion=2022-11-28#update-branch-protection
           protection = {
             required_pull_request_reviews = null;
@@ -97,8 +95,8 @@
             allow_force_pushes = false;
             restrictions.apps = [];
           };
-        }
-      ];
+        };
+      };
     };
 
     workflow."pages.yml".text = lib.generators.toYAML {} {

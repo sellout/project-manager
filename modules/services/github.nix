@@ -25,8 +25,8 @@ in {
         Declarative GitHub settings, as provided by [Probot’s Settings
         app](https://probot.github.io/apps/settings/).
       '';
-      type = lib.types.attrs;
-      default = {};
+      type = lib.types.nullOr lib.types.attrs;
+      default = null;
     };
 
     workflow = lib.mkOption {
@@ -43,6 +43,35 @@ in {
   };
 
   config = lib.mkIf cfg.enable (let
+    ## Have users provide a list of topics, then convert it into the comma-
+    ## separated string expected by settings.yml.
+    concatTopics = settings:
+      if settings ? repository && settings.repository ? topics
+      then
+        settings
+        // {
+          repository =
+            settings.repository
+            // {topics = lib.concatStringsSep ", " settings.repository.topics;};
+        }
+      else settings;
+
+    ## settings.yaml expects a list of branches, but that doesn’t have the most
+    ## useful merge semantics. So we have an attrSet of branches, with the key
+    ## being used as the name, if the name isn’t otherwise set.
+    restructureBranches = settings:
+      if settings ? branches
+      then
+        settings
+        // {
+          branches = lib.mapAttrsToList (k: v:
+            if v ? name
+            then v
+            else v // {name = k;})
+          settings.branches;
+        }
+      else settings;
+
     generatedAndCommitted =
       lib.filterAttrs (n: v: v.persistence == "repository") config.project.file;
   in {
@@ -64,8 +93,9 @@ in {
         ## .gitattributes itself), so we always commit.
         ".gitattributes".commit-by-default = true;
         ".github/settings.yml".text =
-          lib.mkIf (cfg.settings != {})
-          (lib.generators.toYAML {} cfg.settings);
+          lib.mkIf (cfg.settings != null)
+          (lib.generators.toYAML {}
+            (restructureBranches (concatTopics cfg.settings)));
       }
       // cfg.workflow;
   });
