@@ -18,81 +18,9 @@
   in
     {
       ## This output’s schema may be in flux. See NixOS/nix#8892.
-      schemas = let
-        mkChildren = children: {inherit children;};
-      in
-        inputs.flake-schemas.schemas
-        // {
-          projectConfigurations = {
-            version = 1;
-            doc = ''
-              The `projectConfigurations` flake output defines project configurations.
-            '';
-            inventory = output:
-              mkChildren (builtins.mapAttrs (system: project: {
-                  what = "Project Manager configuration for this flake’s project";
-                  derivation = project.config.activationPackage;
-                })
-                output);
-          };
+      schemas = inputs.flake-schemas.schemas // import ./nix/schemas.nix;
 
-          projectModules = {
-            version = 1;
-            doc = ''
-              Defines “project modules” analogous to `nixosModules` or
-              `homeModules`, but scoped to a single project (often some VCS repo).
-            '';
-            inventory = output:
-              mkChildren (builtins.mapAttrs (moduleName: module: {
-                  what = "Project Manager module";
-                })
-                output);
-          };
-        };
-
-      lib = {
-        configuration = {
-          modules ? [],
-          pkgs,
-          lib ? pkgs.lib,
-          extraSpecialArgs ? {},
-          check ? true,
-        }:
-          import ./modules {
-            inherit check extraSpecialArgs lib pkgs;
-            configuration = {...}: {
-              imports =
-                modules
-                ++ [
-                  {
-                    _module.args.treefmt-nix = inputs.treefmt-nix;
-                    programs.project-manager.path = toString ./.;
-                  }
-                ];
-            };
-            modules = builtins.attrValues inputs.self.projectModules;
-          };
-
-        ## Takes the same arguments as `configuration`, but
-        ## defaults to loading configuration from ./.config/project and
-        ## ./.config/project/user.
-        defaultConfiguration = src: {modules ? [], ...} @ args: let
-          config = src + /.config/project;
-          userConfig = config + /user;
-        in
-          inputs.self.lib.configuration
-          (args
-            // {
-              modules =
-                modules
-                ++ [config]
-                ++ (
-                  if builtins.pathExists userConfig
-                  then [userConfig]
-                  else []
-                );
-            });
-      };
+      lib = import ./nix/lib.nix {inherit (inputs) self treefmt-nix;};
 
       overlays.default = final: prev: {
         project-manager = inputs.self.packages.${final.system}.project-manager;
