@@ -46,7 +46,6 @@
 
 # $ project-manager <TAB>
 #
-# -A
 # -I
 # -f
 # --file
@@ -101,7 +100,6 @@
 #
 #   -f FILE
 #   --file FILE
-#   -A ATTRIBUTE
 #   -I PATH
 #   -v
 #   --verbose
@@ -118,8 +116,6 @@
 #
 #   -f FILE      The project configuration file.
 #                Default is '~/.config/nixpkgs/project.nix'.
-#   -A ATTRIBUTE Optional attribute that selects a configuration
-#                expression in the configuration file.
 #   -I PATH      Add a path to the Nix expression search path.
 #   -v           Verbose output
 #   -n           Do a dry run, only prints what actions would be taken
@@ -295,7 +291,7 @@ _project-manager_subcommand() {
 _project-manager_completions ()
 {
     local Options
-    Options=( "-f" "--file" "-A" "-I" "-h" "--help" "-n" "--dry-run" "-v" \
+    Options=( "-f" "--file" "-I" "-h" "--help" "-n" "--dry-run" "-v" \
               "--verbose" "--cores" "--debug" "--impure" "--keep-failed" \
               "--keep-going" "-j" "--max-jobs" "--no-substitute" "--no-out-link" \
               "-L" "--print-build-logs" \
@@ -359,11 +355,6 @@ _project-manager_completions ()
                     COMPREPLY+=( $( compgen -A directory -- "$CurrentWord") )
                     ;;
 
-                "-A")
-
-                    # shellcheck disable=SC2119
-                    COMPREPLY+=( $( compgen -W "$(_project-manager_list-nix-attributes)" -- "$CurrentWord") )
-                    ;;
                 *)
 
                     if [[ ! $CurrentCommand ]]; then

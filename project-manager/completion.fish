@@ -39,10 +39,8 @@ complete -c project-manager -n "__fish_use_subcommand" -x -a "expire-generations
 
 ### Options
 complete -c project-manager -F -s f -l "file" -d "The project configuration file"
-complete -c project-manager -x -s A -d "Select an expression in the configuration file"
 complete -c project-manager -F -s I -d "Add a path to the Nix expression search path"
 complete -c project-manager -F -l "flake" -d "Use Project Manager configuration at specified flake-uri"
-complete -c project-manager -F -s b -d "Move existing files to new path rather than fail"
 complete -c project-manager -f -s v -l "verbose" -d "Verbose output"
 complete -c project-manager -f -s n -l "dry-run" -d "Do a dry run, only prints what actions would be taken"
 complete -c project-manager -f -s h -l "help" -d "Print this help"

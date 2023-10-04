@@ -16,5 +16,11 @@
         indent_size = null;
       };
     };
+    settings.formatter = let
+      includes = ["project-manager/project-manager"];
+    in {
+      shellcheck = {inherit includes;};
+      shfmt = {inherit includes;};
+    };
   };
 }

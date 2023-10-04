@@ -1,10 +1,12 @@
 #!/usr/bin/env strict-bash
+# shellcheck shell=bash
 
 # Prepare to use tools from Nixpkgs.
 PATH=@DEP_PATH@${PATH:+:}$PATH
 
 ## TODO: This should search more broadly.
-export PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+export PROJECT_ROOT
 
 export TEXTDOMAIN=project-manager
 export TEXTDOMAINDIR=@OUT@/share/locale
@@ -13,61 +15,61 @@ export TEXTDOMAINDIR=@OUT@/share/locale
 source @PROJECT_MANAGER_LIB@
 
 function nixProfileList() {
-    # We attempt to use `--json` first (added in Nix 2.17). Otherwise attempt to
-    # parse the legacy output format.
-    {
-        nix profile list --json 2>/dev/null \
-            | jq -r --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
-    } || {
-        nix profile list \
-            | { grep "$1\$" || test $? = 1; } \
-            | cut -d ' ' -f 4
-    }
+  # We attempt to use `--json` first (added in Nix 2.17). Otherwise attempt to
+  # parse the legacy output format.
+  {
+    nix profile list --json 2> /dev/null \
+      | jq -r --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+  } || {
+    nix profile list \
+      | { grep "$1\$" || test $? = 1; } \
+      | cut -d ' ' -f 4
+  }
 }
 
 function removeByName() {
-    nixProfileList "$1" | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
+  nixProfileList "$1" | xargs -t "$DRY_RUN_CMD" nix profile remove "$VERBOSE_ARG"
 }
 
 function setNixProfileCommands() {
-    if [[ -e $HOME/.nix-profile/manifest.json ]] ; then
-        LIST_OUTPATH_CMD="nix profile list"
-        REMOVE_CMD="removeByName"
-    else
-        LIST_OUTPATH_CMD="nix-env -q --out-path"
-        REMOVE_CMD="nix-env --uninstall"
-    fi
+  if [[ -e $HOME/.nix-profile/manifest.json ]]; then
+    LIST_OUTPATH_CMD="nix profile list"
+    REMOVE_CMD="removeByName"
+  else
+    LIST_OUTPATH_CMD="nix-env -q --out-path"
+    REMOVE_CMD="nix-env --uninstall"
+  fi
 }
 
 function setVerboseAndDryRun() {
-    if [[ -v VERBOSE ]]; then
-        export VERBOSE_ARG="--verbose"
-    else
-        export VERBOSE_ARG=""
-    fi
+  if [[ -v VERBOSE ]]; then
+    export VERBOSE_ARG="--verbose"
+  else
+    export VERBOSE_ARG=""
+  fi
 
-    if [[ -v DRY_RUN ]] ; then
-        export DRY_RUN_CMD=echo
-    else
-        export DRY_RUN_CMD=""
-    fi
+  if [[ -v DRY_RUN ]]; then
+    export DRY_RUN_CMD=echo
+  else
+    export DRY_RUN_CMD=""
+  fi
 }
 
 function setWorkDir() {
-    if [[ ! -v WORK_DIR ]]; then
-        WORK_DIR="$(mktemp --tmpdir -d project-manager-build.XXXXXXXXXX)"
-        # shellcheck disable=2064
-        trap "rm -r '$WORK_DIR'" EXIT
-    fi
+  if [[ ! -v WORK_DIR ]]; then
+    WORK_DIR="$(mktemp --tmpdir -d project-manager-build.XXXXXXXXXX)"
+    # shellcheck disable=2064
+    trap "rm -r '$WORK_DIR'" EXIT
+  fi
 }
 
 # Checks whether the 'flakes' and 'nix-command' Nix options are enabled.
 function hasFlakeSupport() {
-    type -p nix > /dev/null \
-        && nix show-config 2> /dev/null \
-            | grep experimental-features \
-            | grep flakes \
-            | grep -q nix-command
+  type -p nix > /dev/null \
+    && nix show-config 2> /dev/null \
+    | grep experimental-features \
+      | grep flakes \
+      | grep -q nix-command
 }
 
 # Attempts to set the PROJECT_MANAGER_CONFIG global variable.
@@ -75,117 +77,118 @@ function hasFlakeSupport() {
 # If no configuration file can be found then this function will print
 # an error message and exit with an error code.
 function setConfigFile() {
-    if [[ -v PROJECT_MANAGER_CONFIG ]] ; then
-        if [[ -e "$PROJECT_MANAGER_CONFIG" ]] ; then
-            PROJECT_MANAGER_CONFIG="$(realpath "$PROJECT_MANAGER_CONFIG")"
-        else
-            _i 'No configuration file found at %s' \
-               "$PROJECT_MANAGER_CONFIG" >&2
-            exit 1
-        fi
-    elif [[ ! -v PROJECT_MANAGER_CONFIG ]]; then
-        local configHome="${PROJECT_ROOT}/.config"
-        local pmConfigHome="$configHome/project"
-        local defaultConfFile="$pmConfigHome/default.nix"
-        local configFile
-
-        if [[ -e "$defaultConfFile" ]]; then
-            configFile="$defaultConfFile"
-        fi
-
-        if [[ -v configFile ]]; then
-            PROJECT_MANAGER_CONFIG="$(realpath "$configFile")"
-        else
-            _i 'No configuration file found. Please create one at %s' \
-               "$defaultConfFile" >&2
-            exit 1
-        fi
+  if [[ -v PROJECT_MANAGER_CONFIG ]]; then
+    if [[ -e $PROJECT_MANAGER_CONFIG ]]; then
+      PROJECT_MANAGER_CONFIG="$(realpath "$PROJECT_MANAGER_CONFIG")"
+    else
+      _i 'No configuration file found at %s' \
+        "$PROJECT_MANAGER_CONFIG" >&2
+      exit 1
     fi
+  elif [[ ! -v PROJECT_MANAGER_CONFIG ]]; then
+    local configHome="${PROJECT_ROOT}/.config"
+    local pmConfigHome="$configHome/project"
+    local defaultConfFile="$pmConfigHome/default.nix"
+    local configFile
+
+    if [[ -e $defaultConfFile ]]; then
+      configFile="$defaultConfFile"
+    fi
+
+    if [[ -v configFile ]]; then
+      PROJECT_MANAGER_CONFIG="$(realpath "$configFile")"
+    else
+      _i 'No configuration file found. Please create one at %s' \
+        "$defaultConfFile" >&2
+      exit 1
+    fi
+  fi
 }
 
 function setFlakeAttribute() {
-    local flake="."
-    local name="$(nix eval --expr 'builtins.currentSystem' --impure --raw)"
-    export FLAKE_CONFIG_URI="$flake#projectConfigurations.$name"
+  local flake="."
+  local name
+  name="$(nix eval --expr 'builtins.currentSystem' --impure --raw)"
+  export FLAKE_CONFIG_URI="$flake#projectConfigurations.$name"
 }
 
 function doInit() {
-    # The directory where we should place the initial configuration.
-    local confDir
+  # The directory where we should place the initial configuration.
+  local confDir
 
-    # Whether we should immediate activate the configuration.
-    local switch
+  # Whether we should immediate activate the configuration.
+  local switch
 
-    # Whether we should create a flake file.
-    local withFlake
+  # Whether we should create a flake file.
+  local withFlake
 
-    if hasFlakeSupport; then
-        withFlake=1
-    fi
+  if hasFlakeSupport; then
+    withFlake=1
+  fi
 
-    while (( $# > 0 )); do
-        local opt="$1"
-        shift
+  while (($# > 0)); do
+    local opt="$1"
+    shift
 
-        case $opt in
-            --no-flake)
-                unset withFlake
-                ;;
-            --switch)
-                switch=1
-                ;;
-            -*)
-                _iError "%s: unknown option '%s'" "$0" "$opt" >&2
-                exit 1
-                ;;
-            *)
-                if [[ -v confDir ]]; then
-                    _i "Run '%s --help' for usage help" "$0" >&2
-                    exit 1
-                else
-                    confDir="$opt"
-                fi
-                ;;
-        esac
-    done
-
-    if [[ ! -v confDir ]]; then
-        confDir="${PROJECT_ROOT}/.config/project"
-    fi
-
-    if [[ ! -e $confDir ]]; then
-        mkdir -p "$confDir"
-    fi
-
-    if [[ ! -d $confDir ]]; then
+    case $opt in
+      --no-flake)
+        unset withFlake
+        ;;
+      --switch)
+        switch=1
+        ;;
+      -*)
         _iError "%s: unknown option '%s'" "$0" "$opt" >&2
         exit 1
+        ;;
+      *)
+        if [[ -v confDir ]]; then
+          _i "Run '%s --help' for usage help" "$0" >&2
+          exit 1
+        else
+          confDir="$opt"
+        fi
+        ;;
+    esac
+  done
+
+  if [[ ! -v confDir ]]; then
+    confDir="${PROJECT_ROOT}/.config/project"
+  fi
+
+  if [[ ! -e $confDir ]]; then
+    mkdir -p "$confDir"
+  fi
+
+  if [[ ! -d $confDir ]]; then
+    _iError "%s: unknown option '%s'" "$0" "$opt" >&2
+    exit 1
+  fi
+
+  local confFile="$confDir/default.nix"
+  local flakeFile="${PROJECT_ROOT}/flake.nix"
+
+  if [[ -e $confFile ]]; then
+    _i 'The file %s already exists, leaving it unchanged...' "$confFile"
+  else
+    _i 'Creating %s...' "$confFile"
+    local nl=$'\n'
+    local xdgVars=""
+    if [[ -v XDG_CACHE_HOME && $XDG_CACHE_HOME != "$HOME/.cache" ]]; then
+      xdgVars="$xdgVars  xdg.cacheHome = \"$XDG_CACHE_HOME\";$nl"
+    fi
+    if [[ -v XDG_CONFIG_HOME && $XDG_CONFIG_HOME != "$HOME/.config" ]]; then
+      xdgVars="$xdgVars  xdg.configHome = \"$XDG_CONFIG_HOME\";$nl"
+    fi
+    if [[ -v XDG_DATA_HOME && $XDG_DATA_HOME != "$HOME/.local/share" ]]; then
+      xdgVars="$xdgVars  xdg.dataHome = \"$XDG_DATA_HOME\";$nl"
+    fi
+    if [[ -v XDG_STATE_HOME && $XDG_STATE_HOME != "$HOME/.local/state" ]]; then
+      xdgVars="$xdgVars  xdg.stateHome = \"$XDG_STATE_HOME\";$nl"
     fi
 
-    local confFile="$confDir/default.nix"
-    local flakeFile="${PROJECT_ROOT}/flake.nix"
-
-    if [[ -e $confFile ]]; then
-        _i 'The file %s already exists, leaving it unchanged...' "$confFile"
-    else
-        _i 'Creating %s...' "$confFile"
-        local nl=$'\n'
-        local xdgVars=""
-        if [[ -v XDG_CACHE_HOME && $XDG_CACHE_HOME != "$HOME/.cache" ]]; then
-            xdgVars="$xdgVars  xdg.cacheHome = \"$XDG_CACHE_HOME\";$nl"
-        fi
-        if [[ -v XDG_CONFIG_HOME && $XDG_CONFIG_HOME != "$HOME/.config" ]]; then
-            xdgVars="$xdgVars  xdg.configHome = \"$XDG_CONFIG_HOME\";$nl"
-        fi
-        if [[ -v XDG_DATA_HOME && $XDG_DATA_HOME != "$HOME/.local/share" ]]; then
-            xdgVars="$xdgVars  xdg.dataHome = \"$XDG_DATA_HOME\";$nl"
-        fi
-        if [[ -v XDG_STATE_HOME && $XDG_STATE_HOME != "$HOME/.local/state" ]]; then
-            xdgVars="$xdgVars  xdg.stateHome = \"$XDG_STATE_HOME\";$nl"
-        fi
-
-        mkdir -p "$confDir"
-        cat > "$confFile" <<EOF
+    mkdir -p "$confDir"
+    cat > "$confFile" << EOF
 { config, pkgs, ... }:
 
 {
@@ -253,23 +256,23 @@ $xdgVars
   programs.project-manager.enable = true;
 }
 EOF
-    fi
+  fi
 
-    if [[ ! -v withFlake ]]; then
-        PROJECT_MANAGER_CONFIG="$confFile"
+  if [[ ! -v withFlake ]]; then
+    PROJECT_MANAGER_CONFIG="$confFile"
+  else
+    if [[ -e $flakeFile ]]; then
+      _i 'The file %s already exists, leaving it unchanged...' "$flakeFile"
     else
-        if [[ -e $flakeFile ]]; then
-            _i 'The file %s already exists, leaving it unchanged...' "$flakeFile"
-        else
-            _i 'Creating %s...' "$flakeFile"
+      _i 'Creating %s...' "$flakeFile"
 
-            local nixSystem
-            nixSystem=$(nix eval --expr builtins.currentSystem --raw --impure)
+      local nixSystem
+      nixSystem=$(nix eval --expr builtins.currentSystem --raw --impure)
 
-            mkdir -p "$confDir"
-            cat > "$flakeFile" <<EOF
+      mkdir -p "$confDir"
+      cat > "$flakeFile" << EOF
 {
-  description = "Project Manager configuration for ${basename "$PWD"}";
+  description = "Project Manager configuration for $(basename "$PWD")";
 
   inputs = {
     # Specify the source of Project Manager and Nixpkgs.
@@ -298,210 +301,210 @@ EOF
     };
 }
 EOF
-        fi
     fi
+  fi
 
-    if [[ -v switch ]]; then
-        echo
-        _i "Creating initial Project Manager generation..."
-        echo
+  if [[ -v switch ]]; then
+    echo
+    _i "Creating initial Project Manager generation..."
+    echo
 
-        if doSwitch; then
-            # translators: The "%s" specifier will be replaced by a file path.
-            _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
-                "$confFile"
-            exit 0
-        else
-            # translators: The "%s" specifier will be replaced by a URL.
-            _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
-                "https://github.com/nix-community/project-manager/issues"
-            exit 1
-        fi
+    if doSwitch; then
+      # translators: The "%s" specifier will be replaced by a file path.
+      _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
+        "$confFile"
+      exit 0
+    else
+      # translators: The "%s" specifier will be replaced by a URL.
+      _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
+        "https://github.com/nix-community/project-manager/issues"
+      exit 1
     fi
+  fi
 }
 
 function doBuildFlake() {
-    local extraArgs=("$@")
+  local extraArgs=("$@")
 
-    if [[ -v VERBOSE ]]; then
-        extraArgs=("${extraArgs[@]}" "--verbose")
-    fi
+  if [[ -v VERBOSE ]]; then
+    extraArgs=("${extraArgs[@]}" "--verbose")
+  fi
 
-    nix build \
-        "${extraArgs[@]}" \
-        "${PASSTHROUGH_OPTS[@]}"
+  nix build \
+    "${extraArgs[@]}" \
+    "${PASSTHROUGH_OPTS[@]}"
 }
 
 # Presents news to the user as specified by the `news.display` option.
 function presentNews() {
-    local newsNixFile="$WORK_DIR/news.nix"
-    buildNews "$newsNixFile"
+  local newsNixFile="$WORK_DIR/news.nix"
+  buildNews "$newsNixFile"
 
-    local newsDisplay
-    newsDisplay="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.display" | xargs)"
+  local newsDisplay
+  newsDisplay="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.display" | xargs)"
 
-    local newsNumUnread
-    newsNumUnread="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.numUnread" | xargs)"
+  local newsNumUnread
+  newsNumUnread="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.numUnread" | xargs)"
 
-    # shellcheck disable=2154
-    if [[ $newsNumUnread -eq 0 ]]; then
-        return
-    elif [[ "$newsDisplay" == "silent" ]]; then
-        return
-    elif [[ "$newsDisplay" == "notify" ]]; then
-        local cmd msg
-        cmd="$(basename "$0")"
-        msg="$(_ip \
-                $'There is %d unread and relevant news item.\nRead it by running the command "%s news".' \
-                $'There are %d unread and relevant news items.\nRead them by running the command "%s news".' \
-                "$newsNumUnread" "$newsNumUnread" "$cmd")"
+  # shellcheck disable=2154
+  if [[ $newsNumUnread -eq 0 ]]; then
+    return
+  elif [[ $newsDisplay == "silent" ]]; then
+    return
+  elif [[ $newsDisplay == "notify" ]]; then
+    local cmd msg
+    cmd="$(basename "$0")"
+    msg="$(_ip \
+      $'There is %d unread and relevant news item.\nRead it by running the command "%s news".' \
+      $'There are %d unread and relevant news items.\nRead them by running the command "%s news".' \
+      "$newsNumUnread" "$newsNumUnread" "$cmd")"
 
-        # Not actually an error but here stdout is reserved for
-        # nix-build output.
-        echo $'\n'"$msg"$'\n' >&2
+    # Not actually an error but here stdout is reserved for
+    # nix-build output.
+    echo $'\n'"$msg"$'\n' >&2
 
-        if [[ -v DISPLAY ]] && type -P notify-send > /dev/null; then
-            notify-send "Project Manager" "$msg" > /dev/null 2>&1 || true
-        fi
-    elif [[ "$newsDisplay" == "show" ]]; then
-        doShowNews --unread
-    else
-        _i 'Unknown "news.display" setting "%s".' "$newsDisplay" >&2
+    if [[ -v DISPLAY ]] && type -P notify-send > /dev/null; then
+      notify-send "Project Manager" "$msg" > /dev/null 2>&1 || true
     fi
+  elif [[ $newsDisplay == "show" ]]; then
+    doShowNews --unread
+  else
+    _i 'Unknown "news.display" setting "%s".' "$newsDisplay" >&2
+  fi
 }
 
 function doEdit() {
-    if [[ ! -v EDITOR || -z $EDITOR ]]; then
-        # shellcheck disable=2016
-        _i 'Please set the $EDITOR environment variable' >&2
-        return 1
-    fi
+  if [[ ! -v EDITOR || -z $EDITOR ]]; then
+    # shellcheck disable=2016
+    _i 'Please set the $EDITOR environment variable' >&2
+    return 1
+  fi
 
-    setConfigFile
+  setConfigFile
 
-    # Don't quote $EDITOR in order to support values including options, e.g.,
-    # "code --wait".
-    #
-    # shellcheck disable=2086
-    exec $EDITOR "$PROJECT_MANAGER_CONFIG"
+  # Don't quote $EDITOR in order to support values including options, e.g.,
+  # "code --wait".
+  #
+  # shellcheck disable=2086
+  exec $EDITOR "$PROJECT_MANAGER_CONFIG"
 }
 
 function doBuild() {
-    if [[ ! -w . ]]; then
-        _i 'Cannot run build in read-only directory' >&2
-        return 1
-    fi
+  if [[ ! -w . ]]; then
+    _i 'Cannot run build in read-only directory' >&2
+    return 1
+  fi
 
-    setWorkDir
+  setWorkDir
 
-    setFlakeAttribute
-    doBuildFlake \
-        "$FLAKE_CONFIG_URI.activationPackage" \
-        ${DRY_RUN+--dry-run} \
-        ${NO_OUT_LINK+--no-link} \
-        ${PRINT_BUILD_LOGS+--print-build-logs} \
-        || return
+  setFlakeAttribute
+  doBuildFlake \
+    "$FLAKE_CONFIG_URI.activationPackage" \
+    ${DRY_RUN+--dry-run} \
+    ${NO_OUT_LINK+--no-link} \
+    ${PRINT_BUILD_LOGS+--print-build-logs} \
+    || return
 
-    # presentNews
+  # presentNews
 }
 
 function doSwitch() {
-    setWorkDir
+  setWorkDir
 
-    local generation
+  local generation
 
-    # Build the generation and run the activate script. Note, we
-    # specify an output link so that it is treated as a GC root. This
-    # prevents an unfortunately timed GC from removing the generation
-    # before activation completes.
-    generation="$WORK_DIR/generation"
+  # Build the generation and run the activate script. Note, we
+  # specify an output link so that it is treated as a GC root. This
+  # prevents an unfortunately timed GC from removing the generation
+  # before activation completes.
+  generation="$WORK_DIR/generation"
 
-    setFlakeAttribute
-    doBuildFlake \
-        "$FLAKE_CONFIG_URI.activationPackage" \
-        --out-link "$generation" \
-        ${PRINT_BUILD_LOGS+--print-build-logs} \
-        && "$generation/activate" || return
+  setFlakeAttribute
+  doBuildFlake \
+    "$FLAKE_CONFIG_URI.activationPackage" \
+    --out-link "$generation" \
+    ${PRINT_BUILD_LOGS+--print-build-logs} \
+    && "$generation/activate" || return
 
-    # presentNews
+  # presentNews
 }
 
 function doListGens() {
-    # Whether to colorize the generations output.
-    local color="never"
-    if [[ ! -v NO_COLOR && -t 1 ]]; then
-        color="always"
-    fi
+  # Whether to colorize the generations output.
+  local color="never"
+  if [[ ! -v NO_COLOR && -t 1 ]]; then
+    color="always"
+  fi
 
-    pushd "$PM_PROFILE_DIR" > /dev/null
-    # shellcheck disable=2012
-    ls --color=$color -gG --time-style=long-iso --sort time project-manager-*-link \
-        | cut -d' ' -f 4- \
-        | sed -E 's/project-manager-([[:digit:]]*)-link/: id \1/'
-    popd > /dev/null
+  pushd "$PM_PROFILE_DIR" > /dev/null || exit
+  # shellcheck disable=2012
+  ls --color=$color -gG --time-style=long-iso --sort time project-manager-*-link \
+    | cut -d' ' -f 4- \
+    | sed -E 's/project-manager-([[:digit:]]*)-link/: id \1/'
+  popd > /dev/null || exit
 }
 
 # Removes linked generations. Takes as arguments identifiers of
 # generations to remove.
 function doRmGenerations() {
-    setVerboseAndDryRun
+  setVerboseAndDryRun
 
-    pushd "$PM_PROFILE_DIR" > /dev/null
+  pushd "$PM_PROFILE_DIR" > /dev/null || exit
 
-    for generationId in "$@"; do
-        local linkName="project-manager-$generationId-link"
+  for generationId in "$@"; do
+    local linkName="project-manager-$generationId-link"
 
-        if [[ ! -e $linkName ]]; then
-            _i 'No generation with ID %s' "$generationId" >&2
-        elif [[ $linkName == $(readlink project-manager) ]]; then
-            _i 'Cannot remove the current generation %s' "$generationId" >&2
-        else
-            _i 'Removing generation %s' "$generationId"
-            $DRY_RUN_CMD rm $VERBOSE_ARG $linkName
-        fi
-    done
+    if [[ ! -e $linkName ]]; then
+      _i 'No generation with ID %s' "$generationId" >&2
+    elif [[ $linkName == $(readlink project-manager) ]]; then
+      _i 'Cannot remove the current generation %s' "$generationId" >&2
+    else
+      _i 'Removing generation %s' "$generationId"
+      $DRY_RUN_CMD rm $VERBOSE_ARG "$linkName"
+    fi
+  done
 
-    popd > /dev/null
+  popd > /dev/null || exit
 }
 
 function doExpireGenerations() {
-    local generations
-    generations="$( \
-        find "$PM_PROFILE_DIR" -name 'project-manager-*-link' -not -newermt "$1" \
-        | sed 's/^.*-\([0-9]*\)-link$/\1/' \
-    )"
+  local generations
+  generations="$(
+    find "$PM_PROFILE_DIR" -name 'project-manager-*-link' -not -newermt "$1" \
+      | sed 's/^.*-\([0-9]*\)-link$/\1/'
+  )"
 
-    if [[ -n $generations ]]; then
-        # shellcheck disable=2086
-        doRmGenerations $generations
-    elif [[ -v VERBOSE ]]; then
-        _i "No generations to expire"
-    fi
+  if [[ -n $generations ]]; then
+    # shellcheck disable=2086
+    doRmGenerations $generations
+  elif [[ -v VERBOSE ]]; then
+    _i "No generations to expire"
+  fi
 }
 
 function doListPackages() {
-    setNixProfileCommands
-    local outPath
-    outPath="$($LIST_OUTPATH_CMD | grep -o '/.*project-manager-path$')"
-    if [[ -n "$outPath" ]] ; then
-        nix-store -q --references "$outPath" | sed 's/[^-]*-//'
-    else
-        _i 'No project-manager packages seem to be installed.' >&2
-    fi
+  setNixProfileCommands
+  local outPath
+  outPath="$($LIST_OUTPATH_CMD | grep -o '/.*project-manager-path$')"
+  if [[ -n $outPath ]]; then
+    nix-store -q --references "$outPath" | sed 's/[^-]*-//'
+  else
+    _i 'No project-manager packages seem to be installed.' >&2
+  fi
 }
 
 function newsReadIdsFile() {
-    local dataDir="${XDG_DATA_HOME:-$HOME/.local/share}/project-manager"
-    local path="$dataDir/news-read-ids"
+  local dataDir="${XDG_DATA_HOME:-$HOME/.local/share}/project-manager"
+  local path="$dataDir/news-read-ids"
 
-    # If the path doesn't exist then we should create it, otherwise
-    # Nix will error out when we attempt to use builtins.readFile.
-    if [[ ! -f "$path" ]]; then
-        mkdir -p "$dataDir"
-        touch "$path"
-    fi
+  # If the path doesn't exist then we should create it, otherwise
+  # Nix will error out when we attempt to use builtins.readFile.
+  if [[ ! -f $path ]]; then
+    mkdir -p "$dataDir"
+    touch "$path"
+  fi
 
-    echo "$path"
+  echo "$path"
 }
 
 # Builds the Project Manager news data file.
@@ -510,336 +513,329 @@ function newsReadIdsFile() {
 # put the output in the work directory to avoid the risk of an
 # unfortunately timed GC removing it.
 function buildNews() {
-    local newsNixFile="$1"
-    local newsJsonFile="$WORK_DIR/news.json"
+  local newsNixFile="$1"
+  local newsJsonFile="$WORK_DIR/news.json"
 
-    # TODO: Use check=false to make it more likely that the build succeeds.
-    doBuildFlake \
-        "$FLAKE_CONFIG_URI.config.news.json.output" \
-        --quiet \
-        --out-link "$newsJsonFile" \
-        || return
+  # TODO: Use check=false to make it more likely that the build succeeds.
+  doBuildFlake \
+    "$FLAKE_CONFIG_URI.config.news.json.output" \
+    --quiet \
+    --out-link "$newsJsonFile" \
+    || return
 
-    local extraArgs=()
+  local extraArgs=()
 
-    for p in "${EXTRA_NIX_PATH[@]}"; do
-        extraArgs=("${extraArgs[@]}" "-I" "$p")
-    done
+  for p in "${EXTRA_NIX_PATH[@]}"; do
+    extraArgs=("${extraArgs[@]}" "-I" "$p")
+  done
 
-    local readIdsFile
-    readIdsFile=$(newsReadIdsFile)
+  local readIdsFile
+  readIdsFile=$(newsReadIdsFile)
 
-    # nix-instantiate \
-    #     --no-build-output --strict \
-    #     --eval '<project-manager/project-manager/build-news.nix>' \
-    #     --arg newsJsonFile "$newsJsonFile" \
-    #     --arg newsReadIdsFile "$readIdsFile" \
-    #     "${extraArgs[@]}" \
-    #     > "$newsNixFile"
+  # nix-instantiate \
+  #     --no-build-output --strict \
+  #     --eval '<project-manager/project-manager/build-news.nix>' \
+  #     --arg newsJsonFile "$newsJsonFile" \
+  #     --arg newsReadIdsFile "$readIdsFile" \
+  #     "${extraArgs[@]}" \
+  #     > "$newsNixFile"
 }
 
 function doShowNews() {
-    setWorkDir
-    setFlakeAttribute
+  setWorkDir
+  setFlakeAttribute
 
-    local newsNixFile="$WORK_DIR/news.nix"
-    buildNews "$newsNixFile"
+  local newsNixFile="$WORK_DIR/news.nix"
+  buildNews "$newsNixFile"
 
-    local readIdsFile
-    readIdsFile=$(newsReadIdsFile)
+  local readIdsFile
+  readIdsFile=$(newsReadIdsFile)
 
-    local news
+  local news
 
-    # shellcheck disable=2154,2046
-    case $1 in
-        --all)
-            news="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).news.all")"
-            ;;
-        --unread)
-            news="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).news.unread")"
-            ;;
-        *)
-            _i 'Unknown argument %s' "$1"
-            return 1
-    esac
+  # shellcheck disable=2154,2046
+  case $1 in
+    --all)
+      news="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).news.all")"
+      ;;
+    --unread)
+      news="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).news.unread")"
+      ;;
+    *)
+      _i 'Unknown argument %s' "$1"
+      return 1
+      ;;
+  esac
 
-    # Prints the news without surrounding quotes.
-    echo -e "${news:1:-1}" | ${PAGER:-less}
+  # Prints the news without surrounding quotes.
+  echo -e "${news:1:-1}" | ${PAGER:-less}
 
-    local allIds
-    allIds="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).meta.ids")"
-    allIds="${allIds:1:-1}"    # Trim surrounding quotes.
+  local allIds
+  allIds="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).meta.ids")"
+  allIds="${allIds:1:-1}" # Trim surrounding quotes.
 
-    local readIdsFileNew="$WORK_DIR/news-read-ids.new"
-    {
-      cat "$readIdsFile"
-      echo -e "$allIds"
-    } | sort | uniq > "$readIdsFileNew"
+  local readIdsFileNew="$WORK_DIR/news-read-ids.new"
+  {
+    cat "$readIdsFile"
+    echo -e "$allIds"
+  } | sort | uniq > "$readIdsFileNew"
 
-    mv -f "$readIdsFileNew" "$readIdsFile"
+  mv -f "$readIdsFileNew" "$readIdsFile"
 }
 
 function doUninstall() {
-    setVerboseAndDryRun
-    setNixProfileCommands
+  setVerboseAndDryRun
+  setNixProfileCommands
 
-    _i 'This will remove Project Manager from your system.'
+  _i 'This will remove Project Manager from your system.'
 
-    if [[ -v DRY_RUN ]]; then
-        _i 'This is a dry run, nothing will actually be uninstalled.'
-    fi
+  if [[ -v DRY_RUN ]]; then
+    _i 'This is a dry run, nothing will actually be uninstalled.'
+  fi
 
-    local confirmation
-    read -r -n 1 -p "$(_i 'Really uninstall Project Manager?') [y/n] " confirmation
-    echo
+  local confirmation
+  read -r -n 1 -p "$(_i 'Really uninstall Project Manager?') [y/n] " confirmation
+  echo
 
-    # shellcheck disable=2086
-    case $confirmation in
-        y|Y)
-            _i "Switching to empty Project Manager configuration..."
-            PROJECT_MANAGER_CONFIG="$(mktemp --tmpdir project-manager.XXXXXXXXXX)"
-            echo "{ lib, ... }: {"  > "$PROJECT_MANAGER_CONFIG"
-            echo "  project.file = lib.mkForce {};" >> "$PROJECT_MANAGER_CONFIG"
-            echo "  project.stateVersion = \"18.09\";" >> "$PROJECT_MANAGER_CONFIG"
-            echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
-            echo "}" >> "$PROJECT_MANAGER_CONFIG"
-            doSwitch
-            $DRY_RUN_CMD $REMOVE_CMD project-manager-path || true
-            rm "$PROJECT_MANAGER_CONFIG"
+  # shellcheck disable=2086
+  case $confirmation in
+    y | Y)
+      _i "Switching to empty Project Manager configuration..."
+      PROJECT_MANAGER_CONFIG="$(mktemp --tmpdir project-manager.XXXXXXXXXX)"
+      echo "{ lib, ... }: {" > "$PROJECT_MANAGER_CONFIG"
+      echo "  project.file = lib.mkForce {};" >> "$PROJECT_MANAGER_CONFIG"
+      echo '  project.stateVersion = "18.09";' >> "$PROJECT_MANAGER_CONFIG"
+      echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
+      echo "}" >> "$PROJECT_MANAGER_CONFIG"
+      doSwitch
+      $DRY_RUN_CMD $REMOVE_CMD project-manager-path || true
+      rm "$PROJECT_MANAGER_CONFIG"
 
-            if [[ -e $PM_DATA_HOME ]]; then
-                $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_DATA_HOME"
-            fi
+      if [[ -e $PM_DATA_HOME ]]; then
+        $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_DATA_HOME"
+      fi
 
-            if [[ -e $PM_STATE_DIR ]]; then
-                $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_STATE_DIR"
-            fi
+      if [[ -e $PM_STATE_DIR ]]; then
+        $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_STATE_DIR"
+      fi
 
-            if [[ -e $PM_PROFILE_DIR ]]; then
-                $DRY_RUN_CMD rm $VERBOSE_ARG "$PM_PROFILE_DIR/project-manager"*
-            fi
+      if [[ -e $PM_PROFILE_DIR ]]; then
+        $DRY_RUN_CMD rm $VERBOSE_ARG "$PM_PROFILE_DIR/project-manager"*
+      fi
 
-            if [[ -e $PM_GCROOT_LEGACY_PATH ]]; then
-                $DRY_RUN_CMD rm $VERBOSE_ARG "$PM_GCROOT_LEGACY_PATH"
-            fi
-            ;;
-        *)
-            _i "Yay!"
-            exit 0
-            ;;
-    esac
+      if [[ -e $PM_GCROOT_LEGACY_PATH ]]; then
+        $DRY_RUN_CMD rm $VERBOSE_ARG "$PM_GCROOT_LEGACY_PATH"
+      fi
+      ;;
+    *)
+      _i "Yay!"
+      exit 0
+      ;;
+  esac
 
-    _i "Project Manager is uninstalled but your project.nix is left untouched."
+  _i "Project Manager is uninstalled but your project.nix is left untouched."
 }
 
 function doHelp() {
-    echo "Usage: $0 [OPTION] COMMAND"
-    echo
-    echo "Options"
-    echo
-    echo "  -f FILE           The project configuration file."
-    echo "                    Default is '\$PROJECT_ROOT/.config/project/default.nix'."
-    echo "  -A ATTRIBUTE      Optional attribute that selects a configuration"
-    echo "                    expression in the configuration file."
-    echo "  -I PATH           Add a path to the Nix expression search path."
-    echo "  -v                Verbose output"
-    echo "  -n                Do a dry run, only prints what actions would be taken"
-    echo "  -h                Print this help"
-    echo "  --version         Print the Project Manager version"
-    echo
-    echo "Options passed on to nix-build(1)"
-    echo
-    echo "  --arg(str) NAME VALUE    Override inputs passed to project-manager.nix"
-    echo "  --cores NUM"
-    echo "  --debug"
-    echo "  --impure"
-    echo "  --keep-failed"
-    echo "  --keep-going"
-    echo "  -j, --max-jobs NUM"
-    echo "  --option NAME VALUE"
-    echo "  -L, --print-build-logs"
-    echo "  --show-trace"
-    echo "  --(no-)substitute"
-    echo "  --no-out-link            Do not create a symlink to the output path"
-    echo "  --no-write-lock-file"
-    echo "  --builders VALUE"
-    echo "  --refresh                Consider all previously downloaded files out-of-date"
-    echo
-    echo "Commands"
-    echo
-    echo "  help         Print this help"
-    echo
-    echo "  edit         Open the project configuration in \$EDITOR"
-    echo
-    echo "  build        Build configuration into result directory"
-    echo
-    echo "  init [--switch] [DIR]"
-    echo "      Initializes a configuration in the given directory. If the directory"
-    echo "      does not exist, then it will be created. The default directory is"
-    echo "      '~/.config/project-manager'."
-    echo
-    echo "      --switch      Immediately activate the generated configuration."
-    echo
-    echo "  switch       Build and activate configuration"
-    echo
-    echo "  generations  List all project environment generations"
-    echo
-    echo "  remove-generations ID..."
-    echo "      Remove indicated generations. Use 'generations' command to"
-    echo "      find suitable generation numbers."
-    echo
-    echo "  expire-generations TIMESTAMP"
-    echo "      Remove generations older than TIMESTAMP where TIMESTAMP is"
-    echo "      interpreted as in the -d argument of the date tool. For"
-    echo "      example \"-30 days\" or \"2018-01-01\"."
-    echo
-    echo "  packages     List all packages installed in project-manager-path"
-    echo
-    echo "  news         Show news entries in a pager"
-    echo
-    echo "  uninstall    Remove Project Manager"
+  echo "Usage: $0 [OPTION] COMMAND"
+  echo
+  echo "Options"
+  echo
+  echo "  -f FILE           The project configuration file."
+  echo "                    Default is '\$PROJECT_ROOT/.config/project/default.nix'."
+  echo "  -I PATH           Add a path to the Nix expression search path."
+  echo "  -v                Verbose output"
+  echo "  -n                Do a dry run, only prints what actions would be taken"
+  echo "  -h                Print this help"
+  echo "  --version         Print the Project Manager version"
+  echo
+  echo "Options passed on to nix-build(1)"
+  echo
+  echo "  --arg(str) NAME VALUE    Override inputs passed to project-manager.nix"
+  echo "  --cores NUM"
+  echo "  --debug"
+  echo "  --impure"
+  echo "  --keep-failed"
+  echo "  --keep-going"
+  echo "  -j, --max-jobs NUM"
+  echo "  --option NAME VALUE"
+  echo "  -L, --print-build-logs"
+  echo "  --show-trace"
+  echo "  --(no-)substitute"
+  echo "  --no-out-link            Do not create a symlink to the output path"
+  echo "  --no-write-lock-file"
+  echo "  --builders VALUE"
+  echo "  --refresh                Consider all previously downloaded files out-of-date"
+  echo
+  echo "Commands"
+  echo
+  echo "  help         Print this help"
+  echo
+  echo '  edit         Open the project configuration in $EDITOR'
+  echo
+  echo "  build        Build configuration into result directory"
+  echo
+  echo "  init [--switch] [DIR]"
+  echo "      Initializes a configuration in the given directory. If the directory"
+  echo "      does not exist, then it will be created. The default directory is"
+  echo "      '~/.config/project-manager'."
+  echo
+  echo "      --switch      Immediately activate the generated configuration."
+  echo
+  echo "  switch       Build and activate configuration"
+  echo
+  echo "  generations  List all project environment generations"
+  echo
+  echo "  remove-generations ID..."
+  echo "      Remove indicated generations. Use 'generations' command to"
+  echo "      find suitable generation numbers."
+  echo
+  echo "  expire-generations TIMESTAMP"
+  echo "      Remove generations older than TIMESTAMP where TIMESTAMP is"
+  echo "      interpreted as in the -d argument of the date tool. For"
+  echo '      example "-30 days" or "2018-01-01".'
+  echo
+  echo "  packages     List all packages installed in project-manager-path"
+  echo
+  echo "  news         Show news entries in a pager"
+  echo
+  echo "  uninstall    Remove Project Manager"
 }
 
 EXTRA_NIX_PATH=()
-PROJECT_MANAGER_CONFIG_ATTRIBUTE=""
 PASSTHROUGH_OPTS=()
 COMMAND=""
 COMMAND_ARGS=()
 
 while [[ $# -gt 0 ]]; do
-    opt="$1"
-    shift
-    case $opt in
-        build|init|edit|expire-generations|generations|help|news|packages|remove-generations|switch|uninstall)
-            COMMAND="$opt"
-            ;;
-        -A)
-            PROJECT_MANAGER_CONFIG_ATTRIBUTE="$1"
-            shift
-            ;;
-        -I)
-            EXTRA_NIX_PATH+=("$1")
-            shift
-            ;;
-        -f|--file)
-            PROJECT_MANAGER_CONFIG="$1"
-            shift
-            ;;
-        --recreate-lock-file|--no-update-lock-file|--no-write-lock-file|--no-registries|--commit-lock-file|--refresh)
-            PASSTHROUGH_OPTS+=("$opt")
-            ;;
-        --update-input)
-            PASSTHROUGH_OPTS+=("$opt" "$1")
-            shift
-            ;;
-        --override-input)
-            PASSTHROUGH_OPTS+=("$opt" "$1" "$2")
-            shift 2
-            ;;
-        --experimental-features)
-            PASSTHROUGH_OPTS+=("$opt" "$1")
-            shift
-            ;;
-        --extra-experimental-features)
-            PASSTHROUGH_OPTS+=("$opt" "$1")
-            shift
-            ;;
-        --no-out-link)
-            NO_OUT_LINK=1
-            ;;
-        -L|--print-build-logs)
-            PRINT_BUILD_LOGS=1
-            ;;
-        -h|--help)
-            doHelp
-            exit 0
-            ;;
-        -n|--dry-run)
-            export DRY_RUN=1
-            ;;
-        --option|--arg|--argstr)
-            PASSTHROUGH_OPTS+=("$opt" "$1" "$2")
-            shift 2
-            ;;
-        -j|--max-jobs|--cores|--builders)
-            PASSTHROUGH_OPTS+=("$opt" "$1")
-            shift
-            ;;
-        --debug|--keep-failed|--keep-going|--show-trace\
-            |--substitute|--no-substitute|--impure)
-            PASSTHROUGH_OPTS+=("$opt")
-            ;;
-        -v|--verbose)
-            export VERBOSE=1
-            ;;
-        --version)
-            echo 23.11-pre
-            exit 0
-            ;;
+  opt="$1"
+  shift
+  case $opt in
+    build | init | edit | expire-generations | generations | help | news | packages | remove-generations | switch | uninstall)
+      COMMAND="$opt"
+      ;;
+    -I)
+      EXTRA_NIX_PATH+=("$1")
+      shift
+      ;;
+    -f | --file)
+      PROJECT_MANAGER_CONFIG="$1"
+      shift
+      ;;
+    --recreate-lock-file | --no-update-lock-file | --no-write-lock-file | --no-registries | --commit-lock-file | --refresh)
+      PASSTHROUGH_OPTS+=("$opt")
+      ;;
+    --update-input)
+      PASSTHROUGH_OPTS+=("$opt" "$1")
+      shift
+      ;;
+    --override-input)
+      PASSTHROUGH_OPTS+=("$opt" "$1" "$2")
+      shift 2
+      ;;
+    --experimental-features)
+      PASSTHROUGH_OPTS+=("$opt" "$1")
+      shift
+      ;;
+    --extra-experimental-features)
+      PASSTHROUGH_OPTS+=("$opt" "$1")
+      shift
+      ;;
+    --no-out-link)
+      NO_OUT_LINK=1
+      ;;
+    -L | --print-build-logs)
+      PRINT_BUILD_LOGS=1
+      ;;
+    -h | --help)
+      doHelp
+      exit 0
+      ;;
+    -n | --dry-run)
+      export DRY_RUN=1
+      ;;
+    --option | --arg | --argstr)
+      PASSTHROUGH_OPTS+=("$opt" "$1" "$2")
+      shift 2
+      ;;
+    -j | --max-jobs | --cores | --builders)
+      PASSTHROUGH_OPTS+=("$opt" "$1")
+      shift
+      ;;
+    --debug | --keep-failed | --keep-going | --show-trace | --substitute | --no-substitute | --impure)
+      PASSTHROUGH_OPTS+=("$opt")
+      ;;
+    -v | --verbose)
+      export VERBOSE=1
+      ;;
+    --version)
+      echo 23.11-pre
+      exit 0
+      ;;
+    *)
+      case $COMMAND in
+        init | expire-generations | remove-generations | option)
+          COMMAND_ARGS+=("$opt")
+          ;;
         *)
-            case $COMMAND in
-                init|expire-generations|remove-generations|option)
-                    COMMAND_ARGS+=("$opt")
-                    ;;
-                *)
-                    _iError "%s: unknown option '%s'" "$0" "$opt" >&2
-                    _i "Run '%s --help' for usage help" "$0" >&2
-                    exit 1
-                    ;;
-            esac
-            ;;
-    esac
+          _iError "%s: unknown option '%s'" "$0" "$opt" >&2
+          _i "Run '%s --help' for usage help" "$0" >&2
+          exit 1
+          ;;
+      esac
+      ;;
+  esac
 done
 
 if [[ -z $COMMAND ]]; then
-    doHelp >&2
-    exit 1
+  doHelp >&2
+  exit 1
 fi
 
 case $COMMAND in
-    edit)
-        doEdit
-        ;;
-    build)
-        doBuild
-        ;;
-    init)
-        doInit "${COMMAND_ARGS[@]}"
-        ;;
-    switch)
-        doSwitch
-        ;;
-    generations)
-        doListGens
-        ;;
-    remove-generations)
-        doRmGenerations "${COMMAND_ARGS[@]}"
-        ;;
-    expire-generations)
-        if [[ ${#COMMAND_ARGS[@]} != 1 ]]; then
-            _i 'expire-generations expects one argument, got %d.' "${#COMMAND_ARGS[@]}" >&2
-            exit 1
-        else
-            doExpireGenerations "${COMMAND_ARGS[@]}"
-        fi
-        ;;
-    packages)
-        doListPackages
-        ;;
-    news)
-        doShowNews --all
-        ;;
-    uninstall)
-        doUninstall
-        ;;
-    help)
-        doHelp
-        ;;
-    *)
-        _iError 'Unknown command: %s' "$COMMAND" >&2
-        doHelp >&2
-        exit 1
-        ;;
+  edit)
+    doEdit
+    ;;
+  build)
+    doBuild
+    ;;
+  init)
+    doInit "${COMMAND_ARGS[@]}"
+    ;;
+  switch)
+    doSwitch
+    ;;
+  generations)
+    doListGens
+    ;;
+  remove-generations)
+    doRmGenerations "${COMMAND_ARGS[@]}"
+    ;;
+  expire-generations)
+    if [[ ${#COMMAND_ARGS[@]} != 1 ]]; then
+      _i 'expire-generations expects one argument, got %d.' "${#COMMAND_ARGS[@]}" >&2
+      exit 1
+    else
+      doExpireGenerations "${COMMAND_ARGS[@]}"
+    fi
+    ;;
+  packages)
+    doListPackages
+    ;;
+  news)
+    doShowNews --all
+    ;;
+  uninstall)
+    doUninstall
+    ;;
+  help)
+    doHelp
+    ;;
+  *)
+    _iError 'Unknown command: %s' "$COMMAND" >&2
+    doHelp >&2
+    exit 1
+    ;;
 esac
 
 # vim: ft=bash
