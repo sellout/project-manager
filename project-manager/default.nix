@@ -21,7 +21,7 @@
 in
   runCommand "project-manager" {
     preferLocalBuild = true;
-    nativeBuildInputs = [gettext];
+    nativeBuildInputs = [gettext pkgs.makeWrapper];
     meta = with lib; {
       mainProgram = "project-manager";
       description = "A project environment configurator";
@@ -49,6 +49,14 @@ in
     }" \
       --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.sh}' \
       --subst-var-by OUT "$out"
+
+    ## TODO: I feel like this should use
+    ##      `patchShebangs --host $out/bin/project-manager` instead of
+    ##      `wrapProgram`, but I can’t seem to get it to actually replace the
+    ##      `strict-bash` reference.
+    wrapProgram $out/bin/project-manager --prefix PATH : ${pkgs.lib.makeBinPath [
+      pkgs.bash-strict-mode
+    ]}
 
     install -D -m755 ${./completion.bash} \
       $out/share/bash-completion/completions/project-manager
