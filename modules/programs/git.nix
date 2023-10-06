@@ -275,7 +275,9 @@ in {
               [[ $sourcePath =~ pm-metadata ]] && continue
               relativePath="''${sourcePath#$newGenFiles/}"
               if [[ ''${persistence[$relativePath]} == repository ]]; then
-                ${pkgs.git}/bin/git add --intent-to-add "$relativePath"
+                ## We use force here in case the file is covered by an ignore
+                ## somewhere.
+                ${pkgs.git}/bin/git add --force --intent-to-add "$relativePath"
               else
                 ${pkgs.git}/bin/git rm --cached --ignore-unmatch "$relativePath"
               fi

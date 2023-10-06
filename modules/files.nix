@@ -166,7 +166,8 @@ in {
                 # with a permission error.
                 $DRY_RUN_CMD rmdir $VERBOSE_ARG \
                     -p --ignore-fail-on-non-empty \
-                    "$targetDir"
+                    "$targetDir" \
+                  || true
 
                 popd > /dev/null
               fi
