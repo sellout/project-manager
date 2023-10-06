@@ -541,7 +541,10 @@ in {
         default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
           nativeBuildInputs =
-            cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
+            cfg.packages
+            ++ [
+              (pkgs.callPackage ../project-manager {inherit bash-strict-mode;})
+            ];
           shellHook = cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";

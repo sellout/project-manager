@@ -1,7 +1,7 @@
 {
   runCommand,
   lib,
-  bash,
+  bash-strict-mode,
   callPackage,
   coreutils,
   findutils,
@@ -9,6 +9,7 @@
   gnused,
   jq,
   less,
+  makeWrapper,
   ncurses,
   unixtools,
   # used for pkgs.path for nixos-option
@@ -21,7 +22,7 @@
 in
   runCommand "project-manager" {
     preferLocalBuild = true;
-    nativeBuildInputs = [gettext pkgs.makeWrapper];
+    nativeBuildInputs = [gettext makeWrapper];
     meta = with lib; {
       mainProgram = "project-manager";
       description = "A project environment configurator";
@@ -33,7 +34,6 @@ in
     install -v -D -m755  ${./project-manager} $out/bin/project-manager
 
     substituteInPlace $out/bin/project-manager \
-      --subst-var-by bash "${bash}" \
       --subst-var-by DEP_PATH "${
       lib.makeBinPath [
         coreutils
@@ -54,9 +54,11 @@ in
     ##      `patchShebangs --host $out/bin/project-manager` instead of
     ##      `wrapProgram`, but I can’t seem to get it to actually replace the
     ##      `strict-bash` reference.
-    wrapProgram $out/bin/project-manager --prefix PATH : ${pkgs.lib.makeBinPath [
-      pkgs.bash-strict-mode
-    ]}
+    wrapProgram $out/bin/project-manager --prefix PATH : "${
+      lib.makeBinPath [
+        bash-strict-mode
+      ]
+    }"
 
     install -D -m755 ${./completion.bash} \
       $out/share/bash-completion/completions/project-manager
