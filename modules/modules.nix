@@ -24,7 +24,9 @@
   # ./programs/nushell.nix
   project-manager = ./programs/project-manager.nix;
   # ./programs/pylint.nix
+  shellcheck = ./programs/shellcheck.nix;
   treefmt = ./programs/treefmt.nix;
+  vale = ./programs/vale.nix;
   # ./programs/vim.nix
   # ./programs/vscode.nix
   # ./programs/zellij.nix

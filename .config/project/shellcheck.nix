@@ -1,6 +1,6 @@
 {
-  project.file.".shellcheckrc" = {
-    minimum-persistence = "worktree";
-    source = ./shellcheckrc;
+  programs.shellcheck = {
+    enable = true;
+    settings.source = ./shellcheckrc;
   };
 }
