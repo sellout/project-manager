@@ -76,7 +76,9 @@ A shell derivation that provides everything configured in your project configura
 The following will set it up as the default shell. it can also be overridden to use as a basis of various shells.
 
 ```nix
-devShells.default = self.projectConfigurations.${system}.devShell;
+devShells = self.projectConfigurations.${system}.devShells // {
+  ## more devShells
+};
 ```
 
 #### `formatter`

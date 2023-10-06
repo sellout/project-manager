@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  self,
   treefmt-nix,
   ...
 }: let
@@ -66,7 +67,7 @@ in {
     };
   in {
     project = {
-      checkFunctions.formatter = format.config.build.check;
+      checks.formatter = format.config.build.check self;
       formatter = format.config.build.wrapper;
       packages = [cfg.package];
     };

@@ -263,18 +263,9 @@ in {
       '';
     };
 
-    checkFunctions = mkOption {
-      type = types.attrsOf (types.functionTo types.package);
-      default = {};
-      description = lib.mdDoc ''
-        A function that accepts the current flake (`self`) and returns attrset
-        of checks to be applied for the current system.
-      '';
-    };
-
     checks = mkOption {
       internal = true;
-      type = types.functionTo types.attrs;
+      type = types.attrs;
       default = {};
       description = lib.mdDoc ''
         A function that accepts the current flake (`self`) and returns attrset
@@ -282,12 +273,15 @@ in {
       '';
     };
 
-    devShell = mkOption {
+    devShells = mkOption {
       internal = true;
-      type = types.package;
+      type = types.attrsOf types.package;
       description = lib.mdDoc ''
-        Package providing a shell with all the tooling declared in the project
-        config.
+        Packages providing shells with various tooling. There is always a
+        `project.devShells.default` which contains all the tooling declared in
+        the project config. Other modules may also define their own `devShells`,
+        for example, when they have a check that can’t be defined as a pure
+        check, it’s provided as a devShell with the `check-` prefix.
       '';
     };
 
@@ -543,17 +537,44 @@ in {
         '');
 
     project = {
-      checks = self: lib.mapAttrs (k: v: v self) cfg.checkFunctions;
+      devShells = {
+        default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
+          inherit (pkgs) system;
+          nativeBuildInputs =
+            cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
+          shellHook = cfg.extraProfileCommands;
+          meta = {
+            description = "A shell provided by Project Manager.";
+          };
+        });
 
-      devShell = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
-        inherit (pkgs) system;
-        nativeBuildInputs =
-          cfg.packages ++ [(pkgs.callPackage ../project-manager {})];
-        shellHook = cfg.extraProfileCommands;
-        meta = {
-          description = "A shell provided by Project Manager.";
-        };
-      });
+        ## This runs all devShells whose names are prefixed with `check-`,
+        ## allowing us to define “lax” checks that can be run even in the face
+        ## of Internet access.
+        lax-checks =
+          bash-strict-mode.lib.checkedDrv pkgs
+          (pkgs.mkShell {
+            nativeBuildInputs = [pkgs.nix];
+            checkList = lib.filter (lib.hasPrefix "check-") (builtins.attrNames config.project.devShells);
+            shellHook = ''
+              ## Shouldn’t need this, but apparently `bash-strict-mode` isn’t
+              ## working properly.
+              ##
+              ## Also, can’t use `-u` because of Starship, which is a personal issue
+              ## that I should report.
+              set -eo pipefail
+
+              IFS=' ' read -ra checks <<< "$checkList"
+              ## TODO: Run all, collecting failures, instead of exiting after first
+              ##       failure.
+              for check in "''${checks[@]}"; do
+                ## TODO: Colorize using _iNote from project-manager
+                echo "Running $check check (laxly)"
+                nix develop ".#$check" --command echo
+              done
+            '';
+          });
+      };
 
       filterRepositoryPersistedExcept = exceptions: _type: name:
         !(lib.elem name (lib.mapAttrsToList (_k: v: v.target) cfg.file))

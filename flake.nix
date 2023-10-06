@@ -21,7 +21,8 @@
       schemas = inputs.flake-schemas.schemas // import ./nix/schemas.nix;
 
       lib = import ./nix/lib.nix {
-        inherit (inputs) bash-strict-mode self treefmt-nix;
+        inherit (inputs) bash-strict-mode treefmt-nix;
+        project-manager = inputs.self;
       };
 
       overlays.default = final: prev: {
@@ -56,7 +57,7 @@
         project-manager = pkgs.callPackage ./project-manager {};
       };
 
-      devShells.default = inputs.self.projectConfigurations.${system}.devShell;
+      devShells = inputs.self.projectConfigurations.${system}.devShells;
 
       # devShells = let
       #   pkgs = inputs.nixpkgs.legacyPackages.${system};
@@ -64,10 +65,12 @@
       # in
       #   tests.run;
 
-      projectConfigurations =
-        inputs.self.lib.defaultConfiguration ./. {inherit pkgs;};
+      projectConfigurations = inputs.self.lib.defaultConfiguration {
+        inherit pkgs;
+        inherit (inputs) self;
+      };
 
-      checks = inputs.self.projectConfigurations.${system}.checks inputs.self;
+      checks = inputs.self.projectConfigurations.${system}.checks;
 
       formatter = inputs.self.projectConfigurations.${system}.formatter;
     });

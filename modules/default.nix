@@ -48,7 +48,7 @@ in {
 
   checks = module.config.project.checks;
 
-  devShell = module.config.project.devShell;
+  devShells = module.config.project.devShells;
 
   formatter = module.config.project.formatter;
 
