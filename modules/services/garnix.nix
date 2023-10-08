@@ -13,7 +13,7 @@ in {
     enable = mkEnableOption (lib.mdDoc "Garnix CI configuration");
 
     builds = mkOption {
-      type = lib.types.nullOr lib.types.attrs;
+      type = lib.types.nullOr (lib.types.attrsOf (lib.types.listOf lib.types.str));
       default = null;
       description = lib.mdDoc ''
         Configuration written to {file}`$PROJECT_ROOT/garnix.yaml`.
