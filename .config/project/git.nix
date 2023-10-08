@@ -12,10 +12,11 @@
       };
     };
     hooks = {
-      # post-commit = {
-      #   auto-install = true;
-      #   content = "";
-      # };
+      pre-push.text = ''
+        #!/usr/bin/env bash
+
+        nix flake check
+      '';
     };
     ignores = [
       # Nix build
@@ -25,5 +26,6 @@
     ignoreRevs = [
       "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
     ];
+    installConfig = true;
   };
 }

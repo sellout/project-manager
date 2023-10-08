@@ -7,6 +7,29 @@
 with lib; let
   cfg = config.programs.git;
 
+  projectDirectory = config.project.projectDirectory;
+
+  sourceStorePath = file: let
+    sourcePath = toString file.source;
+    sourceName = config.lib.strings.storeFileName (baseNameOf sourcePath);
+  in
+    if builtins.hasContext sourcePath
+    then file.source
+    else
+      builtins.path {
+        path = file.source;
+        name = sourceName;
+      };
+
+  fileType =
+    (import ../lib/file-type.nix {
+      inherit projectDirectory lib pkgs;
+      commit-by-default = config.project.commit-by-default;
+    })
+    .fileType;
+
+  hooksPath = ".cache/git/hooks";
+
   # create [section "subsection"] keys from "section.subsection" attrset names
   mkSectionName = name: let
     containsQuote = strings.hasInfix ''"'' name;
@@ -162,6 +185,17 @@ in {
         '';
       };
 
+      ## TODO: Support “interactive”, where the user has to explicitly approve
+      ##       changes during activation.
+      installConfig = mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = lib.mdDoc ''
+          Whether to have Project Manager link the generated config into
+          $PROJECT_ROOT/.git/config.
+        '';
+      };
+
       signing = mkOption {
         type = types.nullOr signModule;
         default = null;
@@ -170,12 +204,20 @@ in {
         '';
       };
 
+      ## TODO: Make this an attrset of a DAG of functions that return lines.
+      ##       Each hook takes a parameter for each positional argument and the
+      ##       config linearizes the DAG and passes strings like
+      ##       `$remote_url_XXXXXX` for the arguments, resulting in a
+      ##       comprehensive script. Each hook node also has a “builder” arg
+      ##       (defaulting to `bash`) and a function for how to generate the arg
+      ##       names (really, this should be part of the builder). So it still
+      ##       has the flexibility for non-Bash scripts.
       hooks = mkOption {
-        type = types.attrsOf types.path;
+        type = types.nullOr (types.attrsOf types.attrs);
         default = {};
         example = lib.literalMD ''
           {
-            pre-commit = ./pre-commit-script;
+            pre-commit.source = ./pre-commit-script;
           }
         '';
         description = lib.mdDoc ''
@@ -200,8 +242,8 @@ in {
       };
 
       ignoreRevs = mkOption {
-        type = types.listOf types.str;
-        default = [];
+        type = types.nullOr (types.listOf types.str);
+        default = null;
         example = ["*~" "*.swp"];
         description = lib.mdDoc ''
           List of revisions that should be ignored when assigning blame.
@@ -297,7 +339,19 @@ in {
         file = {
           ## FIXME: Before enabling this, we might need to figure out how to not
           ##        overwrite the one that’s there already.
-          # ".git/config".text = gitToIni cfg.iniContent;
+          ".cache/git/config" = {
+            minimum-persistence = "store";
+            onChange =
+              if cfg.installConfig
+              then ''
+                ${pkgs.git}/bin/git config --worktree \
+                  include.path "${sourceStorePath config.project.file.".cache/git/config"}"
+              ''
+              else ''
+                ${pkgs.git}/bin/git config --worktree --unset include.path || true
+              '';
+            text = gitToIni cfg.iniContent;
+          };
 
           ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
           ##        actually be a copy, but can be added to itself, so we don’t
@@ -329,13 +383,38 @@ in {
       };
     })
 
-    (mkIf (cfg.hooks != {}) {
+    (mkIf (cfg.ignoreRevs != null) (let
+      ignoreRevsPath = ".cache/git/ignoreRevs";
+    in {
       programs.git.iniContent = {
+        blame.ignoreRevsFile =
+          toString (sourceStorePath config.project.file."${ignoreRevsPath}");
+      };
+      project.file."${ignoreRevsPath}" = {
+        minimum-persistence = "store";
+        text = concatLines cfg.ignoreRevs;
+      };
+    }))
+
+    (mkIf (cfg.hooks != null) {
+      project.file = lib.mapAttrs (k: v:
+        v
+        // {
+          executable = true;
+          minimum-persistence = "store";
+        })
+      cfg.hooks;
+      programs.git.iniContent = {
+        ## FIXME: Not working, because the actual file location, …-pm_precommit
+        ##       (etc.) isn’t executable.
         core.hooksPath = let
-          entries =
-            mapAttrsToList (name: path: {inherit name path;}) cfg.hooks;
+          entries = mapAttrsToList (name: file: {
+            inherit name;
+            path = sourceStorePath config.project.file."${name}";
+          })
+          cfg.hooks;
         in
-          toString (pkgs.linkFarm "git-hooks" entries);
+          toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries);
       };
     })
 
