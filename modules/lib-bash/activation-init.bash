@@ -1,21 +1,20 @@
 function setupVars() {
   declare -r stateHome="${XDG_STATE_HOME:-$HOME/.local/state}"
   declare -r userNixStateDir="$stateHome/nix"
-  declare -r hmGcrootsDir="$stateHome/project-manager/gcroots"
+  declare -r pmGcrootsDir="$stateHome/project-manager/gcroots"
 
   declare -r globalNixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
-  declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user/$USER"
-  declare -r globalGcrootsDir="$globalNixStateDir/gcroots/per-user/$USER"
+    declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user"
 
-  # If the user Nix profiles path exists, then place the HM profile there.
+  # If the user Nix profiles path exists, then place the PM profile there.
   # Otherwise, if the global Nix per-user state directory exists then use
   # that. If neither exists, then we give up.
   #
   # shellcheck disable=2174
   if [[ -d $userNixStateDir/profiles ]]; then
     declare -r profilesDir="$userNixStateDir/profiles"
-  elif [[ -d $globalProfilesDir ]]; then
-    declare -r profilesDir="$globalProfilesDir"
+  elif [[ -v USER && -d $globalProfilesDir/$USER ]]; then
+    declare -r profilesDir="$globalProfilesDir/$USER"
   else
     _iError 'Could not find suitable profile directory, tried %s and %s' \
       "$userNixStateDir/profiles" "$globalProfilesDir" >&2
@@ -24,8 +23,7 @@ function setupVars() {
 
   declare -gr genProfilePath="$profilesDir/project-manager"
   declare -gr newGenPath="@GENERATION_DIR@"
-  declare -gr newGenGcPath="$hmGcrootsDir/current-project"
-  declare -gr legacyGenGcPath="$globalGcrootsDir/current-project"
+  declare -gr newGenGcPath="$pmGcrootsDir/current-project"
 
   declare greatestGenNum
   greatestGenNum=$(
@@ -51,7 +49,7 @@ function setupVars() {
     ! -v oldGenNum && -v oldGenPath ]]; then
     _i $'The previous generation number and path are in conflict! These\nmust be either both empty or both set but are now set to\n\n    \'%s\' and \'%s\'\n\nIf you don\'t mind losing previous profile generations then\nthe easiest solution is probably to run\n\n   rm %s/project-manager*\n   rm %s/current-project\n\nand trying project-manager switch again. Good luck!' \
       "${oldGenNum-}" "${oldGenPath-}" \
-      "$profilesDir" "$hmGcrootsDir"
+      "$profilesDir" "$pmGcrootsDir"
     exit 1
   fi
 }
@@ -113,4 +111,3 @@ $VERBOSE_ECHO "  newGenPath=$newGenPath"
 $VERBOSE_ECHO "  newGenNum=$newGenNum"
 $VERBOSE_ECHO "  genProfilePath=$genProfilePath"
 $VERBOSE_ECHO "  newGenGcPath=$newGenGcPath"
-$VERBOSE_ECHO "  legacyGenGcPath=$legacyGenGcPath"
