@@ -6,7 +6,9 @@ PATH=@DEP_PATH@${PATH:+:}$PATH
 
 ## TODO: Make the file we look for configurable, like treefmt’s
 ##      `projectRootFile`. For now, this just finds the flake.
-PROJECT_ROOT="$(nix flake metadata | grep 'Resolved URL:' | cut -c35-)"
+PROJECT_ROOT="$(nix flake metadata --json \
+  | jq -r ".resolvedUrl" \
+  | sed -e 's/^[^\/]*[\/]*\//\//')"
 export PROJECT_ROOT
 
 export TEXTDOMAIN=project-manager
