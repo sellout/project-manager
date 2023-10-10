@@ -15,18 +15,6 @@ with lib; let
       commit-by-default = config.project.commit-by-default;
     })
     .fileType;
-
-  sourceStorePath = file: let
-    sourcePath = toString file.source;
-    sourceName = config.lib.strings.storeFileName (baseNameOf sourcePath);
-  in
-    if builtins.hasContext sourcePath
-    then file.source
-    else
-      builtins.path {
-        path = file.source;
-        name = sourceName;
-      };
 in {
   options = {
     project.file = mkOption {
@@ -244,7 +232,7 @@ in {
           declare -A changedFiles
         ''
         + concatMapStrings (v: let
-          sourceArg = escapeShellArg (sourceStorePath v);
+          sourceArg = escapeShellArg v.storePath;
           targetArg = escapeShellArg v.target;
         in ''
           _cmp ${sourceArg} ${projectDirArg}/${targetArg} \
@@ -352,7 +340,7 @@ in {
           mapAttrsToList (n: v: ''
             insertFile ${
               escapeShellArgs [
-                (sourceStorePath v)
+                v.storePath
                 v.target
                 (
                   if v.executable == null

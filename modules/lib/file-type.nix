@@ -4,7 +4,17 @@
   lib,
   pkgs,
 }: let
-  inherit (lib) hasPrefix pm literalExpression mkDefault mkIf mkOption removePrefix types;
+  inherit
+    (lib)
+    hasPrefix
+    pm
+    literalExpression
+    mkDefault
+    mkIf
+    mkOption
+    removePrefix
+    types
+    ;
 in rec {
   fileContents = opt: basePathDesc: basePath: nameStr: (types.submodule (
     {
@@ -54,6 +64,15 @@ in rec {
             [](#opt-${opt}.${nameStr}.text)
             is non-null then this option will automatically point to a file
             containing that text.
+          '';
+        };
+
+        storePath = mkOption {
+          type = types.path;
+          internal = true;
+          description = lib.mdDoc ''
+            The Nix store path for this file. This is used by Project Manager to
+            reference files without having to link them into the working tree.
           '';
         };
 
@@ -139,13 +158,14 @@ in rec {
 
         commit-by-default = mkOption {
           type = types.nullOr types.bool;
-          default = null; # config.project.commit-by-default;
+          default = null;
           description = lib.mdDoc ''
             Whether to accept the `minimum-persistence` value (`false`) or to
             force the persistence to “repository” (`true`). The latter is useful
             when you want to use a file outside of its standard use case. E.g.,
             `.gitattributes` sets this to true when github is enabled, so that
-            the `lingist-generated` attribute can be processed by GitHub.
+            the `lingist-generated` attribute can be processed by GitHub. `null`
+            inherits the project-wide setting.
           '';
         };
 
@@ -172,6 +192,17 @@ in rec {
             name = pm.strings.storeFileName name;
           })
         );
+        storePath = let
+          sourcePath = toString config.source;
+          sourceName = pm.strings.storeFileName (baseNameOf sourcePath);
+        in
+          if builtins.hasContext sourcePath
+          then config.source
+          else
+            builtins.path {
+              path = config.source;
+              name = sourceName;
+            };
         persistence = lib.mkForce (
           if
             (

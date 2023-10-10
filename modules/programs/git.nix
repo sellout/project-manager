@@ -9,18 +9,6 @@ with lib; let
 
   projectDirectory = config.project.projectDirectory;
 
-  sourceStorePath = file: let
-    sourcePath = toString file.source;
-    sourceName = config.lib.strings.storeFileName (baseNameOf sourcePath);
-  in
-    if builtins.hasContext sourcePath
-    then file.source
-    else
-      builtins.path {
-        path = file.source;
-        name = sourceName;
-      };
-
   fileType =
     (import ../lib/file-type.nix {
       inherit projectDirectory lib pkgs;
@@ -213,6 +201,7 @@ in {
       ##       names (really, this should be part of the builder). So it still
       ##       has the flexibility for non-Bash scripts.
       hooks = mkOption {
+        # types.nullOr (fileType "programs.git.hooks" "" hooksPath);
         type = types.nullOr (types.attrsOf types.attrs);
         default = {};
         example = lib.literalMD ''
@@ -345,7 +334,7 @@ in {
               if cfg.installConfig
               then ''
                 ${pkgs.git}/bin/git config --worktree \
-                  include.path "${sourceStorePath config.project.file.".cache/git/config"}"
+                  include.path "${config.project.file.".cache/git/config".storePath}"
               ''
               else ''
                 ${pkgs.git}/bin/git config --worktree --unset include.path || true
@@ -388,7 +377,7 @@ in {
     in {
       programs.git.iniContent = {
         blame.ignoreRevsFile =
-          toString (sourceStorePath config.project.file."${ignoreRevsPath}");
+          toString config.project.file."${ignoreRevsPath}".storePath;
       };
       project.file."${ignoreRevsPath}" = {
         minimum-persistence = "store";
@@ -408,11 +397,12 @@ in {
         ## FIXME: Not working, because the actual file location, …-pm_precommit
         ##       (etc.) isn’t executable.
         core.hooksPath = let
-          entries = mapAttrsToList (name: file: {
-            inherit name;
-            path = sourceStorePath config.project.file."${name}";
-          })
-          cfg.hooks;
+          entries =
+            mapAttrsToList (name: file: {
+              inherit name;
+              path = config.project.file."${name}".storePath;
+            })
+            cfg.hooks;
         in
           toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries);
       };
