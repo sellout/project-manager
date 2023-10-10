@@ -26,6 +26,8 @@
     ## editors
     ./editorconfig.nix
     ./emacs.nix
+    ## other
+    ./hacktoberfest.nix
   ];
 
   services.renovate.enable = true;

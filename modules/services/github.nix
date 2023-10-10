@@ -25,7 +25,37 @@ in {
         Declarative GitHub settings, as provided by [Probot’s Settings
         app](https://probot.github.io/apps/settings/).
       '';
-      type = lib.types.nullOr lib.types.attrs;
+      type = lib.types.nullOr (lib.types.submodule {
+        freeformType = lib.types.attrs;
+        options = {
+          branches = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
+            default = {};
+            description = ''
+              Labels for issues & PRs.
+            '';
+          };
+          labels = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
+            default = {};
+            description = ''
+              Branch-specific settings.
+            '';
+          };
+          repository = lib.mkOption {
+            type = lib.types.submodule {
+              freeformType = lib.types.anything;
+              options.topics = lib.mkOption {
+                default = [];
+                type = lib.types.listOf lib.types.str;
+                description = lib.mdDoc ''
+                  A list of GitHub “topics”.
+                '';
+              };
+            };
+          };
+        };
+      });
       default = null;
     };
 
@@ -56,20 +86,24 @@ in {
         }
       else settings;
 
+    ## Coverts a structure like `{foo = {x = y;}; bar = {x = z;};}` to one like
+    ## `[{name = "foo"; x = y;} {name = "bar"; x = z;}]`.
+    attrsToNamedList = lib.mapAttrsToList (k: v:
+      if v ? name
+      then v
+      else v // {name = k;});
+
     ## settings.yaml expects a list of branches, but that doesn’t have the most
     ## useful merge semantics. So we have an attrSet of branches, with the key
     ## being used as the name, if the name isn’t otherwise set.
     restructureBranches = settings:
       if settings ? branches
-      then
-        settings
-        // {
-          branches = lib.mapAttrsToList (k: v:
-            if v ? name
-            then v
-            else v // {name = k;})
-          settings.branches;
-        }
+      then settings // {branches = attrsToNamedList settings.branches;}
+      else settings;
+
+    restructureLabels = settings:
+      if settings ? labels
+      then settings // {labels = attrsToNamedList settings.labels;}
       else settings;
 
     generatedAndCommitted =
@@ -95,7 +129,7 @@ in {
         ".github/settings.yml".text =
           lib.mkIf (cfg.settings != null)
           (lib.generators.toYAML {}
-            (restructureBranches (concatTopics cfg.settings)));
+            (restructureBranches (restructureLabels (concatTopics cfg.settings))));
       }
       // cfg.workflow;
   });

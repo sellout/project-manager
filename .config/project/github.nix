@@ -14,7 +14,7 @@
         name = config.project.name;
         description = config.project.summary;
         homepage = "https://sellout.github.io/${config.project.name}";
-        topics = ["development" "hacktoberfest" "nix-flakes"];
+        topics = ["development" "nix-flakes"];
         private = false;
         has_issues = true;
         has_projects = false;
@@ -31,48 +31,33 @@
         enable_vulnerability_alerts = true;
       };
 
-      labels = [
-        {
-          name = "bug";
+      labels = {
+        bug = {
           color = "#d73a4a";
           description = "Something isn’t working";
-        }
-        {
-          name = "documentation";
+        };
+        documentation = {
           color = "#0075ca";
           description = "Improvements or additions to documentation";
-        }
-        {
-          name = "enhancement";
+        };
+        enhancement = {
           color = "#a2eeef";
           description = "New feature or request";
-        }
-        {
-          name = "good first issue";
+        };
+        "good first issue" = {
           color = "#7057ff";
           description = "Good for newcomers";
-        }
-        {
-          name = "hacktoberfest-accepted";
-          color = "#ff7518"; # pumpkin
-          description = "Indicates acceptance for Hacktoberfest criteria, even if not merged yet";
-        }
-        {
+        };
+        "help wanted" = {
           name = "help wanted";
           color = "#008672";
           description = "Extra attention is needed";
-        }
-        {
-          name = "question";
+        };
+        question = {
           color = "#d876e3";
           description = "Further information is requested";
-        }
-        {
-          name = "spam";
-          color = "#ffc0cb"; #pink
-          description = "Topic created in bad faith. Services like Hacktoberfest use this to identify bad actors.";
-        }
-      ];
+        };
+      };
 
       branches = {
         main = {
