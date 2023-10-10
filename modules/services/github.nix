@@ -31,18 +31,21 @@ in {
           branches = lib.mkOption {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
-            description = ''
+            description = lib.mdDoc ''
               Labels for issues & PRs.
             '';
           };
           labels = lib.mkOption {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
-            description = ''
+            description = lib.mdDoc ''
               Branch-specific settings.
             '';
           };
           repository = lib.mkOption {
+            description = lib.mdDoc ''
+              Settings that affect the entire repository.
+            '';
             type = lib.types.submodule {
               freeformType = lib.types.anything;
               options.topics = lib.mkOption {
