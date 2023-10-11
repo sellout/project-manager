@@ -222,8 +222,8 @@ in {
       };
 
       ignores = mkOption {
-        type = types.listOf types.str;
-        default = [];
+        type = types.nullOr (types.listOf types.str);
+        default = null;
         example = ["*~" "*.swp"];
         description = lib.mdDoc ''
           List of paths that should be globally ignored.
@@ -283,9 +283,6 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     {
-      ## TODO: This will conflict until we properly scope it to devShell or whatever.
-      # project.packages = [cfg.package];
-
       project = {
         activation.updateGitStatus = pm.dag.entryAfter ["linkGeneration"] (let
           updateStatus = pkgs.writeText "updateStatus" ''
@@ -326,8 +323,6 @@ in {
         '');
 
         file = {
-          ## FIXME: Before enabling this, we might need to figure out how to not
-          ##        overwrite the one that’s there already.
           ".cache/git/config" = {
             minimum-persistence = "store";
             onChange =
@@ -342,19 +337,6 @@ in {
             text = gitToIni cfg.iniContent;
           };
 
-          ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
-          ##        actually be a copy, but can be added to itself, so we don’t
-          ##        need to commit it.
-          ".gitignore" = {
-            minimum-persistence = "worktree";
-            broken-symlink = true;
-            text =
-              concatStringsSep "\n" (mapAttrsToList (n: v: "/" + v.target)
-                (filterAttrs (n: v: v.persistence == "worktree") config.project.file)
-                ++ cfg.ignores)
-              + "\n";
-          };
-
           ".gitattributes" = {
             minimum-persistence = "worktree";
             text = concatStringsSep "\n" cfg.attributes + "\n";
@@ -364,6 +346,22 @@ in {
         packages = [cfg.package];
       };
     }
+
+    (mkIf (cfg.ignores != null) (let
+      ## NB: For user config, we use .git/info/exclude instead.
+      ignorePath = ".gitignore";
+    in {
+      ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
+      ##        actually be a copy, but can be added to itself, so we don’t need
+      ##        to commit it.
+      project.file."${ignorePath}" = {
+        minimum-persistence = "worktree";
+        broken-symlink = true;
+        text = concatLines (mapAttrsToList (n: v: "/" + v.target)
+          (filterAttrs (n: v: v.persistence == "worktree") config.project.file)
+          ++ cfg.ignores);
+      };
+    }))
 
     (mkIf (cfg.signing != null) {
       programs.git.iniContent = {
@@ -394,8 +392,6 @@ in {
         })
       cfg.hooks;
       programs.git.iniContent = {
-        ## FIXME: Not working, because the actual file location, …-pm_precommit
-        ##       (etc.) isn’t executable.
         core.hooksPath = let
           entries =
             mapAttrsToList (name: file: {
