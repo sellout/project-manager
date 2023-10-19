@@ -542,9 +542,9 @@ in {
         pkgs.runCommand "project-manager-files"
         {
           nativeBuildInputs = [
+            config.programs.git.package
+            config.programs.project-manager.package
             pkgs.coreutils
-            pkgs.git
-            (pkgs.callPackage ../project-manager {})
           ];
           meta.description = "Check that the generated files are up-to-date.";
         }
@@ -573,11 +573,7 @@ in {
       devShells = {
         default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
-          nativeBuildInputs =
-            cfg.packages
-            ++ [
-              (pkgs.callPackage ../project-manager {})
-            ];
+          nativeBuildInputs = cfg.packages;
           shellHook = cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";
