@@ -66,14 +66,19 @@
             required_pull_request_reviews = null;
             required_status_checks = {
               strict = false;
-              contexts = [
-                "check formatter [aarch64-darwin]"
-                "check formatter [aarch64-linux]"
-                "check formatter [x86_64-linux]"
-                "devShell default [aarch64-darwin]"
-                "devShell default [aarch64-linux]"
-                "devShell default [x86_64-linux]"
-              ];
+              contexts = lib.concatMap
+                (f: map f ["aarch64-darwin" "aarch64-linux" "x86_64-linux"])
+                [
+                  (sys: "check formatter [${sys}]")
+                  (sys: "check shellcheck [${sys}]")
+                  (sys: "devShell default [${sys}]")
+                  (sys: "devShell lax-checks [${sys}]")
+                  (sys: "package docs-html [${sys}]")
+                  (sys: "package docs-manpages [${sys}]")
+                  (sys: "package default [${sys}]")
+                  (sys: "package docs-json [${sys}]")
+                  (sys: "package project-manager [${sys}]")
+                ];
             };
             enforce_admins = true;
             required_linear_history = false;
