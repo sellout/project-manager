@@ -555,10 +555,12 @@ in {
           chmod -R a+w $PRJ
           cd $PRJ
           export HOME=$TMPDIR
+          mkdir -p "$HOME/.local/state/nix/profiles"
           export NIX_CONFIG="extra-experimental-features = flakes nix-command"
           ## Record the current state of the repo
           git init
           git config user.email nix@localhost
+          git config user.name Nix
           git add .
           git commit --message "current files"
           ## Update everything
