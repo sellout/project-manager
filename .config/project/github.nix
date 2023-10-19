@@ -78,7 +78,7 @@
             enforce_admins = true;
             required_linear_history = false;
             allow_force_pushes = false;
-            restrictions.apps = [];
+            restrictions = null;
           };
         };
       };
