@@ -4,7 +4,7 @@ function setupVars() {
   declare -r pmGcrootsDir="$stateHome/project-manager/gcroots"
 
   declare -r globalNixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
-    declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user"
+  declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user"
 
   # If the user Nix profiles path exists, then place the PM profile there.
   # Otherwise, if the global Nix per-user state directory exists then use
@@ -21,7 +21,8 @@ function setupVars() {
     exit 1
   fi
 
-  declare -gr genProfilePath="$profilesDir/project-manager"
+  mkdir -p "$profilesDir/project-manager"
+  declare -gr genProfilePath="$profilesDir/project-manager/@PROJECT_NAME@"
   declare -gr newGenPath="@GENERATION_DIR@"
   declare -gr newGenGcPath="$pmGcrootsDir/current-project"
 
