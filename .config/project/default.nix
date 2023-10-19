@@ -30,5 +30,7 @@
     ./hacktoberfest.nix
   ];
 
+  programs.project-manager.enable = true;
+
   services.renovate.enable = true;
 }

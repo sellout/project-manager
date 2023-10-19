@@ -1,4 +1,5 @@
 {
+  bash-strict-mode,
   config,
   lib,
   pkgs,
@@ -12,6 +13,16 @@ in {
   options = {
     programs.project-manager = {
       enable = mkEnableOption (lib.mdDoc "Project Manager");
+
+      package = mkOption {
+        type = types.package;
+        default = pkgs.callPackage ../../project-manager {
+          inherit (bash-strict-mode.packages.${pkgs.system}) bash-strict-mode;
+        };
+        description = lib.mdDoc ''
+          The current Package Manager package.
+        '';
+      };
 
       path = mkOption {
         type = types.nullOr types.str;
@@ -28,6 +39,6 @@ in {
   };
 
   config = mkIf (cfg.enable && !config.submoduleSupport.enable) {
-    project.packages = [(pkgs.callPackage ../../project-manager {inherit (cfg) path;})];
+    project.packages = [config.programs.project-manager.package];
   };
 }
