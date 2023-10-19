@@ -67,9 +67,9 @@
             required_status_checks = {
               strict = false;
               contexts = [
-                "check format [aarch64-darwin]"
-                "check format [aarch64-linux]"
-                "check format [x86_64-linux]"
+                "check formatter [aarch64-darwin]"
+                "check formatter [aarch64-linux]"
+                "check formatter [x86_64-linux]"
                 "devShell default [aarch64-darwin]"
                 "devShell default [aarch64-linux]"
                 "devShell default [x86_64-linux]"
