@@ -3,6 +3,7 @@
   config,
   lib,
   pkgs,
+  self,
   ...
 }:
 with lib; let
@@ -537,13 +538,43 @@ in {
         '');
 
     project = {
+      checks.project-manager-files =
+        pkgs.runCommand "project-manager-files"
+        {
+          nativeBuildInputs = [
+            pkgs.coreutils
+            pkgs.git
+            (pkgs.callPackage ../project-manager {})
+          ];
+          meta.description = "Check that the generated files are up-to-date.";
+        }
+        ''
+          set -e
+          PRJ=$TMP/project
+          cp -r ${self} $PRJ
+          chmod -R a+w $PRJ
+          cd $PRJ
+          export HOME=$TMPDIR
+          export NIX_CONFIG="extra-experimental-features = flakes nix-command"
+          ## Record the current state of the repo
+          git init
+          git config user.email nix@localhost
+          git add .
+          git commit --message "current files"
+          ## Update everything
+          project-manager switch
+          ## Make sure there are no changes
+          git --no-pager diff --exit-code
+          touch $out
+        '';
+
       devShells = {
         default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
           nativeBuildInputs =
             cfg.packages
             ++ [
-              (pkgs.callPackage ../project-manager {inherit bash-strict-mode;})
+              (pkgs.callPackage ../project-manager {})
             ];
           shellHook = cfg.extraProfileCommands;
           meta = {

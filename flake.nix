@@ -10,7 +10,8 @@
     ];
     ## Isolate the build.
     registries = false;
-    sandbox = true;
+    ## TODO: Enable this once it succeeds on darwin.
+    # sandbox = true;
   };
 
   outputs = inputs: let
@@ -38,9 +39,19 @@
     }
     // inputs.flake-utils.lib.eachSystem inputs.flake-utils.lib.defaultSystems
     (system: let
+      unstable = import inputs.nixpkgs-unstable {inherit system;};
       pkgs = import inputs.nixpkgs {
         inherit system;
-        overlays = [inputs.bash-strict-mode.overlays.default];
+        overlays = [
+          (final: prev: {
+            ## TODO: Remove these once Nix 1.16 is in a stable release. See
+            ##       NixOS/nix#8485.
+            nix = unstable.nix;
+            nil = unstable.nil;
+          })
+          inputs.bash-strict-mode.overlays.default
+          inputs.self.overlays.default
+        ];
       };
     in {
       packages = let
@@ -89,6 +100,7 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
       inputs.nixpkgs.follows = "nixpkgs";

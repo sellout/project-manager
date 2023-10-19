@@ -9,8 +9,8 @@
   gnused,
   jq,
   less,
-  makeWrapper,
   ncurses,
+  nix,
   unixtools,
   # used for pkgs.path for nixos-option
   pkgs,
@@ -22,7 +22,10 @@
 in
   runCommand "project-manager" {
     preferLocalBuild = true;
-    nativeBuildInputs = [gettext makeWrapper];
+    nativeBuildInputs = [
+      bash-strict-mode
+      gettext
+    ];
     meta = with lib; {
       mainProgram = "project-manager";
       description = "A project environment configurator";
@@ -43,6 +46,7 @@ in
         jq
         less
         ncurses
+        nix
         nixos-option
         unixtools.hostname
       ]
@@ -50,15 +54,7 @@ in
       --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.sh}' \
       --subst-var-by OUT "$out"
 
-    ## TODO: I feel like this should use
-    ##      `patchShebangs --host $out/bin/project-manager` instead of
-    ##      `wrapProgram`, but I can’t seem to get it to actually replace the
-    ##      `strict-bash` reference.
-    wrapProgram $out/bin/project-manager --prefix PATH : "${
-      lib.makeBinPath [
-        bash-strict-mode
-      ]
-    }"
+    patchShebangs $out/bin/project-manager
 
     install -D -m755 ${./completion.bash} \
       $out/share/bash-completion/completions/project-manager
