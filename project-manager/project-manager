@@ -115,26 +115,14 @@ function setProjectManagerPathVariables() {
     return
   fi
 
-  declare -r globalNixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
-  declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user/$USER"
-
-  declare -r stateHome="${XDG_STATE_HOME:-$HOME/.local/state}"
+  declare -r stateHome="$PROJECT_ROOT/.local/state"
   declare -r userNixStateDir="$stateHome/nix"
 
-  declare -gr PM_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/project-manager"
+  declare -gr PM_DATA_HOME="$PROJECT_ROOT/.local/share/project-manager"
   declare -gr PM_STATE_DIR="$stateHome/project-manager"
 
-  if [[ -d $userNixStateDir/profiles ]]; then
-    declare -gr PM_PROFILE_DIR="$userNixStateDir/profiles/project-manager"
-  elif [[ -d $globalProfilesDir ]]; then
-    declare -gr PM_PROFILE_DIR="$globalProfilesDir/project-manager"
-  else
-    _iError 'Could not find suitable profile directory, tried %s and %s' \
-      "$PM_STATE_DIR/profiles" "$globalProfilesDir" >&2
-    exit 1
-  fi
-
-  PM_PROJECT_NAME="$(nix eval --raw .#projectConfigurations.aarch64-darwin.config.project.name)"
+  mkdir -p "$userNixStateDir/profiles"
+  declare -gr PM_PROFILE_DIR="$userNixStateDir/profiles"
 }
 
 function setFlakeAttribute() {
@@ -472,9 +460,9 @@ function doListGens() {
 
   pushd "$PM_PROFILE_DIR" > /dev/null || exit
   # shellcheck disable=2012
-  ls --color=$color -gG --time-style=long-iso --sort time "${PM_PROJECT_NAME}-*-link" \
+  ls --color=$color -gG --time-style=long-iso --sort time project-manager-*-link \
     | cut -d' ' -f 4- \
-    | sed -E "s/${PM_PROJECT_NAME}-([[:digit:]]*)-link/: id \\1/"
+    | sed -E 's/project-manager-([[:digit:]]*)-link/: id \1/'
   popd > /dev/null || exit
 }
 
@@ -487,7 +475,7 @@ function doRmGenerations() {
   pushd "$PM_PROFILE_DIR" > /dev/null || exit
 
   for generationId in "$@"; do
-    local linkName="${PM_PROJECT_NAME}-$generationId-link"
+    local linkName="project-manager-$generationId-link"
 
     if [[ ! -e $linkName ]]; then
       _i 'No generation with ID %s' "$generationId" >&2
@@ -507,7 +495,7 @@ function doExpireGenerations() {
 
   local generations
   generations="$(
-    find "$PM_PROFILE_DIR" -name '${PM_PROJECT_NAME}-*-link' -not -newermt "$1" \
+    find "$PM_PROFILE_DIR" -name 'project-manager-*-link' -not -newermt "$1" \
       | sed 's/^.*-\([0-9]*\)-link$/\1/'
   )"
 
