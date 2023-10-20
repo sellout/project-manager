@@ -1,28 +1,12 @@
 function setupVars() {
-  declare -r stateHome="${XDG_STATE_HOME:-$HOME/.local/state}"
+  declare -r stateHome="$PROJECT_ROOT/.local/state"
   declare -r userNixStateDir="$stateHome/nix"
   declare -r pmGcrootsDir="$stateHome/project-manager/gcroots"
 
-  declare -r globalNixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
-  declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user"
+  mkdir -p "$userNixStateDir/profiles"
+  declare -r profilesDir="$userNixStateDir/profiles"
 
-  # If the user Nix profiles path exists, then place the PM profile there.
-  # Otherwise, if the global Nix per-user state directory exists then use
-  # that. If neither exists, then we give up.
-  #
-  # shellcheck disable=2174
-  if [[ -d $userNixStateDir/profiles ]]; then
-    declare -r profilesDir="$userNixStateDir/profiles"
-  elif [[ -v USER && -d $globalProfilesDir/$USER ]]; then
-    declare -r profilesDir="$globalProfilesDir/$USER"
-  else
-    _iError 'Could not find suitable profile directory, tried %s and %s' \
-      "$userNixStateDir/profiles" "$globalProfilesDir" >&2
-    exit 1
-  fi
-
-  mkdir -p "$profilesDir/project-manager"
-  declare -gr genProfilePath="$profilesDir/project-manager/@PROJECT_NAME@"
+  declare -gr genProfilePath="$profilesDir/project-manager"
   declare -gr newGenPath="@GENERATION_DIR@"
   declare -gr newGenGcPath="$pmGcrootsDir/current-project"
 
@@ -80,9 +64,6 @@ _i "Starting Project Manager activation"
 # also create the necessary directories in profiles and gcroots.
 $VERBOSE_RUN _i "Sanity checking Nix"
 nix-build --expr '{}' --no-out-link
-
-# Also make sure that the Nix profiles path is created.
-nix-env -q > /dev/null 2>&1 || true
 
 setupVars
 

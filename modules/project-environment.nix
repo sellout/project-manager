@@ -530,8 +530,7 @@ in {
           ln -s $out/activate $out/bin/project-manager-generation
 
           substituteInPlace $out/activate \
-            --subst-var-by GENERATION_DIR $out \
-            --subst-var-by PROJECT_NAME "${config.project.name}"
+            --subst-var-by GENERATION_DIR $out
 
           ln -s ${config.project-files} $out/project-files
 
