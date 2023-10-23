@@ -44,13 +44,17 @@
 in {
   inherit (module) options config;
 
-  activationPackage = module.config.project.activationPackage;
-
-  checks = module.config.project.checks;
-
-  devShells = module.config.project.devShells;
-
-  formatter = module.config.project.formatter;
+  inherit
+    (module.config.project)
+    activationPackage
+    checks
+    devShells
+    formatter
+    cleanRepositoryPersisted
+    cleanRepositoryPersistedExcept
+    filterRepositoryPersisted
+    filterRepositoryPersistedExcept
+    ;
 
   newsDisplay = rawModule.config.news.display;
   newsEntries = lib.sort (a: b: a.time > b.time) (
