@@ -14,20 +14,28 @@
     # sandbox = true;
   };
 
-  outputs = inputs: let
+  outputs = {
+    bash-strict-mode,
+    flake-schemas,
+    flake-utils,
+    nixpkgs,
+    nixpkgs-unstable,
+    self,
+    treefmt-nix,
+  }: let
     pname = "project-manager";
   in
     {
       ## This output’s schema may be in flux. See NixOS/nix#8892.
-      schemas = inputs.flake-schemas.schemas // import ./nix/schemas.nix;
+      schemas = flake-schemas.schemas // import ./nix/schemas.nix;
 
       lib = import ./nix/lib.nix {
-        inherit (inputs) bash-strict-mode treefmt-nix;
-        project-manager = inputs.self;
+        inherit bash-strict-mode treefmt-nix;
+        project-manager = self;
       };
 
       overlays.default = final: prev: {
-        project-manager = inputs.self.packages.${final.system}.project-manager;
+        project-manager = self.packages.${final.system}.project-manager;
       };
 
       ## All of the modules included in Project Manager. You generally don’t
@@ -37,10 +45,10 @@
       ##     Those are not yet included in this set.
       projectModules = import ./modules/modules.nix;
     }
-    // inputs.flake-utils.lib.eachSystem inputs.flake-utils.lib.defaultSystems
+    // flake-utils.lib.eachSystem flake-utils.lib.defaultSystems
     (system: let
-      unstable = import inputs.nixpkgs-unstable {inherit system;};
-      pkgs = import inputs.nixpkgs {
+      unstable = import nixpkgs-unstable {inherit system;};
+      pkgs = import nixpkgs {
         inherit system;
         overlays = [
           (final: prev: {
@@ -49,8 +57,8 @@
             nix = unstable.nix;
             nil = unstable.nil;
           })
-          inputs.bash-strict-mode.overlays.default
-          inputs.self.overlays.default
+          bash-strict-mode.overlays.default
+          self.overlays.default
         ];
       };
     in {
@@ -61,29 +69,34 @@
           inherit (releaseInfo) release isReleaseBranch;
         };
       in {
-        default = inputs.self.packages.${system}.project-manager;
+        default = self.packages.${system}.project-manager;
         docs-html = docs.manual.html;
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
         project-manager = pkgs.callPackage ./project-manager {};
       };
 
-      devShells = inputs.self.projectConfigurations.${system}.devShells;
+      projectConfigurations =
+        self.lib.defaultConfiguration {inherit pkgs self;};
 
-      # devShells = let
-      #   pkgs = inputs.nixpkgs.legacyPackages.${system};
-      #   tests = import ./tests {inherit pkgs;};
-      # in
-      #   tests.run;
+      devShells = let
+        #   tests = import ./tests {inherit pkgs;};
+      in
+        self.projectConfigurations.${system}.devShells
+        # // tests.run
+        // {
+          default =
+            self.devShells.${system}.project-manager.overrideAttrs
+            (old: {
+              inputsFrom =
+                builtins.attrValues self.checks.${system}
+                ++ builtins.attrValues self.packages.${system};
+            });
+        };
 
-      projectConfigurations = inputs.self.lib.defaultConfiguration {
-        inherit pkgs;
-        inherit (inputs) self;
-      };
+      checks = self.projectConfigurations.${system}.checks;
 
-      checks = inputs.self.projectConfigurations.${system}.checks;
-
-      formatter = inputs.self.projectConfigurations.${system}.formatter;
+      formatter = self.projectConfigurations.${system}.formatter;
     });
 
   inputs = {

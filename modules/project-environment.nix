@@ -279,10 +279,10 @@ in {
       type = types.attrsOf types.package;
       description = lib.mdDoc ''
         Packages providing shells with various tooling. There is always a
-        `project.devShells.default` which contains all the tooling declared in
-        the project config. Other modules may also define their own `devShells`,
-        for example, when they have a check that can’t be defined as a pure
-        check, it’s provided as a devShell with the `check-` prefix.
+        `project.devShells.project-manager` which contains all the tooling
+        declared in the project config. Other modules may also define their own
+        `devShells`, for example, when they have a check that can’t be defined
+        as a pure check, it’s provided as a devShell with the `check-` prefix.
       '';
     };
 
@@ -571,7 +571,7 @@ in {
         '';
 
       devShells = {
-        default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
+        project-manager = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
           nativeBuildInputs = cfg.packages;
           shellHook = cfg.extraProfileCommands;
