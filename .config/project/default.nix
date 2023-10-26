@@ -81,6 +81,7 @@
 
   ## publishing
   services.flakehub.enable = true;
+  services.flakestry.enable = true;
   services.github.enable = true;
   services.github.settings.repository.homepage = "https://sellout.github.io/${config.project.name}";
   services.github.settings.repository.topics = ["development" "nix-flakes"];
