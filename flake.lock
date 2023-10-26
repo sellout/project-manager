@@ -291,6 +291,35 @@
         "type": "github"
       }
     },
+    "flaky_2": {
+      "inputs": {
+        "bash-strict-mode": [
+          "bash-strict-mode"
+        ],
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "home-manager": "home-manager_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "project-manager": []
+      },
+      "locked": {
+        "lastModified": 1698295935,
+        "narHash": "sha256-iktyhmf8L+3D8o9uQ8BGywNLM58x+FbAPPn96NORllU=",
+        "owner": "sellout",
+        "repo": "flaky",
+        "rev": "f0732b5025a2ef206fc44a13569943b60ad882eb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sellout",
+        "ref": "improve-base-config",
+        "repo": "flaky",
+        "type": "github"
+      }
+    },
     "haumea": {
       "inputs": {
         "nixpkgs": [
@@ -330,6 +359,28 @@
         "owner": "nix-community",
         "repo": "home-manager",
         "rev": "07c347bb50994691d7b0095f45ebd8838cf6bc38",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "release-23.05",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "home-manager_2": {
+      "inputs": {
+        "nixpkgs": [
+          "flaky",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1695108154,
+        "narHash": "sha256-gSg7UTVtls2yO9lKtP0yb66XBHT1Fx5qZSZbGMpSn2c=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "07682fff75d41f18327a871088d20af2710d4744",
         "type": "github"
       },
       "original": {
@@ -696,6 +747,7 @@
         "bash-strict-mode": "bash-strict-mode",
         "flake-schemas": "flake-schemas",
         "flake-utils": "flake-utils_4",
+        "flaky": "flaky_2",
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "treefmt-nix": "treefmt-nix_2"
