@@ -113,7 +113,7 @@
       url = "github:sellout/bash-strict-mode";
     };
 
-    flake-schemas.url = "github:DeterminateSystems/flake-schemas/support-nixos-modules";
+    flake-schemas.url = "github:DeterminateSystems/flake-schemas";
 
     flake-utils.url = "github:numtide/flake-utils";
 
@@ -124,7 +124,7 @@
         nixpkgs.follows = "nixpkgs";
         project-manager.follows = "";
       };
-      url = "github:sellout/flaky/improve-base-config";
+      url = "github:sellout/flaky";
     };
 
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
