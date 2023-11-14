@@ -16,8 +16,6 @@ with lib; let
     })
     .fileType;
 
-  hooksPath = ".cache/git/hooks";
-
   # create [section "subsection"] keys from "section.subsection" attrset names
   mkSectionName = name: let
     containsQuote = strings.hasInfix ''"'' name;
@@ -322,28 +320,26 @@ in {
           updateGitStatuses || exit 1
         '');
 
-        file = {
-          ".cache/git/config" = {
-            minimum-persistence = "store";
-            onChange =
-              if cfg.installConfig
-              then ''
-                ${pkgs.git}/bin/git config --worktree \
-                  include.path "${config.project.file.".cache/git/config".storePath}"
-              ''
-              else ''
-                ${pkgs.git}/bin/git config --worktree --unset include.path || true
-              '';
-            text = gitToIni cfg.iniContent;
-          };
-
-          ".gitattributes" = {
-            minimum-persistence = "worktree";
-            text = concatStringsSep "\n" cfg.attributes + "\n";
-          };
+        file.".gitattributes" = {
+          minimum-persistence = "worktree";
+          text = concatStringsSep "\n" cfg.attributes + "\n";
         };
 
         packages = [cfg.package];
+      };
+
+      xdg.cacheFile."git/config" = {
+        minimum-persistence = "store";
+        onChange =
+          if cfg.installConfig
+          then ''
+            ${pkgs.git}/bin/git config --worktree \
+              include.path "${config.xdg.cacheFile."git/config".storePath}"
+          ''
+          else ''
+            ${pkgs.git}/bin/git config --worktree --unset include.path || true
+          '';
+        text = gitToIni cfg.iniContent;
       };
     }
 
@@ -371,37 +367,38 @@ in {
     })
 
     (mkIf (cfg.ignoreRevs != null) (let
-      ignoreRevsPath = ".cache/git/ignoreRevs";
+      ignoreRevsPath = "git/ignoreRevs";
     in {
       programs.git.iniContent = {
         blame.ignoreRevsFile =
-          toString config.project.file."${ignoreRevsPath}".storePath;
+          toString (config.xdg.cacheFile."${ignoreRevsPath}".storePath);
       };
-      project.file."${ignoreRevsPath}" = {
+      xdg.cacheFile."${ignoreRevsPath}" = {
         minimum-persistence = "store";
         text = concatLines cfg.ignoreRevs;
       };
     }))
 
     (mkIf (cfg.hooks != null) {
-      project.file = lib.mapAttrs (k: v:
-        v
-        // {
-          executable = true;
-          minimum-persistence = "store";
-        })
+      xdg.cacheFile = lib.mapAttrs' (name: file:
+        lib.nameValuePair "git/hooks/${name}"
+        (lib.mkMerge [
+          file
+          {
+            executable = true;
+            minimum-persistence = "store";
+          }
+        ]))
       cfg.hooks;
-      programs.git.iniContent = {
-        core.hooksPath = let
-          entries =
-            mapAttrsToList (name: file: {
-              inherit name;
-              path = config.project.file."${name}".storePath;
-            })
-            cfg.hooks;
-        in
-          toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries);
-      };
+      programs.git.iniContent.core.hooksPath = let
+        entries =
+          mapAttrsToList (name: file: {
+            inherit name;
+            path = config.xdg.cacheFile."git/hooks/${name}".storePath;
+          })
+          cfg.hooks;
+      in
+        toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries);
     })
 
     (mkIf (lib.isAttrs cfg.config) {

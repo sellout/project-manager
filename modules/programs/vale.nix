@@ -68,7 +68,7 @@ in {
       ##           combine the requested packages with our Vocabs for a new package
       ##       2. if we _don’t_ create a Nix package for this, then the check
       ##           requires downloading.
-      else {StylesPath = ".cache/vale";} // cfg.coreSettings;
+      else {StylesPath = "${config.xdg.cacheDir}/vale";} // cfg.coreSettings;
   in {
     project = {
       file =
