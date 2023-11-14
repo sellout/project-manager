@@ -7,6 +7,7 @@
   # generators = import ./generators.nix { inherit lib; };
   gvariant = import ./gvariant.nix {inherit lib;};
   # maintainers = import ./maintainers.nix;
+  path = import ./path.nix {inherit lib;};
   strings = import ./strings.nix {inherit lib;};
   types = import ./types.nix {inherit gvariant lib;};
 

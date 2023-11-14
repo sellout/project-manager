@@ -76,6 +76,31 @@ in rec {
           '';
         };
 
+        referenceViaStore = mkOption {
+          type = types.functionTo types.bool;
+          internal = true;
+          description = lib.mdDoc ''
+            Whether the file should be referenced from the store (as opposed to
+            the working tree). The argument is where the reference will be used.
+
+            In most cases, `reference` can be used instead to get the path to
+            use as a reference directly. But this is useful when that isn't
+            enough.
+          '';
+        };
+
+        reference = mkOption {
+          type = types.functionTo types.str;
+          internal = true;
+          description = lib.mdDoc ''
+            The path that should be used for references to this file. If the
+            file is store persisted, then this points to the store, otherwise it
+            points into the worktree. The function takes the location that the
+            reference will be used from, returning a path relative to that
+            location.
+          '';
+        };
+
         executable = mkOption {
           type = types.nullOr types.bool;
           default = null;
@@ -203,6 +228,20 @@ in rec {
               path = config.source;
               name = sourceName;
             };
+
+        referenceViaStore = referencingFile:
+          config.persistence == "store" || referencingFile.persistence == "store";
+
+        reference = referencingFile:
+          if config.referenceViaStore referencingFile
+          ## Absolute path to the store. We do this in all cases where the
+          ## referencing file isn't persisted to the working tree to avoid
+          ## having references outside of the store, especially ones that will
+          ## vary between users.
+          then toString config.storePath
+          ## Relative path within worktree
+          else lib.pm.path.routeFromFile referencingFile.target config.target;
+
         persistence = lib.mkForce (
           if
             (

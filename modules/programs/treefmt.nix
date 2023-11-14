@@ -49,20 +49,8 @@ in {
       settings =
         cfg.settings
         // {
-          global =
-            if cfg.settings ? global
-            then
-              cfg.settings.global
-              // {
-                excludes =
-                  (
-                    if cfg.settings.global ? excludes
-                    then cfg.settings.global.excludes
-                    else []
-                  )
-                  ++ newExcludes;
-              }
-            else {excludes = newExcludes;};
+          global.excludes =
+            (cfg.settings.global.excludes or []) ++ newExcludes;
         };
     };
   in {
