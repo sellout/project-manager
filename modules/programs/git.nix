@@ -149,13 +149,11 @@ in {
     programs.git = {
       enable = mkEnableOption (lib.mdDoc "Git");
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.git;
-        defaultText = lib.literalMD "pkgs.git";
-        description = lib.mdDoc ''
-          Git package to install. Use {var}`pkgs.gitAndTools.gitFull`
-          to gain access to {command}`git send-email` for instance.
+      package = lib.mkPackageOptionMD pkgs "Git" {
+        default = ["git"];
+        extraDescription = ''
+          Use {var}`pkgs.gitAndTools.gitFull` to gain access to
+          {command}`git send-email` for instance.
         '';
       };
 
