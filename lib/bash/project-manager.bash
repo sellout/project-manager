@@ -1,11 +1,6 @@
-#!/usr/bin/env strict-bash
-# shellcheck shell=bash
-
-#
 # This file contains a number of utilities for use by the project-manager tool and
 # the generated Project Manager activation scripts. No guarantee is made about
 # backwards or forward compatibility.
-#
 
 # Sets up colors suitable for the `errorEcho`, `warnEcho`, and `noteEcho`
 # functions.
