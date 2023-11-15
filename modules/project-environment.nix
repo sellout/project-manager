@@ -451,7 +451,7 @@ in {
     in ''
       export TEXTDOMAIN=pm-modules
       export TEXTDOMAINDIR=${domainDir}
-      source ${../lib/bash/project-manager.sh}
+      source ${../lib/bash/project-manager.bash}
     '';
 
     project.activationPackage = let
@@ -539,36 +539,38 @@ in {
 
     project = {
       checks.project-manager-files =
-        pkgs.runCommand "project-manager-files"
-        {
-          nativeBuildInputs = [
-            config.programs.git.package
-            config.programs.project-manager.package
-            pkgs.coreutils
-          ];
-          meta.description = "Check that the generated files are up-to-date.";
-        }
-        ''
-          set -e
-          PRJ=$TMP/project
-          cp -r ${self} $PRJ
-          chmod -R a+w $PRJ
-          cd $PRJ
-          export HOME=$TMPDIR
-          mkdir -p "$HOME/.local/state/nix/profiles"
-          export NIX_CONFIG="extra-experimental-features = flakes nix-command"
-          ## Record the current state of the repo
-          git init
-          git config user.email nix@localhost
-          git config user.name Nix
-          git add .
-          git commit --message "current files"
-          ## Update everything
-          project-manager switch
-          ## Make sure there are no changes
-          git --no-pager diff --exit-code
-          touch $out
-        '';
+        bash-strict-mode.lib.checkedDrv
+        pkgs
+        (pkgs.runCommand "project-manager-files"
+          {
+            nativeBuildInputs = [
+              config.programs.git.package
+              config.programs.project-manager.package
+              pkgs.coreutils
+            ];
+            meta.description = "Check that the generated files are up-to-date.";
+          }
+          ''
+            set -e
+            PRJ=$TMP/project
+            cp -r ${self} $PRJ
+            chmod -R a+w $PRJ
+            cd $PRJ
+            export HOME=$TMPDIR
+            mkdir -p "$HOME/.local/state/nix/profiles"
+            export NIX_CONFIG="extra-experimental-features = flakes nix-command"
+            ## Record the current state of the repo
+            git init
+            git config user.email nix@localhost
+            git config user.name Nix
+            git add .
+            git commit --message "current files"
+            ## Update everything
+            project-manager switch
+            ## Make sure there are no changes
+            git --no-pager diff --exit-code
+            touch $out
+          '');
 
       devShells = {
         project-manager = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {

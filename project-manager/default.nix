@@ -22,10 +22,8 @@
 in
   runCommand "project-manager" {
     preferLocalBuild = true;
-    nativeBuildInputs = [
-      bash-strict-mode
-      gettext
-    ];
+    buildInputs = [bash-strict-mode];
+    nativeBuildInputs = [gettext];
     meta = with lib; {
       mainProgram = "project-manager";
       description = "A project environment configurator";
@@ -51,10 +49,10 @@ in
         unixtools.hostname
       ]
     }" \
-      --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.sh}' \
+      --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.bash}' \
       --subst-var-by OUT "$out"
 
-    patchShebangs $out/bin/project-manager
+    patchShebangs --host $out/bin/project-manager
 
     install -D -m755 ${./completion.bash} \
       $out/share/bash-completion/completions/project-manager
@@ -63,8 +61,8 @@ in
     install -D -m755 ${./completion.fish} \
       $out/share/fish/vendor_completions.d/project-manager.fish
 
-    install -D -m755 ${../lib/bash/project-manager.sh} \
-      "$out/share/bash/project-manager.sh"
+    install -D -m755 ${../lib/bash/project-manager.bash} \
+      "$out/share/bash/project-manager.bash"
 
     # for path in {./po}/*.po; do
     #   lang="''${path##*/}"

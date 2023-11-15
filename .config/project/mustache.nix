@@ -9,7 +9,7 @@
         repo = "sellout/project-manager";
         version = "0.1.0";
       };
-      type.name = "bash";
+      type.name = "nix";
     };
   };
 }

@@ -18,12 +18,15 @@
     bash-strict-mode,
     flake-schemas,
     flake-utils,
+    flaky,
     nixpkgs,
     nixpkgs-unstable,
     self,
     treefmt-nix,
   }: let
     pname = "project-manager";
+
+    supportedSystems = flake-utils.lib.defaultSystems;
   in
     {
       ## This output’s schema may be in flux. See NixOS/nix#8892.
@@ -44,8 +47,17 @@
       ## NB: Project Manager also loads some modules inherited from nixpkgs.
       ##     Those are not yet included in this set.
       projectModules = import ./modules/modules.nix;
+
+      homeConfigurations =
+        builtins.listToAttrs
+        (builtins.map
+          (flaky.lib.homeConfigurations.example
+            "project-manager"
+            self
+            [({pkgs, ...}: {home.packages = [pkgs.project-manager];})])
+          supportedSystems);
     }
-    // flake-utils.lib.eachSystem flake-utils.lib.defaultSystems
+    // flake-utils.lib.eachSystem supportedSystems
     (system: let
       unstable = import nixpkgs-unstable {inherit system;};
       pkgs = import nixpkgs {
@@ -77,7 +89,7 @@
       };
 
       projectConfigurations =
-        self.lib.defaultConfiguration {inherit pkgs self;};
+        flaky.lib.projectConfigurations.default {inherit pkgs self;};
 
       devShells = let
         #   tests = import ./tests {inherit pkgs;};
@@ -108,9 +120,19 @@
       url = "github:sellout/bash-strict-mode";
     };
 
-    flake-schemas.url = "github:DeterminateSystems/flake-schemas/support-nixos-modules";
+    flake-schemas.url = "github:DeterminateSystems/flake-schemas";
 
     flake-utils.url = "github:numtide/flake-utils";
+
+    flaky = {
+      inputs = {
+        bash-strict-mode.follows = "bash-strict-mode";
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs";
+        project-manager.follows = "";
+      };
+      url = "github:sellout/flaky";
+    };
 
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
