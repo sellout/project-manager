@@ -192,27 +192,12 @@ function doInit() {
     _i 'The file %s already exists, leaving it unchanged...' "$confFile"
   else
     _i 'Creating %s...' "$confFile"
-    local nl=$'\n'
-    local xdgVars=""
-    if [[ -v XDG_CACHE_HOME && $XDG_CACHE_HOME != "$HOME/.cache" ]]; then
-      xdgVars="$xdgVars  xdg.cacheHome = \"$XDG_CACHE_HOME\";$nl"
-    fi
-    if [[ -v XDG_CONFIG_HOME && $XDG_CONFIG_HOME != "$HOME/.config" ]]; then
-      xdgVars="$xdgVars  xdg.configHome = \"$XDG_CONFIG_HOME\";$nl"
-    fi
-    if [[ -v XDG_DATA_HOME && $XDG_DATA_HOME != "$HOME/.local/share" ]]; then
-      xdgVars="$xdgVars  xdg.dataHome = \"$XDG_DATA_HOME\";$nl"
-    fi
-    if [[ -v XDG_STATE_HOME && $XDG_STATE_HOME != "$HOME/.local/state" ]]; then
-      xdgVars="$xdgVars  xdg.stateHome = \"$XDG_STATE_HOME\";$nl"
-    fi
 
     mkdir -p "$confDir"
     cat > "$confFile" << EOF
 { config, pkgs, ... }:
 
 {
-$xdgVars
   # This value determines the Project Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Project Manager release
   # introduces backwards incompatible changes.
@@ -783,7 +768,7 @@ while [[ $# -gt 0 ]]; do
       PASSTHROUGH_OPTS+=("$opt" "$1")
       shift
       ;;
-    --debug | --keep-failed | --keep-going | --show-trace | --substitute | --no-substitute | --impure)
+    --debug | --eval-cache | --no-eval-cache | --keep-failed | --keep-going | --show-trace | --substitute | --no-substitute | --impure)
       PASSTHROUGH_OPTS+=("$opt")
       ;;
     -v | --verbose)

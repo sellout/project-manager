@@ -8,6 +8,7 @@
   submodule-support = ./misc/submodule-support.nix;
   version = ./misc/version.nix;
   # ./misc/vte.nix
+  xdg = ./misc/xdg.nix;
   # ./programs/bash.nix
   # ./programs/darcs.nix
   direnv = ./programs/direnv.nix;
