@@ -83,6 +83,20 @@ in {
       '';
     };
 
+    wrapPrograms = mkOption {
+      type = types.nullOr types.bool;
+      default = null;
+      apply = p:
+        if p == null
+        then !cfg.commit-by-default
+        else p;
+      description = lib.mdDoc ''
+        Whether to default to wrapping programs instead of writing configuration
+        files. If null, it falls back to the opposite of
+        {var}`project.commit-by-default`.
+      '';
+    };
+
     shellAliases = mkOption {
       type = with types; attrsOf str;
       default = {};

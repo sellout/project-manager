@@ -11,9 +11,7 @@ in {
   options.programs.treefmt = {
     enable = lib.mkEnableOption (lib.mdDoc "treefmt");
 
-    package = lib.mkPackageOptionMD pkgs "treefmt" {
-      default = ["treefmt"];
-    };
+    package = lib.mkPackageOptionMD pkgs "treefmt" {};
 
     projectRootFile = lib.mkOption {
       type = lib.types.str;
@@ -24,7 +22,7 @@ in {
     };
 
     programs = lib.mkOption {
-      type = lib.types.attrs;
+      type = lib.types.attrsOf lib.types.attrs;
       default = {};
       description = lib.mdDoc ''
         Configuration for treefmt formatters. See
@@ -33,7 +31,7 @@ in {
     };
 
     settings = lib.mkOption {
-      type = lib.types.attrs;
+      type = lib.types.attrsOf lib.types.attrs;
       default = {};
       description = lib.mdDoc ''
         Settings for treefmt. See

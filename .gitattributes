@@ -1,7 +1,6 @@
 /.editorconfig linguist-generated
 /.gitattributes linguist-generated
 /.github/settings.yml linguist-generated
-/.shellcheckrc linguist-generated
 /.github/workflows/flakehub-publish.yml linguist-generated
 /.github/workflows/flakestry-publish.yml linguist-generated
 /garnix.yaml linguist-generated
