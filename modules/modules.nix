@@ -19,7 +19,7 @@
   # ./programs/git-cliff.nix
   # ./programs/git-credential-oauth.nix
   git = ./programs/git.nix;
-  # ./programs/just.nix
+  just = ./programs/just.nix;
   mercurial = ./programs/mercurial.nix;
   # ./programs/neovim.nix
   # ./programs/nushell.nix
