@@ -13,14 +13,12 @@
    Manager.
   </para>
   <para>
-   If you encounter problems then please reach out on the IRC channel
-   <link xlink:href="https://webchat.oftc.net/?channels=project-manager">#project-manager</link>
-   hosted by <link xlink:href="https://oftc.net/">OFTC</link>.
-   There is also a <link xlink:href="https://matrix.to/#/%23hm:rycee.net">Matrix room</link>,
-   which is bridged to the IRC channel.
-   If your problem is caused by a bug in Project Manager then it should
-   be reported on the
-   <link xlink:href="https://github.com/sellout/project-manager/issues">Project Manager issue tracker</link>.
+   If you encounter problems then please reach out on
+   <link xlink:href="https://matrix.to/#/%23project-manager:matrix.org">the
+   Project Manager Matrix room</link>. If your problem is caused by a bug in
+   Project Manager then it should be reported on the
+   <link xlink:href="https://github.com/sellout/project-manager/issues">Project
+   Manager issue tracker</link>.
   </para>
   <note>
    <para>
