@@ -501,11 +501,11 @@ in {
         )
         + (
           # Add path of the Nix binaries, if a Nix package is configured, then
-          # use that one, otherwise grab the path of the nix-env tool.
+          # use that one, otherwise grab the path of the nix command.
           # if config.nix.enable && config.nix.package != null then
           #   ":${config.nix.package}/bin"
           # else
-          ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix-env)))"
+          ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix)))"
         )
         + optionalString (!cfg.emptyActivationPath) "\${PATH:+:}$PATH";
 

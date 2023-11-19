@@ -12,9 +12,10 @@ function setupVars() {
 
   declare greatestGenNum
   greatestGenNum=$(
-    nix-env --list-generations --profile "$genProfilePath" \
-      | tail -1 \
-      | sed -E 's/ *([[:digit:]]+) .*/\1/'
+    nix profile history --profile "$genProfilePath" \
+      |tail -2 \
+      | sed -E 's/.*m([[:digit:]]+).*/\1/' \
+      |head -1
   )
 
   if [[ -n $greatestGenNum ]]; then
@@ -78,7 +79,7 @@ else
 fi
 
 if [[ -v VERBOSE ]]; then
-  _i 'Using Nix version: %s' "$(nix-env --version)"
+  _i 'Using Nix version: %s' "$(nix --version)"
 fi
 
 $VERBOSE_RUN _i "Activation variables:"
