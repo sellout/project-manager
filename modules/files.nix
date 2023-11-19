@@ -194,16 +194,12 @@ in {
 
         if [[ ! -v oldGenPath || "$oldGenPath" != "$newGenPath" ]] ; then
           _i "Creating profile generation %s" $newGenNum
-          if [[ -e "$genProfilePath"/manifest.json ]] ; then
-            # Remove all packages from "$genProfilePath"
-            # `nix profile remove '.*' --profile "$genProfilePath"` was not working, so here is a workaround:
-            nix profile list --profile "$genProfilePath" \
-              | cut -d ' ' -f 4 \
-              | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$genProfilePath"
-            $DRY_RUN_CMD nix profile install $VERBOSE_ARG --profile "$genProfilePath" "$newGenPath"
-          else
-            $DRY_RUN_CMD nix-env $VERBOSE_ARG --profile "$genProfilePath" --set "$newGenPath"
-          fi
+          # Remove all packages from "$genProfilePath"
+          # `nix profile remove '.*' --profile "$genProfilePath"` was not working, so here is a workaround:
+          nix profile list --profile "$genProfilePath" \
+            | cut -d ' ' -f 4 \
+            | xargs --no-run-if-empty $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$genProfilePath"
+          $DRY_RUN_CMD nix profile install $VERBOSE_ARG --profile "$genProfilePath" "$newGenPath"
 
           $DRY_RUN_CMD nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
         else

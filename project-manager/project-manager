@@ -31,17 +31,12 @@ function nixProfileList() {
 }
 
 function removeByName() {
-  nixProfileList "$1" | xargs -t "$DRY_RUN_CMD" nix profile remove "$VERBOSE_ARG"
+  nixProfileList "$1" | xargs --no-run-if-empty "$VERBOSE" "$DRY_RUN_CMD" nix profile remove "$VERBOSE_ARG"
 }
 
 function setNixProfileCommands() {
-  if [[ -e $HOME/.nix-profile/manifest.json ]]; then
-    LIST_OUTPATH_CMD="nix profile list"
-    REMOVE_CMD="removeByName"
-  else
-    LIST_OUTPATH_CMD="nix-env -q --out-path"
-    REMOVE_CMD="nix-env --uninstall"
-  fi
+  LIST_OUTPATH_CMD="nix profile list"
+  REMOVE_CMD="removeByName"
 }
 
 function setVerboseAndDryRun() {
