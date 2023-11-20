@@ -40,12 +40,7 @@
       ## Shell linter
       programs.shellcheck.enable = true;
       ## Shell formatter
-      programs.shfmt = {
-        enable = true;
-        ## FIXME: This should be inherited from base, but it’s getting
-        ##        overridden.
-        indent_size = null;
-      };
+      programs.shfmt.enable = true;
       settings.formatter = let
         includes = ["project-manager/project-manager"];
       in {
