@@ -28,7 +28,7 @@ in {
       then ".github"
       else ".";
   in {
-    project.file."${location}/renovate.json".text = lib.generators.toJSON {} ({
+    project.file."${location}/renovate.json".text = lib.pm.generators.toJSON {} ({
         "$schema" = "https://docs.renovatebot.com/renovate-schema.json";
         extends = ["config:base"];
         nix.enabled = true;
