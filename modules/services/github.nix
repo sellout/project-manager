@@ -131,7 +131,7 @@ in {
         ".gitattributes".commit-by-default = true;
         ".github/settings.yml".text =
           lib.mkIf (cfg.settings != null)
-          (lib.generators.toYAML {}
+          (lib.pm.generators.toYAML {}
             (restructureBranches (restructureLabels (concatTopics cfg.settings))));
       }
       // cfg.workflow;

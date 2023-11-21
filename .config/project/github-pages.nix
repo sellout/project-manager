@@ -6,7 +6,7 @@ in {
       build_type = "workflow";
       source.branch = defaultBranch;
     };
-    workflow."pages.yml".text = lib.generators.toYAML {} {
+    workflow."pages.yml".text = lib.pm.generators.toYAML {} {
       name = "Deploy generated docs to Pages";
       on = {
         # Runs on pushes targeting the default branch

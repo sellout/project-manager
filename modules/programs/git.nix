@@ -16,57 +16,6 @@ with lib; let
     })
     .fileType;
 
-  # create [section "subsection"] keys from "section.subsection" attrset names
-  mkSectionName = name: let
-    containsQuote = strings.hasInfix ''"'' name;
-    sections = splitString "." name;
-    section = head sections;
-    subsections = tail sections;
-    subsection = concatStringsSep "." subsections;
-  in
-    if containsQuote || subsections == []
-    then name
-    else ''${section} "${subsection}"'';
-
-  mkValueString = v: let
-    escapedV = ''
-      "${
-        replaceStrings ["\n" "	" ''"'' "\\"] ["\\n" "\\t" ''\"'' "\\\\"] v
-      }"'';
-  in
-    generators.mkValueStringDefault {} (
-      if isString v
-      then escapedV
-      else v
-    );
-
-  # generation for multiple ini values
-  mkKeyValue = k: v: let
-    mkKeyValue =
-      generators.mkKeyValueDefault {inherit mkValueString;} " = " k;
-  in
-    concatStringsSep "\n" (map (kv: "	" + mkKeyValue kv) (toList v));
-
-  # converts { a.b.c = 5; } to { "a.b".c = 5; } for toINI
-  gitFlattenAttrs = let
-    recurse = path: value:
-      if isAttrs value
-      then mapAttrsToList (name: value: recurse ([name] ++ path) value) value
-      else if length path > 1
-      then {
-        ${concatStringsSep "." (reverseList (tail path))}.${head path} = value;
-      }
-      else {
-        ${head path} = value;
-      };
-  in
-    attrs: foldl recursiveUpdate {} (flatten (recurse [] attrs));
-
-  gitToIni = attrs: let
-    toIni = generators.toINI {inherit mkKeyValue mkSectionName;};
-  in
-    toIni (gitFlattenAttrs attrs);
-
   gitIniType = with types; let
     primitiveType = either str (either bool int);
     multipleType = either primitiveType (listOf primitiveType);
@@ -140,7 +89,7 @@ with lib; let
     };
     config.path = mkIf (config.contents != {}) (mkDefault
       (pkgs.writeText (hm.strings.storeFileName config.contentSuffix)
-        (gitToIni config.contents)));
+        (lib.pm.generators.toGitIni config.contents)));
   });
 in {
   meta.maintainers = [maintainers.sellout];
@@ -337,7 +286,7 @@ in {
           else ''
             ${pkgs.git}/bin/git config --worktree --unset include.path || true
           '';
-        text = gitToIni cfg.iniContent;
+        text = lib.pm.generators.toGitINI cfg.iniContent;
       };
     }
 
@@ -420,7 +369,7 @@ in {
             };
       in
         mkAfter
-        (concatStringsSep "\n" (map gitToIni (map include cfg.includes)));
+        (concatStringsSep "\n" (map lib.pm.generators.toGitINI (map include cfg.includes)));
     })
 
     (mkIf cfg.lfs.enable {

@@ -79,7 +79,7 @@ in {
             onChange = ''
               ${cfg.package}/bin/vale sync
             '';
-            text = lib.generators.toINIWithGlobalSection {} {
+            text = lib.pm.generators.toINIWithGlobalSection {} {
               globalSection = actualCoreSettings;
               sections = cfg.formatSettings or {};
             };
