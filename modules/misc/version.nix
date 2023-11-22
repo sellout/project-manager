@@ -5,7 +5,7 @@
 }:
 with lib; let
   releaseInfo = {
-    release = "23.05";
+    release = "23.11";
     isReleaseBranch = true;
   };
 in {

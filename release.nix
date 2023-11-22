@@ -1,4 +1,4 @@
 {
-  release = "23.05";
+  release = "23.11";
   isReleaseBranch = true;
 }

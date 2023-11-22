@@ -206,34 +206,18 @@
         "type": "github"
       }
     },
-    "nixpkgs-unstable_2": {
-      "locked": {
-        "lastModified": 1700444282,
-        "narHash": "sha256-s/+tgT+Iz0LZO+nBvSms+xsMqvHt2LqYniG9r+CYyJc=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "3f21a22b5aafefa1845dec6f4a378a8f53d8681c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1700478853,
-        "narHash": "sha256-5uA6jKckTf+DCbVBNKsmT5pUT/7Apt5tNdpcbLnPzFI=",
+        "lastModified": 1700633036,
+        "narHash": "sha256-+So+2iLcUv3NM5/Z9HPd7yhAXHnkhE1lnza0Xg9mn5o=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9faf91e6d0b7743d41cce3b63a8e5c733dc696a3",
+        "rev": "431c3d8bc434c80f270460a47325472bc26cb592",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "release-23.05",
+        "ref": "release-23.11",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -280,7 +264,6 @@
         "flake-utils": "flake-utils",
         "flaky": "flaky_2",
         "nixpkgs": "nixpkgs_2",
-        "nixpkgs-unstable": "nixpkgs-unstable_2",
         "treefmt-nix": "treefmt-nix_2"
       }
     },

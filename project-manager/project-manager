@@ -200,7 +200,7 @@ function doInit() {
   # You should not change this value, even if you update Project Manager. If you do
   # want to update the value, then make sure to first check the Project Manager
   # release notes.
-  project.stateVersion = "23.05"; # Please read the comment before changing.
+  project.stateVersion = "23.11"; # Please read the comment before changing.
 
   # The project.packages option allows you to install Nix packages into your
   # environment.
@@ -276,7 +276,7 @@ EOF
 
   inputs = {
     # Specify the source of Project Manager and Nixpkgs.
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/release-23.11";
     project-manager = {
       url = "github:nix-community/project-manager";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -20,7 +20,6 @@
     flake-utils,
     flaky,
     nixpkgs,
-    nixpkgs-unstable,
     self,
     treefmt-nix,
   }: let
@@ -59,16 +58,9 @@
     }
     // flake-utils.lib.eachSystem supportedSystems
     (system: let
-      unstable = import nixpkgs-unstable {inherit system;};
       pkgs = import nixpkgs {
         inherit system;
         overlays = [
-          (final: prev: {
-            ## TODO: Remove these once Nix 1.16 is in a stable release. See
-            ##       NixOS/nix#8485.
-            nix = unstable.nix;
-            nil = unstable.nil;
-          })
           bash-strict-mode.overlays.default
           self.overlays.default
         ];
@@ -127,8 +119,7 @@
       url = "github:sellout/flaky";
     };
 
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
 
     treefmt-nix = {
       inputs.nixpkgs.follows = "nixpkgs";
