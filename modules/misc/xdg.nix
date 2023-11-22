@@ -1,3 +1,5 @@
+## This module implements a pseudo-XDG file-system layout. It’s XDG base
+## directories, but using `$PROJECT_ROOT` instead of `$HOME`.
 {
   config,
   lib,
