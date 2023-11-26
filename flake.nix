@@ -106,7 +106,14 @@
           buildNixpkgs.lib.mapAttrs'
           (name:
             buildNixpkgs.lib.nameValuePair
-            "${name}-${nixpkgs.lib.trivial.release}")
+            (name
+              + "-"
+              ## TODO: Can’t have dots in output names unil garnix-io/issues#30
+              ##       is fixed.
+              + builtins.replaceStrings
+              ["."]
+              ["_"]
+              nixpkgs.lib.trivial.release))
           (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
       in
         self.projectConfigurations.${system}.checks
