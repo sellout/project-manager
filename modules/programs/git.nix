@@ -316,10 +316,9 @@ in {
     (mkIf (cfg.ignoreRevs != null) (let
       ignoreRevsPath = "git/ignoreRevs";
     in {
-      programs.git.iniContent = {
-        blame.ignoreRevsFile =
-          toString (config.xdg.cacheFile."${ignoreRevsPath}".reference config.xdg.cacheFile."git/config");
-      };
+      programs.git.iniContent.blame.ignoreRevsFile =
+        config.xdg.cacheFile."${ignoreRevsPath}".reference
+        config.xdg.cacheFile."git/config";
       xdg.cacheFile."${ignoreRevsPath}" = {
         minimum-persistence = "store";
         text = concatLines cfg.ignoreRevs;

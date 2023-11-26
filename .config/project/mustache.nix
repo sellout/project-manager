@@ -1,5 +1,5 @@
 {config, lib, ...}: {
-  project.file.".config/mustache.yaml" = {
+  xdg.configFile."mustache.yaml" = {
     ## TODO: Should be able to make this `"store"`.
     minimum-persistence = "worktree";
     text = lib.pm.generators.toYAML {} {

@@ -15,6 +15,12 @@
     removePrefix
     types
     ;
+
+  persistenceType = types.enum [
+    "store"
+    "worktree"
+    "repository"
+  ];
 in rec {
   fileContents = opt: basePathDesc: basePath: nameStr: (types.submodule (
     {
@@ -155,7 +161,7 @@ in rec {
         };
 
         minimum-persistence = mkOption {
-          type = types.str; # TODO: Make this stricter.
+          type = persistenceType;
           default = "repository";
           description = lib.mdDoc ''
             How we store the file. The options are “store” (file will be
@@ -196,7 +202,7 @@ in rec {
 
         persistence = mkOption {
           internal = true;
-          type = types.str; # TODO: Make this stricter.
+          type = persistenceType;
           description = lib.mdDoc ''
             How we store the file. The options are “store” (file will be
             referenced by the worktree on demand), “worktree” (persist the file
