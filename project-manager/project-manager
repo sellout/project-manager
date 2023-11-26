@@ -200,7 +200,7 @@ function doInit() {
   # You should not change this value, even if you update Project Manager. If you do
   # want to update the value, then make sure to first check the Project Manager
   # release notes.
-  project.stateVersion = "23.05"; # Please read the comment before changing.
+  project.stateVersion = 0; # Please read the comment before changing.
 
   # The project.packages option allows you to install Nix packages into your
   # environment.
@@ -609,7 +609,7 @@ function doUninstall() {
       PROJECT_MANAGER_CONFIG="$(mktemp --tmpdir project-manager.XXXXXXXXXX)"
       echo "{ lib, ... }: {" > "$PROJECT_MANAGER_CONFIG"
       echo "  project.file = lib.mkForce {};" >> "$PROJECT_MANAGER_CONFIG"
-      echo '  project.stateVersion = "18.09";' >> "$PROJECT_MANAGER_CONFIG"
+      echo '  project.stateVersion = 0;' >> "$PROJECT_MANAGER_CONFIG"
       echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
       doSwitch

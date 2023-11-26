@@ -395,17 +395,64 @@ in {
     ];
 
     warnings = let
+      ## Nixpkgs versions that have never been supported by Project Manager.
+      unsupportedVersions = [
+        "13.10"
+        "14.04"
+        "14.12"
+        "15.09"
+        "16.03"
+        "16.09"
+        "17.03"
+        "17.09"
+        "18.03"
+        "18.09"
+        "19.03"
+        "19.09"
+        "20.03"
+        "20.09"
+        "21.05"
+        "21.11"
+        "22.05"
+        "22.11"
+      ];
+      ## For each nixpkgs release, this lists the Project Manager versions that
+      ## support it.
+      ## TODO: The Project Manager release shouldn't include the revision.
+      supportedVersions =
+        lib.listToAttrs
+        (map (name: lib.nameValuePair name []) unsupportedVersions)
+        // {
+          "23.05" = ["0.1" "0.2" "0.3"];
+          "23.11" = ["0.3"];
+          "24.05" = ["0.3"];
+        };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;
+      allowedPmVersions = supportedVersions.${nixpkgsRelease};
       releaseMismatch =
         config.project.enableNixpkgsReleaseCheck
-        && pmRelease != nixpkgsRelease;
+        && !(lib.any
+          (pmMinor: lib.hasPrefix "${pmMinor}." pmRelease)
+          allowedPmVersions);
     in
       optional releaseMismatch ''
         You are using
 
           Project Manager version ${pmRelease} and
           Nixpkgs version ${nixpkgsRelease}.
+
+        ${
+          if allowedPmVersions == []
+          then ''
+            There are no Project Manager versions that support
+            Nixpkgs ${nixpkgsRelease}.
+          ''
+          else ''
+            Project Manager versions that support Nixpkgs ${nixpkgsRelease}:
+            • ${concatStringsSep ".*\n• " supportedVersions.${nixpkgsRelease}}.*
+          ''
+        }
 
         Using mismatched versions is likely to cause errors and unexpected
         behavior. It is therefore highly recommended to use a release of
