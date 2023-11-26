@@ -56,6 +56,13 @@
     builds.exclude = [
       # TODO: Remove once garnix-io/garnix#285 is fixed.
       "homeConfigurations.x86_64-darwin-${config.project.name}-example"
+    ]
+    ## NB: Explicitly excluded because it isn’t sandboxed, but since the check
+    ##     is renamed, it’s not caught by the auto-exclusion.
+    ++ map (nixpkgs: "checks.*.project-manager-files-${nixpkgs}") [
+      "23_05"
+      "23_11"
+      "24_05"
     ];
   };
   services.github.settings.branches.main.protection.required_status_checks.contexts =
