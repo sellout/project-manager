@@ -54,7 +54,7 @@ A fresh install of Project Manager will generate a minimal `$PROJECT_ROOT/.confi
   # You can update Project Manager without changing this value. See
   # the Project Manager release notes for a list of state version
   # changes in each release.
-  project.stateVersion = "23.05";
+  project.stateVersion = 0;
 
   # Let Project Manager install and manage itself.
   programs.project-manager.enable = true;
@@ -89,7 +89,7 @@ To satisfy the above setup we should elaborate the `project.nix` file as follows
   # You can update Project Manager without changing this value. See
   # the Project Manager release notes for a list of state version
   # changes in each release.
-  project.stateVersion = "23.05";
+  project.stateVersion = 0;
 
   # Let Project Manager install and manage itself.
   programs.project-manager.enable = true;
