@@ -33,24 +33,29 @@ in {
         build = {
           runs-on = "ubuntu-latest";
           steps = [
-            { name = "Checkout";
+            {
+              name = "Checkout";
               uses = "actions/checkout@v4";
             }
-            { name = "Setup Pages";
+            {
+              name = "Setup Pages";
               uses = "actions/configure-pages@v3";
             }
-            { uses = "cachix/install-nix-action@v23";
+            {
+              uses = "cachix/install-nix-action@v23";
               "with".extra_nix_config = ''
                 extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g=
                 extra-substituters = https://cache.garnix.io
               '';
             }
-            { run = ''
+            {
+              run = ''
                 nix build .#docs-html
                 cp -r result/share/doc/project-manager ./_site
               '';
             }
-            { name = "Upload artifact";
+            {
+              name = "Upload artifact";
               uses = "actions/upload-pages-artifact@v2";
             }
           ];
@@ -63,7 +68,8 @@ in {
           runs-on = "ubuntu-latest";
           needs = "build";
           steps = [
-            { name = "Deploy to GitHub Pages";
+            {
+              name = "Deploy to GitHub Pages";
               id = "deployment";
               uses = "actions/deploy-pages@v2";
             }
