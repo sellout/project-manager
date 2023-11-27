@@ -213,6 +213,11 @@ in {
       '';
     };
 
+    path = mkOption {
+      internal = true;
+      description = "The derivation installing the project packages.";
+    };
+
     emptyActivationPath = mkOption {
       internal = true;
       type = types.bool;
@@ -493,6 +498,74 @@ in {
     # script's "check" and the "write" phases.
     project.activation.writeBoundary = pm.dag.entryAnywhere "";
 
+    # Install packages to the project environment.
+    #
+    # Note, sometimes our target may not allow modification of the Nix
+    # store and then we cannot rely on `nix profile install`. This is the case,
+    # for example, if we are running as a NixOS module and building a
+    # virtual machine. Then we must instead rely on an external
+    # mechanism for installing packages, which in NixOS is provided by
+    # the `users.users.<name?>.packages` option. The activation
+    # command is still needed since some modules need to run their
+    # activation commands after the packages are guaranteed to be
+    # installed.
+    #
+    # In case the user has moved from a user-install of Home Manager
+    # to a submodule managed one we attempt to uninstall the
+    # `project-manager-path-for-*` package if it is installed.
+    project.activation.installPackages = pm.dag.entryAfter ["writeBoundary"] (
+      let
+        profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
+        pathPackageName = "project-manager-path-for-${config.project.name}";
+      in
+        if config.submoduleSupport.externalPackageInstall
+        then ''
+          nix profile list --profile ${profileDir} \
+            | { grep '${pathPackageName}$' || test $? = 1; } \
+            | cut -d ' ' -f 4 \
+            | xargs --no-run-if-empty $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
+        ''
+        else ''
+          function nixProfileList() {
+            # We attempt to use `--json` first (added in Nix 2.17). Otherwise
+            # attempt to parse the legacy output format.
+            {
+              nix profile list --profile ${profileDir} --json 2>/dev/null \
+                | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+            } || {
+              nix profile list --profile ${profileDir} \
+                | { grep "$1\$" || test $? = 1; } \
+                | cut -d ' ' -f 4
+            }
+          }
+
+          function nixRemoveProfileByName() {
+              nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
+          }
+
+          function nixReplaceProfile() {
+            local oldNix="$(command -v nix)"
+
+            nixRemoveProfileByName '${pathPackageName}'
+
+            $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
+          }
+
+          INSTALL_CMD="nix profile install --profile ${profileDir}"
+          INSTALL_CMD_ACTUAL="nixReplaceProfile"
+          LIST_CMD="nix profile list --profile ${profileDir}"
+          REMOVE_CMD_SYNTAX='nix profile remove --profile ${profileDir} {number | store path}'
+
+          if ! $INSTALL_CMD_ACTUAL ${cfg.path} ; then
+            echo
+            _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
+            exit 1
+          fi
+          unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
+          unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
+        ''
+    );
+
     # Text containing Bash commands that will initialize the Project Manager Bash
     # library. Most importantly, this will prepare for using translated strings
     # in the `pm-modules` text domain.
@@ -598,6 +671,19 @@ in {
           ${cfg.extraBuilderCommands}
         '');
 
+    project.path = pkgs.buildEnv {
+      name = "project-manager-path-for-${config.project.name}";
+
+      paths = cfg.packages;
+      inherit (cfg) extraOutputsToInstall;
+
+      postBuild = cfg.extraProfileCommands;
+
+      meta = {
+        description = "Environment of packages installed through Project Manager";
+      };
+    };
+
     project = {
       checks.project-manager-files =
         bash-strict-mode.lib.checkedDrv
@@ -636,7 +722,7 @@ in {
       devShells = {
         default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
-          nativeBuildInputs = cfg.packages;
+          nativeBuildInputs = [config.project.path];
           shellHook = cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";
