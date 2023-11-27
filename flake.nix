@@ -19,6 +19,7 @@
     flake-schemas,
     flake-utils,
     flaky,
+    nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
     nixpkgs-unstable,
@@ -117,6 +118,7 @@
           (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
       in
         self.projectConfigurations.${system}.checks
+        // checksWith nixpkgs-22_11
         // checksWith nixpkgs-23_05
         // checksWith nixpkgs-23_11
         // checksWith nixpkgs-unstable;
@@ -150,6 +152,7 @@
 
     ## We test against each supported version of nixpkgs, but build against the
     ## latest stable release.
+    nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

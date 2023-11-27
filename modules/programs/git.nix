@@ -98,13 +98,19 @@ in {
     programs.git = {
       enable = mkEnableOption (lib.mdDoc "Git");
 
-      package = lib.mkPackageOptionMD pkgs "Git" {
-        default = ["git"];
-        extraDescription = ''
-          Use {var}`pkgs.gitAndTools.gitFull` to gain access to
-          {command}`git send-email` for instance.
-        '';
-      };
+      package = lib.mkPackageOptionMD pkgs "Git" ({
+          default = ["git"];
+        }
+        // (
+          if lib.trivial.release == "22.11"
+          then {}
+          else {
+            extraDescription = ''
+              Use {var}`pkgs.gitAndTools.gitFull` to gain access to
+              {command}`git send-email` for instance.
+            '';
+          }
+        ));
 
       config = mkOption {
         type = gitIniType;

@@ -463,7 +463,7 @@ function doRmGenerations() {
       _i 'Cannot remove the current generation %s' "$generationId" >&2
     else
       _i 'Removing generation %s' "$generationId"
-      $DRY_RUN_CMD rm $VERBOSE_ARG "$linkName"
+      $DRY_RUN_CMD rm "$VERBOSE_ARG" "$linkName"
     fi
   done
 

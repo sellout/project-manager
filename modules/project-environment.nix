@@ -414,7 +414,6 @@ in {
         "21.05"
         "21.11"
         "22.05"
-        "22.11"
       ];
       ## For each nixpkgs release, this lists the Project Manager versions that
       ## support it.
@@ -423,6 +422,7 @@ in {
         lib.listToAttrs
         (map (name: lib.nameValuePair name []) unsupportedVersions)
         // {
+          "22.11" = ["0.3"];
           "23.05" = ["0.1" "0.2" "0.3"];
           "23.11" = ["0.3"];
           "24.05" = ["0.3"];

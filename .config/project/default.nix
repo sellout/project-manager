@@ -5,7 +5,7 @@
   pkgs,
   ...
 }: let
-  testedNixpkgsVersions = ["23_05" "23_11" "24_05"];
+  testedNixpkgsVersions = ["22_11" "23_05" "23_11" "24_05"];
 in {
   project = {
     name = "project-manager";
