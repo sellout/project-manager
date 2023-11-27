@@ -36,7 +36,9 @@
   in
     {
       ## This output’s schema may be in flux. See NixOS/nix#8892.
-      schemas = flake-schemas.schemas // import ./nix/schemas.nix;
+      schemas =
+        flake-schemas.schemas
+        // import ./nix/schemas.nix {inherit flake-schemas;};
 
       lib = import ./nix/lib.nix {
         inherit bash-strict-mode treefmt-nix;
