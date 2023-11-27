@@ -1,4 +1,12 @@
-{config, flaky, lib, pkgs, ...}: {
+{
+  config,
+  flaky,
+  lib,
+  pkgs,
+  ...
+}: let
+  testedNixpkgsVersions = ["23_05" "23_11" "24_05"];
+in {
   project = {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
@@ -53,20 +61,18 @@
   ## CI
   services.garnix = {
     enable = true;
-    builds.exclude = [
-      # TODO: Remove once garnix-io/garnix#285 is fixed.
-      "homeConfigurations.x86_64-darwin-${config.project.name}-example"
-    ]
-    ## NB: Explicitly excluded because it isn’t sandboxed, but since the check
-    ##     is renamed, it’s not caught by the auto-exclusion.
-    ++ map (nixpkgs: "checks.*.project-manager-files-${nixpkgs}") [
-      "23_05"
-      "23_11"
-      "24_05"
-    ];
+    builds.exclude =
+      [
+        # TODO: Remove once garnix-io/garnix#285 is fixed.
+        "homeConfigurations.x86_64-darwin-${config.project.name}-example"
+      ]
+      ## NB: Explicitly excluded because it isn’t sandboxed, but since the check
+      ##     is renamed, it’s not caught by the auto-exclusion.
+      ++ map
+      (nixpkgs: "checks.*.project-manager-files-${nixpkgs}")
+      testedNixpkgsVersions;
   };
-  services.github.settings.branches.main.protection.required_status_checks.contexts =
-    lib.mkForce (lib.concatMap flaky.lib.garnixChecks [
+  services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (lib.concatMap flaky.lib.garnixChecks ([
       (sys: "check shellcheck [${sys}]")
       (sys: "devShell lax-checks [${sys}]")
       (sys: "package docs-html [${sys}]")
@@ -77,7 +83,12 @@
       ## FIXME: These are duplicated from the base config
       (sys: "check formatter [${sys}]")
       (sys: "devShell default [${sys}]")
-    ]);
+    ]
+    ++ lib.concatMap (nixpkgs: [
+      (sys: "check formatter-${nixpkgs} [${sys}]")
+      (sys: "check shellcheck-${nixpkgs} [${sys}]")
+    ])
+    testedNixpkgsVersions));
 
   ## publishing
   services.flakehub.enable = true;
@@ -85,7 +96,6 @@
   services.github.enable = true;
   services.github.settings.repository.homepage = "https://sellout.github.io/${config.project.name}";
   services.github.settings.repository.topics = ["development" "nix-flakes"];
-
 
   imports = [
     ./github-pages.nix

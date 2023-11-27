@@ -1,4 +1,8 @@
-{config, lib, ...}: {
+{
+  config,
+  lib,
+  ...
+}: {
   xdg.configFile."mustache.yaml" = {
     ## TODO: Should be able to make this `"store"`.
     minimum-persistence = "worktree";
