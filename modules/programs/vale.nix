@@ -97,7 +97,7 @@ in {
         })
         cfg.vocab;
 
-      packages = [cfg.package];
+      devPackages = [cfg.package];
 
       ## TODO: Certain checks functions (like this one) require the sandbox to be
       ##       disabled, otherwise they fail. We should be able to
