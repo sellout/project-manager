@@ -281,6 +281,8 @@ in {
         devPackages = [cfg.package];
       };
 
+      programs.vale.excludes = ["./.gitattributes"];
+
       xdg.cacheFile."git/config" = {
         minimum-persistence = "store";
         onChange =
