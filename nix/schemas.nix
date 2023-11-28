@@ -35,7 +35,7 @@ in {
               project.checks);
             devShells = flake-schemas.lib.mkChildren (builtins.mapAttrs (shellName: shell: {
                 inherit forSystems;
-                shortDescription = shell.meta.description;
+                shortDescription = shell.meta.description or "";
                 derivation = shell;
                 evalChecks.isDerivation = checkDerivation shell;
                 what = "development environment";
