@@ -56,17 +56,17 @@ in {
               isFlakeCheck = false;
             };
             filterRepositoryPersisted = {
-              shortDescription = project.options.filterRepositoryPersisted.description;
+              shortDescription = project.options.project.filterRepositoryPersisted.description;
               what = "source filter";
               isFlakeCheck = false;
             };
             cleanRepositoryPersistedExcept = {
-              shortDescription = project.options.cleanRepositoryPersistedExcept.description;
+              shortDescription = project.options.project.cleanRepositoryPersistedExcept.description;
               what = "source filter";
               isFlakeCheck = false;
             };
             cleanRepositoryPersisted = {
-              shortDescription = project.options.cleanRepositoryPersisted.description;
+              shortDescription = project.options.project.cleanRepositoryPersisted.description;
               what = "source filter";
               isFlakeCheck = false;
             };
