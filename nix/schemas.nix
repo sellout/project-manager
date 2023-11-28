@@ -51,7 +51,7 @@ in {
               isFlakeCheck = false;
             };
             filterRepositoryPersistedExcept = {
-              shortDescription = project.options.filterRepositoryPersistedExcept.description;
+              shortDescription = project.options.project.filterRepositoryPersistedExcept.description;
               what = "source filter";
               isFlakeCheck = false;
             };
