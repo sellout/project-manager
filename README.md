@@ -50,9 +50,11 @@ For this to do anything, you need to add a `projectConfigurations.${system}` out
 
 Once you define your `projectConfigurations`, there are a number of helpful attributes to take advantage of
 
-#### `activationPackage`
+#### `packages`
 
-Rarely used directly, this is the derivation behind `project-manager build` and `switch`. It’s what sets up your generated environment.
+- `packages.activation` – rarely used directly, this is the derivation behind `project-manager switch`. It’s what sets up your generated environment.
+- `packages.path` contains all of the packages referenced by the project configuration, it is used in devShells, etc. to make sure the right versions of the right commands are available. You might use it directly to add the packages to another derivation
+- `packages.sessionVariables` sets up the shell environment variables referenced by the project configuration.
 
 #### `checks`
 

@@ -194,15 +194,6 @@ in {
       '';
     };
 
-    packages = mkOption {
-      type = types.listOf types.package;
-      default = [];
-      description = lib.mdDoc ''
-        The set of packages to appear in the project environment. This is now
-        deprecated.
-      '';
-    };
-
     devPackages = mkOption {
       type = types.listOf types.package;
       default = [];
@@ -220,11 +211,6 @@ in {
         {var}`project.devPackages` that should be installed into
         the user environment.
       '';
-    };
-
-    path = mkOption {
-      internal = true;
-      description = "The derivation installing the project packages.";
     };
 
     emptyActivationPath = mkOption {
@@ -284,21 +270,24 @@ in {
       '';
     };
 
-    activationPackage = mkOption {
+    packages = mkOption {
       internal = true;
-      type = types.package;
+      type = types.attrsOf types.package;
+      default = {};
       description = lib.mdDoc ''
-        The package containing the complete activation script.
+        Packages provided by the project configuration. These generally don’t
+        need to be explicitly referenced, as they’re part of the usual
+        functioning of Project Manager.
       '';
     };
 
     checks = mkOption {
       internal = true;
-      type = types.attrs;
+      type = types.attrsOf types.package;
       default = {};
       description = lib.mdDoc ''
-        A function that accepts the current flake (`self`) and returns attrset
-        of checks to be applied for the current system.
+        Checks provided by the project configuration. These can be included in
+        your flake’s checks.
       '';
     };
 
@@ -436,10 +425,10 @@ in {
         lib.listToAttrs
         (map (name: lib.nameValuePair name []) unsupportedVersions)
         // {
-          "22.11" = ["0.3"];
-          "23.05" = ["0.1" "0.2" "0.3"];
-          "23.11" = ["0.3"];
-          "24.05" = ["0.3"];
+          "22.11" = ["0.3" "0.4"];
+          "23.05" = ["0.1" "0.2" "0.3" "0.4"];
+          "23.11" = ["0.3" "0.4"];
+          "24.05" = ["0.3" "0.4"];
         };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;
@@ -484,7 +473,7 @@ in {
     # programs.fish.shellAliases = cfg.shellAliases;
 
     # Provide a file holding all session variables.
-    project.sessionVariablesPackage = pkgs.writeTextFile {
+    project.packages.sessionVariables = pkgs.writeTextFile {
       name = "pm-session-vars.sh";
       destination = "/etc/profile.d/pm-session-vars.sh";
       text =
@@ -501,11 +490,9 @@ in {
         + cfg.sessionVariablesExtra;
     };
 
-    project.devPackages =
-      cfg.packages
-      ++ [
-        config.project.sessionVariablesPackage
-      ];
+    project.devPackages = [
+      config.project.packages.sessionVariables
+    ];
 
     # A dummy entry acting as a boundary between the activation
     # script's "check" and the "write" phases.
@@ -548,7 +535,7 @@ in {
         LIST_CMD="nix profile list --profile ${profileDir}"
         REMOVE_CMD_SYNTAX='nix profile remove --profile ${profileDir} {number | store path}'
 
-        if ! $INSTALL_CMD_ACTUAL ${cfg.path} ; then
+        if ! $INSTALL_CMD_ACTUAL ${cfg.packages.path} ; then
           echo
           _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
           exit 1
@@ -580,7 +567,7 @@ in {
       source ${../lib/bash/project-manager.bash}
     '';
 
-    project.activationPackage = let
+    project.packages.activation = let
       mkCmd = res: ''
         _iNote "Activating %s" "${res.name}"
         ${res.data}
@@ -663,7 +650,7 @@ in {
           ${cfg.extraBuilderCommands}
         '');
 
-    project.path = pkgs.buildEnv {
+    project.packages.path = pkgs.buildEnv {
       name = "project-manager-path-for-${config.project.name}";
 
       paths = cfg.devPackages;
@@ -672,7 +659,9 @@ in {
       postBuild = cfg.extraProfileCommands;
 
       meta = {
-        description = "Environment of packages installed through Project Manager";
+        description = ''
+          Environment of packages installed through Project Manager.
+        '';
       };
     };
 
@@ -714,7 +703,7 @@ in {
       devShells = {
         default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
-          nativeBuildInputs = [config.project.path];
+          nativeBuildInputs = [config.project.packages.path];
           shellHook = cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";

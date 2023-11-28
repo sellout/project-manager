@@ -391,7 +391,7 @@ function doBuild() {
 
   setFlakeAttribute
   doBuildFlake \
-    "$FLAKE_CONFIG_URI.activationPackage" \
+    "$FLAKE_CONFIG_URI.packages.activation" \
     ${DRY_RUN+--dry-run} \
     ${NO_OUT_LINK+--no-link} \
     ${PRINT_BUILD_LOGS+--print-build-logs} \
@@ -413,7 +413,7 @@ function doSwitch() {
 
   setFlakeAttribute
   doBuildFlake \
-    "$FLAKE_CONFIG_URI.activationPackage" \
+    "$FLAKE_CONFIG_URI.packages.activation" \
     --out-link "$generation" \
     ${PRINT_BUILD_LOGS+--print-build-logs} \
     && "$generation/activate" || return

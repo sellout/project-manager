@@ -15,14 +15,15 @@ in {
           inherit forSystems;
           what = "Project Manager configuration for this flake’s project";
           children = {
-            activationPackage = {
-              inherit forSystems;
-              shortDescription = project.activationPackage.meta.description;
-              derivation = project.activationPackage;
-              evalChecks.isDerivation = checkDerivation project.activationPackage;
-              what = "package";
-              isFlakeCheck = false;
-            };
+            packages = flake-schemas.lib.mkChildren (builtins.mapAttrs (packageName: package: {
+                inherit forSystems;
+                shortDescription = package.meta.description or "";
+                derivation = package;
+                evalChecks.isDerivation = checkDerivation package;
+                what = "package";
+                isFlakeCheck = false;
+              })
+              project.packages);
             checks = flake-schemas.lib.mkChildren (builtins.mapAttrs (checkName: check: {
                 inherit forSystems;
                 shortDescription = check.meta.description or "";
