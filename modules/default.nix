@@ -46,7 +46,7 @@ in {
 
   inherit
     (module.config.project)
-    activationPackage
+    packages
     checks
     devShells
     formatter
