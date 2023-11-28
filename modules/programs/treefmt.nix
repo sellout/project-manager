@@ -55,7 +55,7 @@ in {
     project = {
       checks.formatter = format.config.build.check self;
       formatter = format.config.build.wrapper;
-      packages = [cfg.package];
+      devPackages = [cfg.package];
     };
   });
 }

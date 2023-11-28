@@ -21,7 +21,7 @@ let
 in
 
 {
-  project.packages = [
+  project.devPackages = [
     pkgsUnstable.foo
   ];
 

@@ -194,9 +194,9 @@ function doInit() {
   # release notes.
   project.stateVersion = 0; # Please read the comment before changing.
 
-  # The project.packages option allows you to install Nix packages into your
+  # The project.devPackages option allows you to install Nix packages into your
   # environment.
-  project.packages = [
+  project.devPackages = [
     # # Adds the 'hello' command to your environment. It prints a friendly
     # # "Hello, world!" when run.
     # pkgs.hello

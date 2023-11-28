@@ -17,7 +17,7 @@ in {
     ## lean into Project Manager and avoid committing extra files.
     commit-by-default = lib.mkForce false;
 
-    packages = [pkgs.nix-schema];
+    devPackages = [pkgs.nix-schema];
   };
 
   ## dependency management
