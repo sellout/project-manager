@@ -149,7 +149,9 @@
       url = "github:sellout/bash-strict-mode";
     };
 
-    flake-schemas.url = "github:DeterminateSystems/flake-schemas";
+    ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is
+    ##       merged.
+    flake-schemas.url = "github:sellout/flake-schemas/patch-1";
 
     flake-utils.url = "github:numtide/flake-utils";
 
