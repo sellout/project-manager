@@ -76,7 +76,7 @@ To satisfy the above setup we should elaborate the `project.nix` file as follows
 
 {
   # Packages that should be installed to the project profile.
-  project.packages = [                               <1>
+  project.devPackages = [                            <1>
     pkgs.htop
     pkgs.fortune
   ];
@@ -109,7 +109,7 @@ To satisfy the above setup we should elaborate the `project.nix` file as follows
   };
 }
 ----
-<1> Nixpkgs packages can be installed to the dev shell using <<opt-project.packages>>.
+<1> Nixpkgs packages can be installed to the dev shell using <<opt-project.devPackages>>.
 <2> The option names of a program module typically start with `programs.<package name>`.
 <3> Similarly, for a service module, the names start with `services.<package name>`. Note in some cases a package has both programs _and_ service options – Emacs is such an example.
 

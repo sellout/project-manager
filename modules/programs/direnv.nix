@@ -60,7 +60,7 @@ in {
   config = mkIf cfg.enable (let
     layoutDir = "${config.xdg.cacheDir}/direnv";
   in {
-    project.packages = [cfg.package];
+    project.devPackages = [cfg.package];
 
     programs.git.ignores = ["/${layoutDir}/"];
     programs.mercurial.ignoresRooted = ["${layoutDir}/**"];

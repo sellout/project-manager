@@ -198,7 +198,16 @@ in {
       type = types.listOf types.package;
       default = [];
       description = lib.mdDoc ''
-        The set of packages to appear in the user environment.
+        The set of packages to appear in the project environment. This is now
+        deprecated.
+      '';
+    };
+
+    devPackages = mkOption {
+      type = types.listOf types.package;
+      default = [];
+      description = lib.mdDoc ''
+        The set of packages to appear in the project environment.
       '';
     };
 
@@ -208,7 +217,7 @@ in {
       example = ["doc" "info" "devdoc"];
       description = lib.mdDoc ''
         List of additional package outputs of the packages
-        {var}`project.packages` that should be installed into
+        {var}`project.devPackages` that should be installed into
         the user environment.
       '';
     };
@@ -492,7 +501,11 @@ in {
         + cfg.sessionVariablesExtra;
     };
 
-    project.packages = [config.project.sessionVariablesPackage];
+    project.devPackages =
+      cfg.packages
+      ++ [
+        config.project.sessionVariablesPackage
+      ];
 
     # A dummy entry acting as a boundary between the activation
     # script's "check" and the "write" phases.
@@ -500,70 +513,49 @@ in {
 
     # Install packages to the project environment.
     #
-    # Note, sometimes our target may not allow modification of the Nix
-    # store and then we cannot rely on `nix profile install`. This is the case,
-    # for example, if we are running as a NixOS module and building a
-    # virtual machine. Then we must instead rely on an external
-    # mechanism for installing packages, which in NixOS is provided by
-    # the `users.users.<name?>.packages` option. The activation
-    # command is still needed since some modules need to run their
-    # activation commands after the packages are guaranteed to be
-    # installed.
-    #
-    # In case the user has moved from a user-install of Home Manager
-    # to a submodule managed one we attempt to uninstall the
-    # `project-manager-path-for-*` package if it is installed.
     project.activation.installPackages = pm.dag.entryAfter ["writeBoundary"] (
       let
         profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
         pathPackageName = "project-manager-path-for-${config.project.name}";
-      in
-        if config.submoduleSupport.externalPackageInstall
-        then ''
-          nix profile list --profile ${profileDir} \
-            | { grep '${pathPackageName}$' || test $? = 1; } \
-            | cut -d ' ' -f 4 \
-            | xargs --no-run-if-empty $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
-        ''
-        else ''
-          function nixProfileList() {
-            # We attempt to use `--json` first (added in Nix 2.17). Otherwise
-            # attempt to parse the legacy output format.
-            {
-              nix profile list --profile ${profileDir} --json 2>/dev/null \
-                | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
-            } || {
-              nix profile list --profile ${profileDir} \
-                | { grep "$1\$" || test $? = 1; } \
-                | cut -d ' ' -f 4
-            }
+      in ''
+        function nixProfileList() {
+          # We attempt to use `--json` first (added in Nix 2.17). Otherwise
+          # attempt to parse the legacy output format.
+          {
+            nix profile list --profile ${profileDir} --json 2>/dev/null \
+              | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+          } || {
+            nix profile list --profile ${profileDir} \
+              | { grep "$1\$" || test $? = 1; } \
+              | cut -d ' ' -f 4
           }
+        }
 
-          function nixRemoveProfileByName() {
-              nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
-          }
+        function nixRemoveProfileByName() {
+            nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
+        }
 
-          function nixReplaceProfile() {
-            local oldNix="$(command -v nix)"
+        function nixReplaceProfile() {
+          local oldNix="$(command -v nix)"
 
-            nixRemoveProfileByName '${pathPackageName}'
+          nixRemoveProfileByName '${pathPackageName}'
 
-            $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
-          }
+          $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
+        }
 
-          INSTALL_CMD="nix profile install --profile ${profileDir}"
-          INSTALL_CMD_ACTUAL="nixReplaceProfile"
-          LIST_CMD="nix profile list --profile ${profileDir}"
-          REMOVE_CMD_SYNTAX='nix profile remove --profile ${profileDir} {number | store path}'
+        INSTALL_CMD="nix profile install --profile ${profileDir}"
+        INSTALL_CMD_ACTUAL="nixReplaceProfile"
+        LIST_CMD="nix profile list --profile ${profileDir}"
+        REMOVE_CMD_SYNTAX='nix profile remove --profile ${profileDir} {number | store path}'
 
-          if ! $INSTALL_CMD_ACTUAL ${cfg.path} ; then
-            echo
-            _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
-            exit 1
-          fi
-          unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
-          unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
-        ''
+        if ! $INSTALL_CMD_ACTUAL ${cfg.path} ; then
+          echo
+          _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
+          exit 1
+        fi
+        unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
+        unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
+      ''
     );
 
     # Text containing Bash commands that will initialize the Project Manager Bash
@@ -674,7 +666,7 @@ in {
     project.path = pkgs.buildEnv {
       name = "project-manager-path-for-${config.project.name}";
 
-      paths = cfg.packages;
+      paths = cfg.devPackages;
       inherit (cfg) extraOutputsToInstall;
 
       postBuild = cfg.extraProfileCommands;

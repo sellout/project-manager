@@ -378,8 +378,8 @@
       configuration file. That is, if <filename>project.nix</filename> contains
 <programlisting language="nix">
 {
-  joe-at-work = {pkgs, ...}: { project.packages = [ pkgs.fortune ]; };
-  joe-at-home = {pkgs, ...}: { project.packages = [ pkgs.cowsay ]; };
+  joe-at-work = {pkgs, ...}: { project.devPackages = [ pkgs.fortune ]; };
+  joe-at-home = {pkgs, ...}: { project.devPackages = [ pkgs.cowsay ]; };
 }
 </programlisting>
       then the command <command>project-manager switch -A joe-at-work</command>

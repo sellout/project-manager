@@ -19,6 +19,7 @@
     flake-schemas,
     flake-utils,
     flaky,
+    nix-schema,
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
@@ -35,8 +36,9 @@
     buildNixpkgs = nixpkgs-23_11;
   in
     {
-      ## This output’s schema may be in flux. See NixOS/nix#8892.
-      schemas = flake-schemas.schemas // import ./nix/schemas.nix;
+      schemas =
+        flake-schemas.schemas
+        // import ./nix/schemas.nix {inherit flake-schemas;};
 
       lib = import ./nix/lib.nix {
         inherit bash-strict-mode treefmt-nix;
@@ -71,6 +73,17 @@
           overlays = [
             bash-strict-mode.overlays.default
             self.overlays.default
+            (final: prev: {
+              nix-schema = nix-schema.packages.${system}.nix.overrideAttrs (old: {
+                doCheck = false;
+                postInstall =
+                  old.postInstall
+                  + ''
+                    mv $out/bin/nix $out/bin/nix-schema
+                  '';
+                doInstallCheck = false;
+              });
+            })
           ];
         };
 
@@ -148,6 +161,17 @@
         project-manager.follows = "";
       };
       url = "github:sellout/flaky";
+    };
+
+    ## Provides a version of `nix` that uses schemas. Helpful for validation.
+    ## This should be simplified once either DeterminateSystems/flake-schemas#14
+    ## or NixOS/nix#8892 is resolved.
+    nix-schema = {
+      inputs = {
+        flake-schemas.follows = "flake-schemas";
+        nixpkgs.follows = "nixpkgs-23_11";
+      };
+      url = "github:DeterminateSystems/nix/flake-schemas";
     };
 
     ## We test against each supported version of nixpkgs, but build against the

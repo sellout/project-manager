@@ -278,7 +278,7 @@ in {
           text = concatStringsSep "\n" cfg.attributes + "\n";
         };
 
-        packages = [cfg.package];
+        devPackages = [cfg.package];
       };
 
       xdg.cacheFile."git/config" = {
@@ -378,7 +378,7 @@ in {
     })
 
     (mkIf cfg.lfs.enable {
-      project.packages = [pkgs.git-lfs];
+      project.devPackages = [pkgs.git-lfs];
 
       programs.git.iniContent.filter.lfs = let
         skipArg = optional cfg.lfs.skipSmudge "--skip";

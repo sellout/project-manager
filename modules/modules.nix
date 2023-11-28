@@ -5,7 +5,6 @@
   editorconfig = ./misc/editorconfig.nix;
   news = ./misc/news.nix;
   # ./misc/specialisation.nix
-  submodule-support = ./misc/submodule-support.nix;
   version = ./misc/version.nix;
   # ./misc/vte.nix
   xdg = ./misc/xdg.nix;

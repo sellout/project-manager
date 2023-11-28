@@ -16,6 +16,8 @@ in {
     ## contributable-to by non-Nix users. However, Nix-specific projects can
     ## lean into Project Manager and avoid committing extra files.
     commit-by-default = lib.mkForce false;
+
+    devPackages = [pkgs.nix-schema];
   };
 
   ## dependency management

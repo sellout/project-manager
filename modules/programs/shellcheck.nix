@@ -187,7 +187,7 @@ in {
         ]);
       };
 
-      packages = [wrapped];
+      devPackages = [wrapped];
     };
 
     programs.treefmt.programs.shellcheck.package = wrapped;
