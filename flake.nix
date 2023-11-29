@@ -146,7 +146,7 @@
         flaky.follows = "flaky";
         nixpkgs.follows = "nixpkgs-23_11";
       };
-      url = "github:sellout/bash-strict-mode";
+      url = "github:sellout/bash-strict-mode/nix-run-repro";
     };
 
     ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is

@@ -14,15 +14,16 @@
         "shellcheck-nix-attributes": "shellcheck-nix-attributes"
       },
       "locked": {
-        "lastModified": 1701068959,
-        "narHash": "sha256-9EkOn4rYXiIosLG8rjl/8uN1+OJ7QvbXSf4c4vkw1nc=",
+        "lastModified": 1701281489,
+        "narHash": "sha256-aQJrHkB06xYeuzF1YEysH8fKSSNdAvO59ho0TTV2wI4=",
         "owner": "sellout",
         "repo": "bash-strict-mode",
-        "rev": "6290c8aa90350a1109ccd80e4b53061afb1aadf1",
+        "rev": "330a79c44ceb80f9c2b649b44f7afaeed56de441",
         "type": "github"
       },
       "original": {
         "owner": "sellout",
+        "ref": "nix-run-repro",
         "repo": "bash-strict-mode",
         "type": "github"
       }
