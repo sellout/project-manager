@@ -1,15 +1,11 @@
-#!/usr/bin/env strict-bash
-# shellcheck shell=bash
+#!/usr/bin/env bash
 
 # Prepare to use tools from Nixpkgs.
 PATH=@DEP_PATH@${PATH:+:}$PATH
 
-## TODO: Make the file we look for configurable, like treefmt’s
-##      `projectRootFile`. For now, this just finds the flake.
-PROJECT_ROOT="$(nix flake metadata --json \
-  | jq -r ".resolvedUrl" \
-  | sed -e 's/^[^\/]*[\/]*\//\//')"
-export PROJECT_ROOT
+## See sellout/bash-strict-mode#10 for why we can’t use `strict-bash` directly.
+# shellcheck disable=SC1091
+source strict-mode.bash
 
 export TEXTDOMAIN=project-manager
 export TEXTDOMAINDIR=@OUT@/share/locale
@@ -784,6 +780,13 @@ if [[ -z $COMMAND ]]; then
   doHelp >&2
   exit 1
 fi
+
+## TODO: Make the file we look for configurable, like treefmt’s
+##      `projectRootFile`. For now, this just finds the flake.
+PROJECT_ROOT="$(nix flake metadata --json \
+  | jq -r ".resolvedUrl" \
+  | sed -e 's/^[^\/]*[\/]*\//\//')"
+export PROJECT_ROOT
 
 case $COMMAND in
   edit)
