@@ -111,7 +111,13 @@ in {
             ##       packages, but as it is, they need to be downloaded via
             ##      `vale sync`.
             __noChroot = true;
-            nativeBuildInputs = [pkgs.vale];
+            nativeBuildInputs = [
+              pkgs.vale
+              ## TODO: Conditinalize these dependencies based on whether the
+              ##       user wants to lint these files types.
+              pkgs.asciidoctor
+              pkgs.libxslt
+            ];
             src = self;
           } ''
             cp -R "$src/." build

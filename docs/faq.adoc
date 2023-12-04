@@ -39,7 +39,7 @@ $ nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
 $ nix-channel --update
 ----
 
-Note, the package will not be affected by any package overrides, overlays, etc.
+Note, the package won’t be affected by any package overrides, overlays, etc.
 
 === How do I override the package used by a module?
 :nixpkgs-overlays: https://nixos.org/nixpkgs/manual/#chap-overlays
