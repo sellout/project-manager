@@ -124,42 +124,6 @@ in {
               -exec vale {} +
             mkdir -p "$out"
           '');
-
-      # ## TODO: Generalize this to a `projects.laxChecks` that produces a devShell
-      # ##       for each check.
-      # devShells.check-vale = let
-      #   lax-check = src: nativeBuildInputs: command:
-      #     bash-strict-mode.lib.checkedDrv pkgs
-      #       (pkgs.mkShell {
-      #         inherit nativeBuildInputs src;
-      #     shellHook = ''
-      #       ## Shouldn’t need this, but apparently `bash-strict-mode` isn’t
-      #       ## working properly.
-      #       ##
-      #       ## Also, can’t use `-u` because of Starship, which is a personal issue
-      #       ## that I should report.
-      #       set -eo pipefail
-
-      #       build_dir=$(mktemp -d -t "project-manager-check-vale.XXXXXX")
-      #       cp -R "$src/." "$build_dir"
-      #       chmod -R +w "$build_dir"
-      #       cd "$build_dir" || exit
-      #       ${command}
-      #     '';
-      # });
-      # in lax-check ../../.. [pkgs.vale] ''
-      #   vale sync
-      #   ## We skip licenses because they are written by lawyers, not by us.
-      #   ## TODO: Have a general `ignores` list that we can process into
-      #   ##       gitignores, `find -not` lists, etc.
-      #   find . -type f \
-      #     -not -path './.cache/*' \
-      #     -not -path './flake.lock' \
-      #     -not -path '*/LICENSE' \
-      #     -not -path '*/Eldev' \
-      #     -not -path '*.nix' \
-      #     -exec vale {} +
-      # '';
     };
 
     programs.git.ignores = let

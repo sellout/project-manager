@@ -10,8 +10,7 @@
     ];
     ## Isolate the build.
     registries = false;
-    ## TODO: Enable this once it succeeds on darwin.
-    # sandbox = true;
+    sandbox = "relaxed";
   };
 
   outputs = {
