@@ -59,7 +59,7 @@ $ nix-shell '<project-manager>' -A install
 Once finished, Project Manager should be active and available in your
 user environment.
 
-4. If you do not plan on having Project Manager manage your shell
+4. If you don’t plan on having Project Manager manage your shell
 configuration then you must source the
 +
 [source,bash]

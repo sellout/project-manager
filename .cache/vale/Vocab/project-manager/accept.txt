@@ -1,0 +1,15 @@
+direnv
+garnix
+[Nn]ix
+Pfeil
+ShellCheck
+babelfish
+[Bb]oolean
+declutter
+Dhall
+formatter
+NMT
+sandboxed
+systemd
+treefmt
+unsandboxed

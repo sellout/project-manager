@@ -58,6 +58,30 @@ in {
         shfmt = {inherit includes;};
       };
     };
+    vale = {
+      enable = true;
+      formatSettings."*.xml".Transform =
+        "${pkgs.docbook-xsl-ns}/share/xml/docbook-xsl-ns/html/docbook.xsl";
+      excludes = [
+        "*.bash"
+        "*.xml" # TODO: Remove this once we get the XSL transform working.
+        "./project-manager/project-manager"
+        "./project-manager/completion.fish"
+        "./project-manager/completion.zsh"
+      ];
+      vocab.${config.project.name}.accept = [
+        "babelfish"
+        "[Bb]oolean"
+        "declutter"
+        "Dhall"
+        "formatter"
+        "NMT"
+        "sandboxed"
+        "systemd"
+        "treefmt"
+        "unsandboxed"
+      ];
+    };
   };
 
   ## CI
@@ -68,10 +92,13 @@ in {
         # TODO: Remove once garnix-io/garnix#285 is fixed.
         "homeConfigurations.x86_64-darwin-${config.project.name}-example"
       ]
-      ## NB: Explicitly excluded because it isn’t sandboxed, but since the check
-      ##     is renamed, it’s not caught by the auto-exclusion.
-      ++ map
-      (nixpkgs: "checks.*.project-manager-files-${nixpkgs}")
+      ## NB: Explicitly excluded because they’re not sandboxed, but since the
+      ##     checks are renamed, they’re not caught by the auto-exclusion.
+      ++ lib.concatMap
+      (nixpkgs: [
+        "checks.*.project-manager-files-${nixpkgs}"
+        "checks.*.vale-${nixpkgs}"
+      ])
       testedNixpkgsVersions;
   };
   services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (lib.concatMap flaky.lib.garnixChecks ([

@@ -45,6 +45,10 @@ in {
   };
 
   config = mkIf (cfg.enable && cfg.settings != {}) {
+    programs.vale.excludes = mkIf (config.project.file.".editorconfig".persistence != "store") [
+      "./${config.project.file.".editorconfig".target}"
+    ];
+
     project.file.".editorconfig" = {
       ## TODO: This needs to be committed so that it affects the format `check`.
       ##       However, it should really be linked into there from the store
