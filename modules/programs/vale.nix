@@ -139,8 +139,5 @@ in {
         "!/${stylesPath}/Vocab/${actualCoreSettings.Vocab}/"
       ]
       else ["/${stylesPath}/"];
-
-    ## Can’t build un-sandboxed derivations on Garnix (see garnix-io/issues#33)
-    services.garnix.builds.exclude = ["checks.*.vale"];
   });
 }
