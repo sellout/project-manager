@@ -76,7 +76,6 @@ in {
   };
   services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (lib.concatMap flaky.lib.garnixChecks ([
       (sys: "check shellcheck [${sys}]")
-      (sys: "devShell lax-checks [${sys}]")
       (sys: "package docs-html [${sys}]")
       (sys: "package docs-manpages [${sys}]")
       (sys: "package default [${sys}]")
