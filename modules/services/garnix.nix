@@ -21,15 +21,13 @@ in {
       '';
       example = lib.literalMD ''
         {
-          "*" = {
-            charset = "utf-8";
-            end_of_line = "lf";
-            trim_trailing_whitespace = true;
-            insert_final_newline = true;
-            max_line_width = 78;
-            indent_style = "space";
-            indent_size = 4;
-          };
+          exclude = ["homeConfigurations.*"];
+          include = [
+            "*.x86_64-linux.*"
+            "packages.aarch64-darwin.*"
+            "defaultPackage.x86_64-linux"
+            "devShell.x86_64-linux"
+          ];
         };
       '';
     };
@@ -39,5 +37,12 @@ in {
     project.file."garnix.yaml".text = lib.pm.generators.toYAML {} {
       inherit (cfg) builds;
     };
+
+    ## Can’t build un-sandboxed derivations on Garnix (see garnix-io/issues#33)
+    services.garnix.builds.exclude =
+      map
+      (name: "checks.*.${name}")
+      (builtins.attrNames config.project.unsandboxedChecks)
+      ++ ["devShells.*.lax-checks"];
   };
 }

@@ -66,10 +66,19 @@ Project manager provides various checks based on your configuration. E.g.,
 You can pick and choose, or just include them all via something like
 
 ```nix
-checks = self.projectConfigurations.${system}.checks self // {
+checks = self.projectConfigurations.${system}.checks // {
   ## more checks
 };
 ```
+
+There are two other attrsets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules (like Vale) that fail in the sandbox.
+
+If that's the case, you have a couple options. You can either
+
+- use `sandboxedChecks` in the flake to only include sandboxed ones in `nix flake check` or
+- weaken `nixConfig.sandbox` to `"relaxed"`, which will allow explicitly unsandboxed derivations (`__noChroot = true`) to run, but keep the others sandboxed.
+
+and run `nix --no-sandbox develop .#unsandboxedChecks` to check the others.
 
 #### `devShell`
 

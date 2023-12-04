@@ -291,6 +291,25 @@ in {
       '';
     };
 
+    sandboxedChecks = mkOption {
+      internal = true;
+      type = types.attrsOf types.package;
+      description = lib.mdDoc ''
+        The subset of `project.checks` that is sandboxed. You can use this
+        instead of that in your flake to avoid disabling the sandbox.
+      '';
+    };
+
+    unsandboxedChecks = mkOption {
+      internal = true;
+      type = types.attrsOf types.package;
+      description = lib.mdDoc ''
+        The subset of `project.checks` that is not sandboxed. These are also
+        exposed via `project.devShells.lax-checks` which can be run outside of
+        `nix flake check`.
+      '';
+    };
+
     devShells = mkOption {
       internal = true;
       type = types.attrsOf types.package;
@@ -671,11 +690,14 @@ in {
         pkgs
         (pkgs.runCommand "project-manager-files"
           {
+            __noChroot = true;
+
             nativeBuildInputs = [
               config.programs.git.package
               config.programs.project-manager.package
               pkgs.coreutils
             ];
+
             meta.description = "Check that the generated files are up-to-date.";
           }
           ''
@@ -700,6 +722,16 @@ in {
             touch $out
           '');
 
+      sandboxedChecks =
+        lib.filterAttrs
+        (_: value: !(value.__noChroot or false))
+        config.project.checks;
+
+      unsandboxedChecks =
+        lib.filterAttrs
+        (_: value: value.__noChroot or false)
+        config.project.checks;
+
       devShells = {
         default = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
@@ -710,32 +742,23 @@ in {
           };
         });
 
-        ## This runs all devShells whose names are prefixed with `check-`,
-        ## allowing us to define “lax” checks that can be run even in the face
-        ## of Internet access.
+        ## This includes all unsandboxed checks as dependencies, so they can be
+        ## run independently of `nix flake check`.
         lax-checks =
-          bash-strict-mode.lib.checkedDrv pkgs
-          (pkgs.mkShell {
-            nativeBuildInputs = [pkgs.nix];
-            checkList = lib.filter (lib.hasPrefix "check-") (builtins.attrNames config.project.devShells);
-            shellHook = ''
-              ## Shouldn’t need this, but apparently `bash-strict-mode` isn’t
-              ## working properly.
-              ##
-              ## Also, can’t use `-u` because of Starship, which is a personal issue
-              ## that I should report.
-              set -eo pipefail
+          lib.mkIf (config.project.unsandboxedChecks != {})
+          (bash-strict-mode.lib.checkedDrv pkgs
+            (pkgs.mkShell {
+              meta.description = ''
+                This shell runs all of the checks that are unsandboxed, then
+                exits.
+              '';
+              nativeBuildInputs =
+                builtins.attrValues config.project.unsandboxedChecks;
 
-              IFS=' ' read -ra checks <<< "$checkList"
-              ## TODO: Run all, collecting failures, instead of exiting after first
-              ##       failure.
-              for check in "''${checks[@]}"; do
-                ## TODO: Colorize using _iNote from project-manager
-                echo "Running $check check (laxly)"
-                nix develop ".#$check" --command echo
-              done
-            '';
-          });
+              shellHook = ''
+                exit
+              '';
+            }));
       };
 
       filterRepositoryPersistedExcept = exceptions: _type: name:

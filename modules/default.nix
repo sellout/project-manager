@@ -48,6 +48,8 @@ in {
     (module.config.project)
     packages
     checks
+    sandboxedChecks
+    unsandboxedChecks
     devShells
     formatter
     cleanRepositoryPersisted
