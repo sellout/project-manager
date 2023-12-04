@@ -690,11 +690,14 @@ in {
         pkgs
         (pkgs.runCommand "project-manager-files"
           {
+            __noChroot = true;
+
             nativeBuildInputs = [
               config.programs.git.package
               config.programs.project-manager.package
               pkgs.coreutils
             ];
+
             meta.description = "Check that the generated files are up-to-date.";
           }
           ''
