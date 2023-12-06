@@ -116,7 +116,9 @@
             self.devShells.${system}.project-manager.overrideAttrs
             (old: {
               inputsFrom =
-                builtins.attrValues self.checks.${system}
+                old.inputsFrom
+                or []
+                ++ builtins.attrValues self.projectConfigurations.${system}.sandboxedChecks
                 ++ builtins.attrValues self.packages.${system};
             });
         };
