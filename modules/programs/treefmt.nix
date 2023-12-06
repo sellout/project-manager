@@ -11,9 +11,7 @@ in {
   options.programs.treefmt = {
     enable = lib.mkEnableOption (lib.mdDoc "treefmt");
 
-    package = lib.mkPackageOptionMD pkgs "treefmt" {
-      default = ["treefmt"];
-    };
+    package = lib.mkPackageOptionMD pkgs "treefmt" {};
 
     projectRootFile = lib.mkOption {
       type = lib.types.str;
@@ -24,7 +22,7 @@ in {
     };
 
     programs = lib.mkOption {
-      type = lib.types.attrs;
+      type = lib.types.attrsOf lib.types.attrs;
       default = {};
       description = lib.mdDoc ''
         Configuration for treefmt formatters. See
@@ -33,7 +31,7 @@ in {
     };
 
     settings = lib.mkOption {
-      type = lib.types.attrs;
+      type = lib.types.attrsOf lib.types.attrs;
       default = {};
       description = lib.mdDoc ''
         Settings for treefmt. See
@@ -49,27 +47,15 @@ in {
       settings =
         cfg.settings
         // {
-          global =
-            if cfg.settings ? global
-            then
-              cfg.settings.global
-              // {
-                excludes =
-                  (
-                    if cfg.settings.global ? excludes
-                    then cfg.settings.global.excludes
-                    else []
-                  )
-                  ++ newExcludes;
-              }
-            else {excludes = newExcludes;};
+          global.excludes =
+            (cfg.settings.global.excludes or []) ++ newExcludes;
         };
     };
   in {
     project = {
       checks.formatter = format.config.build.check self;
       formatter = format.config.build.wrapper;
-      packages = [cfg.package];
+      devPackages = [cfg.package];
     };
   });
 }

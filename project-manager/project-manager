@@ -1,15 +1,11 @@
-#!/usr/bin/env strict-bash
-# shellcheck shell=bash
+#!/usr/bin/env bash
 
 # Prepare to use tools from Nixpkgs.
 PATH=@DEP_PATH@${PATH:+:}$PATH
 
-## TODO: Make the file we look for configurable, like treefmt’s
-##      `projectRootFile`. For now, this just finds the flake.
-PROJECT_ROOT="$(nix flake metadata --json \
-  | jq -r ".resolvedUrl" \
-  | sed -e 's/^[^\/]*[\/]*\//\//')"
-export PROJECT_ROOT
+## See sellout/bash-strict-mode#10 for why we can’t use `strict-bash` directly.
+# shellcheck disable=SC1091
+source strict-mode.bash
 
 export TEXTDOMAIN=project-manager
 export TEXTDOMAINDIR=@OUT@/share/locale
@@ -18,30 +14,17 @@ export TEXTDOMAINDIR=@OUT@/share/locale
 source @PROJECT_MANAGER_LIB@
 
 function nixProfileList() {
-  # We attempt to use `--json` first (added in Nix 2.17). Otherwise attempt to
-  # parse the legacy output format.
-  {
-    nix profile list --json 2> /dev/null \
-      | jq -r --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
-  } || {
-    nix profile list \
-      | { grep "$1\$" || test $? = 1; } \
-      | cut -d ' ' -f 4
-  }
+  nix profile list --json \
+    | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
 }
 
 function removeByName() {
-  nixProfileList "$1" | xargs -t "$DRY_RUN_CMD" nix profile remove "$VERBOSE_ARG"
+  nixProfileList "$1" | xargs "$VERBOSE" "$DRY_RUN_CMD" nix profile remove "$VERBOSE_ARG"
 }
 
 function setNixProfileCommands() {
-  if [[ -e $HOME/.nix-profile/manifest.json ]]; then
-    LIST_OUTPATH_CMD="nix profile list"
-    REMOVE_CMD="removeByName"
-  else
-    LIST_OUTPATH_CMD="nix-env -q --out-path"
-    REMOVE_CMD="nix-env --uninstall"
-  fi
+  LIST_OUTPATH_CMD="nix profile list"
+  REMOVE_CMD="removeByName"
 }
 
 function setVerboseAndDryRun() {
@@ -192,27 +175,12 @@ function doInit() {
     _i 'The file %s already exists, leaving it unchanged...' "$confFile"
   else
     _i 'Creating %s...' "$confFile"
-    local nl=$'\n'
-    local xdgVars=""
-    if [[ -v XDG_CACHE_HOME && $XDG_CACHE_HOME != "$HOME/.cache" ]]; then
-      xdgVars="$xdgVars  xdg.cacheHome = \"$XDG_CACHE_HOME\";$nl"
-    fi
-    if [[ -v XDG_CONFIG_HOME && $XDG_CONFIG_HOME != "$HOME/.config" ]]; then
-      xdgVars="$xdgVars  xdg.configHome = \"$XDG_CONFIG_HOME\";$nl"
-    fi
-    if [[ -v XDG_DATA_HOME && $XDG_DATA_HOME != "$HOME/.local/share" ]]; then
-      xdgVars="$xdgVars  xdg.dataHome = \"$XDG_DATA_HOME\";$nl"
-    fi
-    if [[ -v XDG_STATE_HOME && $XDG_STATE_HOME != "$HOME/.local/state" ]]; then
-      xdgVars="$xdgVars  xdg.stateHome = \"$XDG_STATE_HOME\";$nl"
-    fi
 
     mkdir -p "$confDir"
     cat > "$confFile" << EOF
 { config, pkgs, ... }:
 
 {
-$xdgVars
   # This value determines the Project Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Project Manager release
   # introduces backwards incompatible changes.
@@ -220,11 +188,11 @@ $xdgVars
   # You should not change this value, even if you update Project Manager. If you do
   # want to update the value, then make sure to first check the Project Manager
   # release notes.
-  project.stateVersion = "23.05"; # Please read the comment before changing.
+  project.stateVersion = 0; # Please read the comment before changing.
 
-  # The project.packages option allows you to install Nix packages into your
+  # The project.devPackages option allows you to install Nix packages into your
   # environment.
-  project.packages = [
+  project.devPackages = [
     # # Adds the 'hello' command to your environment. It prints a friendly
     # # "Hello, world!" when run.
     # pkgs.hello
@@ -419,7 +387,7 @@ function doBuild() {
 
   setFlakeAttribute
   doBuildFlake \
-    "$FLAKE_CONFIG_URI.activationPackage" \
+    "$FLAKE_CONFIG_URI.packages.activation" \
     ${DRY_RUN+--dry-run} \
     ${NO_OUT_LINK+--no-link} \
     ${PRINT_BUILD_LOGS+--print-build-logs} \
@@ -441,7 +409,7 @@ function doSwitch() {
 
   setFlakeAttribute
   doBuildFlake \
-    "$FLAKE_CONFIG_URI.activationPackage" \
+    "$FLAKE_CONFIG_URI.packages.activation" \
     --out-link "$generation" \
     ${PRINT_BUILD_LOGS+--print-build-logs} \
     && "$generation/activate" || return
@@ -483,7 +451,7 @@ function doRmGenerations() {
       _i 'Cannot remove the current generation %s' "$generationId" >&2
     else
       _i 'Removing generation %s' "$generationId"
-      $DRY_RUN_CMD rm $VERBOSE_ARG "$linkName"
+      $DRY_RUN_CMD rm "$VERBOSE_ARG" "$linkName"
     fi
   done
 
@@ -629,7 +597,7 @@ function doUninstall() {
       PROJECT_MANAGER_CONFIG="$(mktemp --tmpdir project-manager.XXXXXXXXXX)"
       echo "{ lib, ... }: {" > "$PROJECT_MANAGER_CONFIG"
       echo "  project.file = lib.mkForce {};" >> "$PROJECT_MANAGER_CONFIG"
-      echo '  project.stateVersion = "18.09";' >> "$PROJECT_MANAGER_CONFIG"
+      echo '  project.stateVersion = 0;' >> "$PROJECT_MANAGER_CONFIG"
       echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
       doSwitch
@@ -783,7 +751,7 @@ while [[ $# -gt 0 ]]; do
       PASSTHROUGH_OPTS+=("$opt" "$1")
       shift
       ;;
-    --debug | --keep-failed | --keep-going | --show-trace | --substitute | --no-substitute | --impure)
+    --debug | --eval-cache | --no-eval-cache | --keep-failed | --keep-going | --show-trace | --substitute | --no-substitute | --impure)
       PASSTHROUGH_OPTS+=("$opt")
       ;;
     -v | --verbose)
@@ -812,6 +780,13 @@ if [[ -z $COMMAND ]]; then
   doHelp >&2
   exit 1
 fi
+
+## TODO: Make the file we look for configurable, like treefmt’s
+##      `projectRootFile`. For now, this just finds the flake.
+PROJECT_ROOT="$(nix flake metadata --json \
+  | jq -r ".resolvedUrl" \
+  | sed -e 's/^[^\/]*[\/]*\//\//')"
+export PROJECT_ROOT
 
 case $COMMAND in
   edit)

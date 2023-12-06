@@ -5,9 +5,9 @@
   editorconfig = ./misc/editorconfig.nix;
   news = ./misc/news.nix;
   # ./misc/specialisation.nix
-  submodule-support = ./misc/submodule-support.nix;
   version = ./misc/version.nix;
   # ./misc/vte.nix
+  xdg = ./misc/xdg.nix;
   # ./programs/bash.nix
   # ./programs/darcs.nix
   direnv = ./programs/direnv.nix;
@@ -18,7 +18,7 @@
   # ./programs/git-cliff.nix
   # ./programs/git-credential-oauth.nix
   git = ./programs/git.nix;
-  # ./programs/just.nix
+  just = ./programs/just.nix;
   mercurial = ./programs/mercurial.nix;
   # ./programs/neovim.nix
   # ./programs/nushell.nix

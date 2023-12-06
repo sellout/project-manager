@@ -4,28 +4,25 @@
   ...
 }:
 with lib; let
-  releaseInfo = {
-    release = "23.05";
-    isReleaseBranch = true;
-  };
+  releaseInfo = import ../../release.nix;
 in {
   options = {
     project.stateVersion = mkOption {
-      type = types.enum [
-        "23.05"
-        "23.11"
-      ];
+      type = types.ints.between 0 releaseInfo.version.major;
       description = lib.mdDoc ''
-        It is occasionally necessary for Project Manager to change
-        configuration defaults in a way that is incompatible with
-        stateful data. This could, for example, include switching the
-        default data format or location of a file.
+        It is occasionally necessary for Project Manager to change configuration
+        defaults in a way that is incompatible with stateful data. This could,
+        for example, include switching the default data format or location of a
+        file.
 
-        The *state version* indicates which default
-        settings are in effect and will therefore help avoid breaking
-        program configurations. Switching to a higher state version
-        typically requires performing some manual steps, such as data
-        conversion or moving files.
+        The *state version* indicates which default settings are in effect and
+        will therefore help avoid breaking program configurations. Switching to
+        a higher state version typically requires performing some manual steps,
+        such as data conversion or moving files.
+
+        The state version corresponds to the major version component of the
+        Project Manager release where those defaults were specified. The value
+        can be set to any Project Manager release up to and including this one.
       '';
     };
 
@@ -39,7 +36,7 @@ in {
           suffix =
             optionalString (revision != null) "+${substring 0 8 revision}";
         in "${release}${suffix}";
-        example = "23.05+213a0629";
+        example = "0.3.0+213a0629";
         description = "The full Project Manager version.";
       };
 
@@ -48,7 +45,7 @@ in {
         readOnly = true;
         type = types.str;
         default = releaseInfo.release;
-        example = "23.05";
+        example = "0.3.0";
         description = "The Project Manager release.";
       };
 

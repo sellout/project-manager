@@ -83,6 +83,20 @@ in {
       '';
     };
 
+    wrapPrograms = mkOption {
+      type = types.nullOr types.bool;
+      default = null;
+      apply = p:
+        if p == null
+        then !cfg.commit-by-default
+        else p;
+      description = lib.mdDoc ''
+        Whether to default to wrapping programs instead of writing configuration
+        files. If null, it falls back to the opposite of
+        {var}`project.commit-by-default`.
+      '';
+    };
+
     shellAliases = mkOption {
       type = with types; attrsOf str;
       default = {};
@@ -180,11 +194,11 @@ in {
       '';
     };
 
-    packages = mkOption {
+    devPackages = mkOption {
       type = types.listOf types.package;
       default = [];
       description = lib.mdDoc ''
-        The set of packages to appear in the user environment.
+        The set of packages to appear in the project environment.
       '';
     };
 
@@ -194,7 +208,7 @@ in {
       example = ["doc" "info" "devdoc"];
       description = lib.mdDoc ''
         List of additional package outputs of the packages
-        {var}`project.packages` that should be installed into
+        {var}`project.devPackages` that should be installed into
         the user environment.
       '';
     };
@@ -256,21 +270,43 @@ in {
       '';
     };
 
-    activationPackage = mkOption {
+    packages = mkOption {
       internal = true;
-      type = types.package;
+      type = types.attrsOf types.package;
+      default = {};
       description = lib.mdDoc ''
-        The package containing the complete activation script.
+        Packages provided by the project configuration. These generally don’t
+        need to be explicitly referenced, as they’re part of the usual
+        functioning of Project Manager.
       '';
     };
 
     checks = mkOption {
       internal = true;
-      type = types.attrs;
+      type = types.attrsOf types.package;
       default = {};
       description = lib.mdDoc ''
-        A function that accepts the current flake (`self`) and returns attrset
-        of checks to be applied for the current system.
+        Checks provided by the project configuration. These can be included in
+        your flake’s checks.
+      '';
+    };
+
+    sandboxedChecks = mkOption {
+      internal = true;
+      type = types.attrsOf types.package;
+      description = lib.mdDoc ''
+        The subset of `project.checks` that is sandboxed. You can use this
+        instead of that in your flake to avoid disabling the sandbox.
+      '';
+    };
+
+    unsandboxedChecks = mkOption {
+      internal = true;
+      type = types.attrsOf types.package;
+      description = lib.mdDoc ''
+        The subset of `project.checks` that is not sandboxed. These are also
+        exposed via `project.devShells.lax-checks` which can be run outside of
+        `nix flake check`.
       '';
     };
 
@@ -381,17 +417,64 @@ in {
     ];
 
     warnings = let
+      ## Nixpkgs versions that have never been supported by Project Manager.
+      unsupportedVersions = [
+        "13.10"
+        "14.04"
+        "14.12"
+        "15.09"
+        "16.03"
+        "16.09"
+        "17.03"
+        "17.09"
+        "18.03"
+        "18.09"
+        "19.03"
+        "19.09"
+        "20.03"
+        "20.09"
+        "21.05"
+        "21.11"
+        "22.05"
+      ];
+      ## For each nixpkgs release, this lists the Project Manager versions that
+      ## support it.
+      ## TODO: The Project Manager release shouldn't include the revision.
+      supportedVersions =
+        lib.listToAttrs
+        (map (name: lib.nameValuePair name []) unsupportedVersions)
+        // {
+          "22.11" = ["0.3" "0.4"];
+          "23.05" = ["0.1" "0.2" "0.3" "0.4"];
+          "23.11" = ["0.3" "0.4"];
+          "24.05" = ["0.3" "0.4"];
+        };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;
+      allowedPmVersions = supportedVersions.${nixpkgsRelease};
       releaseMismatch =
         config.project.enableNixpkgsReleaseCheck
-        && pmRelease != nixpkgsRelease;
+        && !(lib.any
+          (pmMinor: lib.hasPrefix "${pmMinor}." pmRelease)
+          allowedPmVersions);
     in
       optional releaseMismatch ''
         You are using
 
           Project Manager version ${pmRelease} and
           Nixpkgs version ${nixpkgsRelease}.
+
+        ${
+          if allowedPmVersions == []
+          then ''
+            There are no Project Manager versions that support
+            Nixpkgs ${nixpkgsRelease}.
+          ''
+          else ''
+            Project Manager versions that support Nixpkgs ${nixpkgsRelease}:
+            • ${concatStringsSep ".*\n• " supportedVersions.${nixpkgsRelease}}.*
+          ''
+        }
 
         Using mismatched versions is likely to cause errors and unexpected
         behavior. It is therefore highly recommended to use a release of
@@ -409,7 +492,7 @@ in {
     # programs.fish.shellAliases = cfg.shellAliases;
 
     # Provide a file holding all session variables.
-    project.sessionVariablesPackage = pkgs.writeTextFile {
+    project.packages.sessionVariables = pkgs.writeTextFile {
       name = "pm-session-vars.sh";
       destination = "/etc/profile.d/pm-session-vars.sh";
       text =
@@ -426,11 +509,60 @@ in {
         + cfg.sessionVariablesExtra;
     };
 
-    project.packages = [config.project.sessionVariablesPackage];
+    project.devPackages = [
+      config.project.packages.sessionVariables
+    ];
 
     # A dummy entry acting as a boundary between the activation
     # script's "check" and the "write" phases.
     project.activation.writeBoundary = pm.dag.entryAnywhere "";
+
+    # Install packages to the project environment.
+    #
+    project.activation.installPackages = pm.dag.entryAfter ["writeBoundary"] (
+      let
+        profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
+        pathPackageName = "project-manager-path-for-${config.project.name}";
+      in ''
+        function nixProfileList() {
+          # We attempt to use `--json` first (added in Nix 2.17). Otherwise
+          # attempt to parse the legacy output format.
+          {
+            nix profile list --profile ${profileDir} --json 2>/dev/null \
+              | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+          } || {
+            nix profile list --profile ${profileDir} \
+              | { grep "$1\$" || test $? = 1; } \
+              | cut -d ' ' -f 4
+          }
+        }
+
+        function nixRemoveProfileByName() {
+            nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
+        }
+
+        function nixReplaceProfile() {
+          local oldNix="$(command -v nix)"
+
+          nixRemoveProfileByName '${pathPackageName}'
+
+          $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
+        }
+
+        INSTALL_CMD="nix profile install --profile ${profileDir}"
+        INSTALL_CMD_ACTUAL="nixReplaceProfile"
+        LIST_CMD="nix profile list --profile ${profileDir}"
+        REMOVE_CMD_SYNTAX='nix profile remove --profile ${profileDir} {number | store path}'
+
+        if ! $INSTALL_CMD_ACTUAL ${cfg.packages.path} ; then
+          echo
+          _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
+          exit 1
+        fi
+        unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
+        unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
+      ''
+    );
 
     # Text containing Bash commands that will initialize the Project Manager Bash
     # library. Most importantly, this will prepare for using translated strings
@@ -454,7 +586,7 @@ in {
       source ${../lib/bash/project-manager.bash}
     '';
 
-    project.activationPackage = let
+    project.packages.activation = let
       mkCmd = res: ''
         _iNote "Activating %s" "${res.name}"
         ${res.data}
@@ -487,11 +619,11 @@ in {
         )
         + (
           # Add path of the Nix binaries, if a Nix package is configured, then
-          # use that one, otherwise grab the path of the nix-env tool.
+          # use that one, otherwise grab the path of the nix command.
           # if config.nix.enable && config.nix.package != null then
           #   ":${config.nix.package}/bin"
           # else
-          ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix-env)))"
+          ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix)))"
         )
         + optionalString (!cfg.emptyActivationPath) "\${PATH:+:}$PATH";
 
@@ -537,17 +669,35 @@ in {
           ${cfg.extraBuilderCommands}
         '');
 
+    project.packages.path = pkgs.buildEnv {
+      name = "project-manager-path-for-${config.project.name}";
+
+      paths = cfg.devPackages;
+      inherit (cfg) extraOutputsToInstall;
+
+      postBuild = cfg.extraProfileCommands;
+
+      meta = {
+        description = ''
+          Environment of packages installed through Project Manager.
+        '';
+      };
+    };
+
     project = {
       checks.project-manager-files =
         bash-strict-mode.lib.checkedDrv
         pkgs
         (pkgs.runCommand "project-manager-files"
           {
+            __noChroot = true;
+
             nativeBuildInputs = [
               config.programs.git.package
               config.programs.project-manager.package
               pkgs.coreutils
             ];
+
             meta.description = "Check that the generated files are up-to-date.";
           }
           ''
@@ -572,42 +722,43 @@ in {
             touch $out
           '');
 
+      sandboxedChecks =
+        lib.filterAttrs
+        (_: value: !(value.__noChroot or false))
+        config.project.checks;
+
+      unsandboxedChecks =
+        lib.filterAttrs
+        (_: value: value.__noChroot or false)
+        config.project.checks;
+
       devShells = {
         project-manager = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
-          nativeBuildInputs = cfg.packages;
+          nativeBuildInputs = [config.project.packages.path];
           shellHook = cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";
           };
         });
 
-        ## This runs all devShells whose names are prefixed with `check-`,
-        ## allowing us to define “lax” checks that can be run even in the face
-        ## of Internet access.
+        ## This includes all unsandboxed checks as dependencies, so they can be
+        ## run independently of `nix flake check`.
         lax-checks =
-          bash-strict-mode.lib.checkedDrv pkgs
-          (pkgs.mkShell {
-            nativeBuildInputs = [pkgs.nix];
-            checkList = lib.filter (lib.hasPrefix "check-") (builtins.attrNames config.project.devShells);
-            shellHook = ''
-              ## Shouldn’t need this, but apparently `bash-strict-mode` isn’t
-              ## working properly.
-              ##
-              ## Also, can’t use `-u` because of Starship, which is a personal issue
-              ## that I should report.
-              set -eo pipefail
+          lib.mkIf (config.project.unsandboxedChecks != {})
+          (bash-strict-mode.lib.checkedDrv pkgs
+            (pkgs.mkShell {
+              meta.description = ''
+                This shell runs all of the checks that are unsandboxed, then
+                exits.
+              '';
+              nativeBuildInputs =
+                builtins.attrValues config.project.unsandboxedChecks;
 
-              IFS=' ' read -ra checks <<< "$checkList"
-              ## TODO: Run all, collecting failures, instead of exiting after first
-              ##       failure.
-              for check in "''${checks[@]}"; do
-                ## TODO: Colorize using _iNote from project-manager
-                echo "Running $check check (laxly)"
-                nix develop ".#$check" --command echo
-              done
-            '';
-          });
+              shellHook = ''
+                exit
+              '';
+            }));
       };
 
       filterRepositoryPersistedExcept = exceptions: _type: name:

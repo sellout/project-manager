@@ -9,4 +9,4 @@ The module system in Project Manager is based entirely on the NixOS module syste
 :wikipedia-dag: https://en.wikipedia.org/w/index.php?title=Directed_acyclic_graph&oldid=939656095
 :gvariant-description: https://docs.gtk.org/glib/struct.Variant.html#description
 
-Overall the basic option types are the same in Project Manager as Home Manager. There are some additional options provided in the file-type submodule.
+Overall the basic option types are the same in Project Manager as Home Manager. There are some extra options provided in the file-type submodule.

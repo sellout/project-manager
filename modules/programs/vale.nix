@@ -68,7 +68,7 @@ in {
       ##           combine the requested packages with our Vocabs for a new package
       ##       2. if we _don’t_ create a Nix package for this, then the check
       ##           requires downloading.
-      else {StylesPath = ".cache/vale";} // cfg.coreSettings;
+      else {StylesPath = "${config.xdg.cacheDir}/vale";} // cfg.coreSettings;
   in {
     project = {
       file =
@@ -79,7 +79,7 @@ in {
             onChange = ''
               ${cfg.package}/bin/vale sync
             '';
-            text = lib.generators.toINIWithGlobalSection {} {
+            text = lib.pm.generators.toINIWithGlobalSection {} {
               globalSection = actualCoreSettings;
               sections = cfg.formatSettings or {};
             };
@@ -97,7 +97,7 @@ in {
         })
         cfg.vocab;
 
-      packages = [cfg.package];
+      devPackages = [cfg.package];
 
       ## TODO: Certain checks functions (like this one) require the sandbox to be
       ##       disabled, otherwise they fail. We should be able to
@@ -111,7 +111,13 @@ in {
             ##       packages, but as it is, they need to be downloaded via
             ##      `vale sync`.
             __noChroot = true;
-            nativeBuildInputs = [pkgs.vale];
+            nativeBuildInputs = [
+              pkgs.vale
+              ## TODO: Conditinalize these dependencies based on whether the
+              ##       user wants to lint these files types.
+              pkgs.asciidoctor
+              pkgs.libxslt
+            ];
             src = self;
           } ''
             cp -R "$src/." build
@@ -124,42 +130,6 @@ in {
               -exec vale {} +
             mkdir -p "$out"
           '');
-
-      # ## TODO: Generalize this to a `projects.laxChecks` that produces a devShell
-      # ##       for each check.
-      # devShells.check-vale = let
-      #   lax-check = src: nativeBuildInputs: command:
-      #     bash-strict-mode.lib.checkedDrv pkgs
-      #       (pkgs.mkShell {
-      #         inherit nativeBuildInputs src;
-      #     shellHook = ''
-      #       ## Shouldn’t need this, but apparently `bash-strict-mode` isn’t
-      #       ## working properly.
-      #       ##
-      #       ## Also, can’t use `-u` because of Starship, which is a personal issue
-      #       ## that I should report.
-      #       set -eo pipefail
-
-      #       build_dir=$(mktemp -d -t "project-manager-check-vale.XXXXXX")
-      #       cp -R "$src/." "$build_dir"
-      #       chmod -R +w "$build_dir"
-      #       cd "$build_dir" || exit
-      #       ${command}
-      #     '';
-      # });
-      # in lax-check ../../.. [pkgs.vale] ''
-      #   vale sync
-      #   ## We skip licenses because they are written by lawyers, not by us.
-      #   ## TODO: Have a general `ignores` list that we can process into
-      #   ##       gitignores, `find -not` lists, etc.
-      #   find . -type f \
-      #     -not -path './.cache/*' \
-      #     -not -path './flake.lock' \
-      #     -not -path '*/LICENSE' \
-      #     -not -path '*/Eldev' \
-      #     -not -path '*.nix' \
-      #     -exec vale {} +
-      # '';
     };
 
     programs.git.ignores = let
@@ -175,8 +145,5 @@ in {
         "!/${stylesPath}/Vocab/${actualCoreSettings.Vocab}/"
       ]
       else ["/${stylesPath}/"];
-
-    ## Can’t build un-sandboxed derivations on Garnix (see garnix-io/issues#33)
-    services.garnix.builds.exclude = ["checks.*.vale"];
   });
 }

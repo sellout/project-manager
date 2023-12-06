@@ -38,7 +38,7 @@ in {
     };
   };
 
-  config = mkIf (cfg.enable && !config.submoduleSupport.enable) {
-    project.packages = [config.programs.project-manager.package];
+  config = mkIf cfg.enable {
+    project.devPackages = [config.programs.project-manager.package];
   };
 }

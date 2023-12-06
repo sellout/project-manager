@@ -10,8 +10,7 @@
     ];
     ## Isolate the build.
     registries = false;
-    ## TODO: Enable this once it succeeds on darwin.
-    # sandbox = true;
+    sandbox = "relaxed";
   };
 
   outputs = {
@@ -19,7 +18,10 @@
     flake-schemas,
     flake-utils,
     flaky,
-    nixpkgs,
+    nix-schema,
+    nixpkgs-22_11,
+    nixpkgs-23_05,
+    nixpkgs-23_11,
     nixpkgs-unstable,
     self,
     treefmt-nix,
@@ -27,10 +29,15 @@
     pname = "project-manager";
 
     supportedSystems = flake-utils.lib.defaultSystems;
+
+    ## The Nixpkgs release to use internally for building Project Manager
+    ## itself, regardless of the downstream package set.
+    buildNixpkgs = nixpkgs-23_11;
   in
     {
-      ## This output’s schema may be in flux. See NixOS/nix#8892.
-      schemas = flake-schemas.schemas // import ./nix/schemas.nix;
+      schemas =
+        flake-schemas.schemas
+        // import ./nix/schemas.nix {inherit flake-schemas;};
 
       lib = import ./nix/lib.nix {
         inherit bash-strict-mode treefmt-nix;
@@ -59,37 +66,45 @@
     }
     // flake-utils.lib.eachSystem supportedSystems
     (system: let
-      unstable = import nixpkgs-unstable {inherit system;};
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [
-          (final: prev: {
-            ## TODO: Remove these once Nix 1.16 is in a stable release. See
-            ##       NixOS/nix#8485.
-            nix = unstable.nix;
-            nil = unstable.nil;
-          })
-          bash-strict-mode.overlays.default
-          self.overlays.default
-        ];
-      };
+      pkgsFrom = nixpkgs:
+        import nixpkgs {
+          inherit system;
+          overlays = [
+            bash-strict-mode.overlays.default
+            self.overlays.default
+            (final: prev: {
+              nix-schema = nix-schema.packages.${system}.nix.overrideAttrs (old: {
+                doCheck = false;
+                postInstall =
+                  old.postInstall
+                  + ''
+                    mv $out/bin/nix $out/bin/nix-schema
+                  '';
+                doInstallCheck = false;
+              });
+            })
+          ];
+        };
+
+      projectConfigurationsFor = pkgs:
+        flaky.lib.projectConfigurations.default {inherit pkgs self;};
     in {
       packages = let
         releaseInfo = import ./release.nix;
         docs = import ./docs {
-          inherit pkgs;
           inherit (releaseInfo) release isReleaseBranch;
+          pkgs = pkgsFrom buildNixpkgs;
         };
       in {
         default = self.packages.${system}.project-manager;
         docs-html = docs.manual.html;
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
-        project-manager = pkgs.callPackage ./project-manager {};
+        project-manager =
+          (pkgsFrom buildNixpkgs).callPackage ./project-manager {};
       };
 
-      projectConfigurations =
-        flaky.lib.projectConfigurations.default {inherit pkgs self;};
+      projectConfigurations = projectConfigurationsFor (pkgsFrom buildNixpkgs);
 
       devShells = let
         #   tests = import ./tests {inherit pkgs;};
@@ -106,7 +121,26 @@
             });
         };
 
-      checks = self.projectConfigurations.${system}.checks;
+      checks = let
+        checksWith = nixpkgs:
+          buildNixpkgs.lib.mapAttrs'
+          (name:
+            buildNixpkgs.lib.nameValuePair
+            (name
+              + "-"
+              ## TODO: Can’t have dots in output names unil garnix-io/issues#30
+              ##       is fixed.
+              + builtins.replaceStrings
+              ["."]
+              ["_"]
+              nixpkgs.lib.trivial.release))
+          (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
+      in
+        self.projectConfigurations.${system}.checks
+        // checksWith nixpkgs-22_11
+        // checksWith nixpkgs-23_05
+        // checksWith nixpkgs-23_11
+        // checksWith nixpkgs-unstable;
 
       formatter = self.projectConfigurations.${system}.formatter;
     });
@@ -115,12 +149,15 @@
     bash-strict-mode = {
       inputs = {
         flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs";
+        flaky.follows = "flaky";
+        nixpkgs.follows = "nixpkgs-23_11";
       };
       url = "github:sellout/bash-strict-mode";
     };
 
-    flake-schemas.url = "github:DeterminateSystems/flake-schemas";
+    ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is
+    ##       merged.
+    flake-schemas.url = "github:sellout/flake-schemas/patch-1";
 
     flake-utils.url = "github:numtide/flake-utils";
 
@@ -128,17 +165,32 @@
       inputs = {
         bash-strict-mode.follows = "bash-strict-mode";
         flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs";
+        nixpkgs.follows = "nixpkgs-23_11";
         project-manager.follows = "";
       };
       url = "github:sellout/flaky";
     };
 
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
+    ## Provides a version of `nix` that uses schemas. Helpful for validation.
+    ## This should be simplified once either DeterminateSystems/flake-schemas#14
+    ## or NixOS/nix#8892 is resolved.
+    nix-schema = {
+      inputs = {
+        flake-schemas.follows = "flake-schemas";
+        nixpkgs.follows = "nixpkgs-23_11";
+      };
+      url = "github:DeterminateSystems/nix/flake-schemas";
+    };
+
+    ## We test against each supported version of nixpkgs, but build against the
+    ## latest stable release.
+    nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
+    nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
+    nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-23_11";
       url = "github:numtide/treefmt-nix";
     };
   };

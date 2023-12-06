@@ -1,8 +1,0 @@
-## -*- mode: sh -*-
-
-# Unicode quotes are good, and ShellCheck gets this wrong a lot.
-disable=SC1111,SC1112
-
-# `shfmt` likes to replace `"\$foo"` with '$foo', which then triggers this
-# complaint, so let shfmt do what it wants.
-disable=SC2016

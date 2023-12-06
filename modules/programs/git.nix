@@ -16,59 +16,6 @@ with lib; let
     })
     .fileType;
 
-  hooksPath = ".cache/git/hooks";
-
-  # create [section "subsection"] keys from "section.subsection" attrset names
-  mkSectionName = name: let
-    containsQuote = strings.hasInfix ''"'' name;
-    sections = splitString "." name;
-    section = head sections;
-    subsections = tail sections;
-    subsection = concatStringsSep "." subsections;
-  in
-    if containsQuote || subsections == []
-    then name
-    else ''${section} "${subsection}"'';
-
-  mkValueString = v: let
-    escapedV = ''
-      "${
-        replaceStrings ["\n" "	" ''"'' "\\"] ["\\n" "\\t" ''\"'' "\\\\"] v
-      }"'';
-  in
-    generators.mkValueStringDefault {} (
-      if isString v
-      then escapedV
-      else v
-    );
-
-  # generation for multiple ini values
-  mkKeyValue = k: v: let
-    mkKeyValue =
-      generators.mkKeyValueDefault {inherit mkValueString;} " = " k;
-  in
-    concatStringsSep "\n" (map (kv: "	" + mkKeyValue kv) (toList v));
-
-  # converts { a.b.c = 5; } to { "a.b".c = 5; } for toINI
-  gitFlattenAttrs = let
-    recurse = path: value:
-      if isAttrs value
-      then mapAttrsToList (name: value: recurse ([name] ++ path) value) value
-      else if length path > 1
-      then {
-        ${concatStringsSep "." (reverseList (tail path))}.${head path} = value;
-      }
-      else {
-        ${head path} = value;
-      };
-  in
-    attrs: foldl recursiveUpdate {} (flatten (recurse [] attrs));
-
-  gitToIni = attrs: let
-    toIni = generators.toINI {inherit mkKeyValue mkSectionName;};
-  in
-    toIni (gitFlattenAttrs attrs);
-
   gitIniType = with types; let
     primitiveType = either str (either bool int);
     multipleType = either primitiveType (listOf primitiveType);
@@ -142,7 +89,7 @@ with lib; let
     };
     config.path = mkIf (config.contents != {}) (mkDefault
       (pkgs.writeText (hm.strings.storeFileName config.contentSuffix)
-        (gitToIni config.contents)));
+        (lib.pm.generators.toGitIni config.contents)));
   });
 in {
   meta.maintainers = [maintainers.sellout];
@@ -151,15 +98,19 @@ in {
     programs.git = {
       enable = mkEnableOption (lib.mdDoc "Git");
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.git;
-        defaultText = lib.literalMD "pkgs.git";
-        description = lib.mdDoc ''
-          Git package to install. Use {var}`pkgs.gitAndTools.gitFull`
-          to gain access to {command}`git send-email` for instance.
-        '';
-      };
+      package = lib.mkPackageOptionMD pkgs "Git" ({
+          default = ["git"];
+        }
+        // (
+          if lib.trivial.release == "22.11"
+          then {}
+          else {
+            extraDescription = ''
+              Use {var}`pkgs.gitAndTools.gitFull` to gain access to
+              {command}`git send-email` for instance.
+            '';
+          }
+        ));
 
       config = mkOption {
         type = gitIniType;
@@ -322,28 +273,28 @@ in {
           updateGitStatuses || exit 1
         '');
 
-        file = {
-          ".cache/git/config" = {
-            minimum-persistence = "store";
-            onChange =
-              if cfg.installConfig
-              then ''
-                ${pkgs.git}/bin/git config --worktree \
-                  include.path "${config.project.file.".cache/git/config".storePath}"
-              ''
-              else ''
-                ${pkgs.git}/bin/git config --worktree --unset include.path || true
-              '';
-            text = gitToIni cfg.iniContent;
-          };
-
-          ".gitattributes" = {
-            minimum-persistence = "worktree";
-            text = concatStringsSep "\n" cfg.attributes + "\n";
-          };
+        file.".gitattributes" = {
+          minimum-persistence = "worktree";
+          text = concatStringsSep "\n" cfg.attributes + "\n";
         };
 
-        packages = [cfg.package];
+        devPackages = [cfg.package];
+      };
+
+      programs.vale.excludes = ["./.gitattributes"];
+
+      xdg.cacheFile."git/config" = {
+        minimum-persistence = "store";
+        onChange =
+          if cfg.installConfig
+          then ''
+            ${pkgs.git}/bin/git config --worktree \
+              include.path "${config.xdg.cacheFile."git/config".reference config.xdg.cacheFile."git/config"}"
+          ''
+          else ''
+            ${pkgs.git}/bin/git config --worktree --unset include.path || true
+          '';
+        text = lib.pm.generators.toGitINI cfg.iniContent;
       };
     }
 
@@ -371,37 +322,41 @@ in {
     })
 
     (mkIf (cfg.ignoreRevs != null) (let
-      ignoreRevsPath = ".cache/git/ignoreRevs";
+      ignoreRevsPath = "git/ignoreRevs";
     in {
-      programs.git.iniContent = {
-        blame.ignoreRevsFile =
-          toString config.project.file."${ignoreRevsPath}".storePath;
-      };
-      project.file."${ignoreRevsPath}" = {
+      programs.git.iniContent.blame.ignoreRevsFile =
+        config.xdg.cacheFile."${ignoreRevsPath}".reference
+        config.xdg.cacheFile."git/config";
+      xdg.cacheFile."${ignoreRevsPath}" = {
         minimum-persistence = "store";
         text = concatLines cfg.ignoreRevs;
       };
     }))
 
     (mkIf (cfg.hooks != null) {
-      project.file = lib.mapAttrs (k: v:
-        v
-        // {
-          executable = true;
-          minimum-persistence = "store";
-        })
+      xdg.cacheFile = lib.mapAttrs' (name: file:
+        lib.nameValuePair "git/hooks/${name}"
+        (lib.mkMerge [
+          file
+          {
+            executable = true;
+            minimum-persistence = "store";
+          }
+        ]))
       cfg.hooks;
-      programs.git.iniContent = {
-        core.hooksPath = let
+
+      programs.git.iniContent.core.hooksPath =
+        if builtins.any (name: config.xdg.cacheFile."git/hooks/${name}".referenceViaStore config.xdg.cacheFile."git/config") (builtins.attrNames cfg.hooks)
+        then let
           entries =
             mapAttrsToList (name: file: {
               inherit name;
-              path = config.project.file."${name}".storePath;
+              path = config.xdg.cacheFile."git/hooks/${name}".reference config.xdg.cacheFile."git/config";
             })
             cfg.hooks;
         in
-          toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries);
-      };
+          toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries)
+        else lib.pm.path.routeFromFile config.xdg.cacheFile."git/config".target "${config.xdg.cacheDir}/git/hooks";
     })
 
     (mkIf (lib.isAttrs cfg.config) {
@@ -421,11 +376,11 @@ in {
             };
       in
         mkAfter
-        (concatStringsSep "\n" (map gitToIni (map include cfg.includes)));
+        (concatStringsSep "\n" (map lib.pm.generators.toGitINI (map include cfg.includes)));
     })
 
     (mkIf cfg.lfs.enable {
-      project.packages = [pkgs.git-lfs];
+      project.devPackages = [pkgs.git-lfs];
 
       programs.git.iniContent.filter.lfs = let
         skipArg = optional cfg.lfs.skipSmudge "--skip";

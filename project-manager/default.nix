@@ -37,6 +37,7 @@ in
     substituteInPlace $out/bin/project-manager \
       --subst-var-by DEP_PATH "${
       lib.makeBinPath [
+        bash-strict-mode
         coreutils
         findutils
         gettext
