@@ -106,13 +106,22 @@
 
       projectConfigurations = projectConfigurationsFor (pkgsFrom buildNixpkgs);
 
-      devShells = self.projectConfigurations.${system}.devShells;
-
-      # devShells = let
-      #   pkgs = nixpkgs.legacyPackages.${system};
-      #   tests = import ./tests {inherit pkgs;};
-      # in
-      #   tests.run;
+      devShells = let
+        #   tests = import ./tests {inherit pkgs;};
+      in
+        self.projectConfigurations.${system}.devShells
+        # // tests.run
+        // {
+          default =
+            self.devShells.${system}.project-manager.overrideAttrs
+            (old: {
+              inputsFrom =
+                old.inputsFrom
+                or []
+                ++ builtins.attrValues self.projectConfigurations.${system}.sandboxedChecks
+                ++ builtins.attrValues self.packages.${system};
+            });
+        };
 
       checks = let
         checksWith = nixpkgs:
