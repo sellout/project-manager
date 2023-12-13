@@ -137,12 +137,19 @@
               ["_"]
               nixpkgs.lib.trivial.release))
           (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
+
+        allChecks =
+          self.projectConfigurations.${system}.checks
+          // checksWith nixpkgs-22_11
+          // checksWith nixpkgs-23_05
+          // checksWith nixpkgs-23_11
+          // checksWith nixpkgs-unstable;
       in
-        self.projectConfigurations.${system}.checks
-        // checksWith nixpkgs-22_11
-        // checksWith nixpkgs-23_05
-        // checksWith nixpkgs-23_11
-        // checksWith nixpkgs-unstable;
+        ## `basement`, a dependency of ShellCheck didn’t work on i686 in Nixpkgs
+        #.#. 23.05.
+        if system == "i686-linux"
+        then removeAttrs allChecks ["formatter-23_05" "shellcheck-23_05"]
+        else allChecks;
 
       formatter = self.projectConfigurations.${system}.formatter;
     });
