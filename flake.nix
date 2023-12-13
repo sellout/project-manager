@@ -28,7 +28,7 @@
   }: let
     pname = "project-manager";
 
-    supportedSystems = flake-utils.lib.defaultSystems;
+    supportedSystems = flaky.lib.defaultSystems;
 
     ## The Nixpkgs release to use internally for building Project Manager
     ## itself, regardless of the downstream package set.
