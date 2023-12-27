@@ -4,7 +4,7 @@
 
 Like [Home Manager](https://nix-community.github.io/home-manager/), but for repositories.
 
-See [the manual](https://sellout.github.io/project-manager/).
+This file is primarily for contributors. See [the manual](https://sellout.github.io/project-manager/) for user documentation (including how to write modules) or join [the Matrix room](https://matrix.to/#/%23project-manager:matrix.org) to discuss any aspect of Project Manager.
 
 ## What?
 
