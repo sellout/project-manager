@@ -2,8 +2,8 @@ let
   ## This follows Semantic Versioning 2.0.0 (https://semver.org/)
   version = {
     major = 0;
-    minor = 4;
-    patch = 4;
+    minor = 5;
+    patch = 0;
   };
 in {
   inherit version;
