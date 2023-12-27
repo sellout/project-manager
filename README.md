@@ -136,6 +136,22 @@ Users have control over each file’s persistence, but you don’t have to worry
 
 Finally, there is a `project.commit-by-default` (which defaults to `false`) and a `commit-by-default` for each file (which defaults to `project.commit-by-default`). These can be used to override the `minimum-persistence` values and commit files that otherwise wouldn’t be. It can be helpful to set `project.commit-by-default = true` when you have non-Nix-using contributors who use tooling that expects these files to exist outside of a Nix environment.
 
+## Comparisons
+
+There are a couple other projects that apply Nix modules to your flakes. However, they differ from Project Manager in various ways, and so far I believe they’re all complementary. One thing that could be improved is making it easier to share different modules between the systems.
+
+### [devenv](https://devenv.sh/)
+
+This is specifically a way to produce `devShells` using Nix modules. Project Manager also produces devShells, but it does it incidentally to overall project configuration. For example., there is the `project-manager` devShell that contains all the inputs and environment from the configuration of the project, which you may or may not want to expose via various devShells in your environment.
+
+Project Manager should probably have a devenv module for defining devShells.
+
+### [Flake Parts](https://flake.parts/)
+
+This is at the other end of the spectrum and is _maybe_ more of a competitor to Project Manager. Flake Parts turns your entire flake into a module. But its purpose is to generate the flake itself. While Project Manager does generate some flake outputs, it also generates a lot of things outside of the flake (like formatter configurations, online service configurations, etc.). The tradeoff here is that (like many other tools, including Home Manager and Nixos) Project Manager has an activation package that needs to be run, while Flake Parts is pure.
+
+Flake Parts should probably have a Project Manager module for defining `projectConfiguration` outputs.
+
 ## Credit
 
 This is more than inspired by Home Manager, it’s basically a hacked-up copy (for now). That should change to _depend on_ Home Manager for what it can and to do everything else its own way. But this is a pre-pre-alpha at the moment, so it’s hack city.

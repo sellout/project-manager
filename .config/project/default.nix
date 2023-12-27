@@ -73,6 +73,8 @@ in {
         "babelfish"
         "[Bb]oolean"
         "declutter"
+        "devenv"
+        "devShell"
         "Dhall"
         "formatter"
         "NMT"
