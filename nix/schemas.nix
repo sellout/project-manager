@@ -51,21 +51,25 @@ in {
               isFlakeCheck = false;
             };
             filterRepositoryPersistedExcept = {
+              inherit forSystems;
               shortDescription = project.options.project.filterRepositoryPersistedExcept.description;
               what = "source filter";
               isFlakeCheck = false;
             };
             filterRepositoryPersisted = {
+              inherit forSystems;
               shortDescription = project.options.project.filterRepositoryPersisted.description;
               what = "source filter";
               isFlakeCheck = false;
             };
             cleanRepositoryPersistedExcept = {
+              inherit forSystems;
               shortDescription = project.options.project.cleanRepositoryPersistedExcept.description;
               what = "source filter";
               isFlakeCheck = false;
             };
             cleanRepositoryPersisted = {
+              inherit forSystems;
               shortDescription = project.options.project.cleanRepositoryPersisted.description;
               what = "source filter";
               isFlakeCheck = false;
