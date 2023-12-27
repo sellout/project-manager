@@ -684,6 +684,16 @@ in {
       };
     };
 
+    programs = {
+      git.ignores = [
+        "/.local/state/project-manager/"
+        "/.local/state/nix/profiles/"
+      ];
+      mercurial.ignoresRooted = [
+        ".local/state/project-manager/"
+        ".local/state/nix/profiles/"
+      ];
+    };
     project = {
       checks.project-manager-files =
         bash-strict-mode.lib.checkedDrv
