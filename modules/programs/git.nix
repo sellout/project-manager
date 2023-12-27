@@ -288,11 +288,23 @@ in {
         onChange =
           if cfg.installConfig
           then ''
-            ${pkgs.git}/bin/git config --worktree \
+            if $(git config --get extensions.worktreeConfig); then
+              scope='--worktree'
+            else
+              scope='--local'
+            fi
+
+            ${pkgs.git}/bin/git config "$scope" \
               include.path "${config.xdg.cacheFile."git/config".reference config.xdg.cacheFile."git/config"}"
           ''
           else ''
-            ${pkgs.git}/bin/git config --worktree --unset include.path || true
+            if $(git config --get extensions.worktreeConfig); then
+              scope='--worktree'
+            else
+              scope='--local'
+            fi
+
+            ${pkgs.git}/bin/git config "$scope" --unset include.path || true
           '';
         text = lib.pm.generators.toGitINI cfg.iniContent;
       };
