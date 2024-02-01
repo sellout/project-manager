@@ -152,7 +152,14 @@ in {
       ## See https://vale.sh/docs/topics/packages/#packages-and-vcs for an
       ## explanation of this convoluted ignoring.
       then [
+        # Need to support all Vale versions in supported Nixpkgs versions until
+        # we test them in separate environments (see sellout/project-manager#69)
         "/${stylesPath}/*"
+        "!/${stylesPath}/config/"
+        "/${stylesPath}/config/*"
+        "!/${stylesPath}/config/vocabularies/"
+        "/${stylesPath}/config/vocabularies/*"
+        "!/${stylesPath}/config/vocabularies/${actualCoreSettings.Vocab}/"
         "!/${stylesPath}/Vocab/"
         "/${stylesPath}/Vocab/*"
         "!/${stylesPath}/Vocab/${actualCoreSettings.Vocab}/"
