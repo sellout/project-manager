@@ -288,7 +288,7 @@ in {
         onChange =
           if cfg.installConfig
           then ''
-            if $(git config --get extensions.worktreeConfig); then
+            if $(${pkgs.git}/bin/git config --get extensions.worktreeConfig); then
               scope='--worktree'
             else
               scope='--local'
@@ -298,7 +298,7 @@ in {
               include.path "${config.xdg.cacheFile."git/config".reference config.xdg.cacheFile."git/config"}"
           ''
           else ''
-            if $(git config --get extensions.worktreeConfig); then
+            if $(${pkgs.git}/bin/git config --get extensions.worktreeConfig); then
               scope='--worktree'
             else
               scope='--local'
