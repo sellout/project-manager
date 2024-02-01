@@ -86,11 +86,24 @@ in {
           };
         }
         // lib.concatMapAttrs (k: v: {
+          # Need to generate files for all Vale versions in supported Nixpkgs
+          # versions until we test them in separate environments
+          # (see sellout/project-manager#69)
+          # for Vale <3.0.0
           "${actualCoreSettings.StylesPath}/Vocab/${k}/accept.txt" = lib.mkIf (v ? accept) {
             # minimum-persistence = "worktree";
             text = lib.concatLines v.accept;
           };
           "${actualCoreSettings.StylesPath}/Vocab/${k}/reject.txt" = lib.mkIf (v ? reject) {
+            # minimum-persistence = "worktree";
+            text = lib.concatLines v.reject;
+          };
+          # for Vale >=3.0.0
+          "${actualCoreSettings.StylesPath}/config/vocabularies/${k}/accept.txt" = lib.mkIf (v ? accept) {
+            # minimum-persistence = "worktree";
+            text = lib.concatLines v.accept;
+          };
+          "${actualCoreSettings.StylesPath}/config/vocabularies/${k}/reject.txt" = lib.mkIf (v ? reject) {
             # minimum-persistence = "worktree";
             text = lib.concatLines v.reject;
           };
