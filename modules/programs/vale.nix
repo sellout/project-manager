@@ -1,6 +1,7 @@
 {
   bash-strict-mode,
   config,
+  flaky,
   lib,
   pkgs,
   self,
@@ -112,37 +113,26 @@ in {
 
       devPackages = [cfg.package];
 
-      ## TODO: Certain checks functions (like this one) require the sandbox to be
-      ##       disabled, otherwise they fail. We should be able to
-      ##    1. see if the sandbox is enabled for this project;
-      ##    2. if so, identify which checks those are (`__noChroot`); and
-      ##    3. expose them via `devShells.laxChecks` instead of as checks.
       checks.vale =
-        bash-strict-mode.lib.checkedDrv pkgs
-        (pkgs.runCommand "vale" {
-            ## TODO: Wouldn’t need this if we had the Vale packages available as Nix
-            ##       packages, but as it is, they need to be downloaded via
-            ##      `vale sync`.
-            __noChroot = true;
-            nativeBuildInputs = [
-              pkgs.vale
-              ## TODO: Conditinalize these dependencies based on whether the
-              ##       user wants to lint these files types.
-              pkgs.asciidoctor
-              pkgs.libxslt
-            ];
-            src = self;
-          } ''
-            cp -R "$src/." build
-            chmod -R +w build
-            cd build || exit
+        flaky.lib.runEmptyCommand pkgs "vale" {
+          nativeBuildInputs = [
+            pkgs.vale
+            ## TODO: Conditinalize these dependencies based on whether the
+            ##       user wants to lint these files types.
+            pkgs.asciidoctor
+            pkgs.libxslt
+          ];
+          src = self;
+        } ''
+          cp -R "$src/." build
+          chmod -R +w build
+          cd build || exit
 
-            vale sync
-            find . -type f \
-              ${lib.concatStringsSep " " (map (v: "-not -path '${v}' ") cfg.excludes)} \
-              -exec vale {} +
-            mkdir -p "$out"
-          '');
+          vale sync
+          find . -type f \
+            ${lib.concatStringsSep " " (map (v: "-not -path '${v}' ") cfg.excludes)} \
+            -exec vale {} +
+        '';
     };
 
     programs.git.ignores = let

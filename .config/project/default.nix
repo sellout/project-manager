@@ -101,7 +101,8 @@ in {
         "checks.*.project-manager-files-${nixpkgs}"
         "checks.*.vale-${nixpkgs}"
       ])
-      testedNixpkgsVersions;
+      ## For some reason, nix-hash is failing with these versions.
+      ["22_11" "23_05"];
   };
   services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (lib.concatMap flaky.lib.garnixChecks ([
       (sys: "check shellcheck [${sys}]")
