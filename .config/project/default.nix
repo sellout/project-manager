@@ -60,8 +60,6 @@ in {
     };
     vale = {
       enable = true;
-      formatSettings."*.xml".Transform =
-        "${pkgs.docbook-xsl-ns}/share/xml/docbook-xsl-ns/html/docbook.xsl";
       excludes = [
         "*.bash"
         "*.xml" # TODO: Remove this once we get the XSL transform working.

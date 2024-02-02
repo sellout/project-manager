@@ -647,28 +647,28 @@ in {
         ${activationCmds}
       '';
     in
-      bash-strict-mode.lib.checkedDrv pkgs (pkgs.runCommand
-        "project-manager-generation-for-${config.project.name}"
-        {
-          preferLocalBuild = true;
-        }
-        ''
-          mkdir -p $out
+      flaky.lib.runCommand pkgs
+      "project-manager-generation-for-${config.project.name}"
+      {
+        preferLocalBuild = true;
+        meta.mainProgram = "activate";
+      }
+      ''
+        mkdir -p $out/bin
 
-          echo "${config.project.version.full}" > $out/pm-version
+        echo "${config.project.version.full}" > $out/pm-version
 
-          cp ${activationScript} $out/activate
+        cp ${activationScript} $out/bin/activate
 
-          mkdir $out/bin
-          ln -s $out/activate $out/bin/project-manager-generation
+        ln -s $out/bin/activate $out/bin/project-manager-generation
 
-          substituteInPlace $out/activate \
-            --subst-var-by GENERATION_DIR $out
+        substituteInPlace $out/bin/activate \
+          --subst-var-by GENERATION_DIR $out
 
-          ln -s ${config.project-files} $out/project-files
+        ln -s ${config.project-files} $out/project-files
 
-          ${cfg.extraBuilderCommands}
-        '');
+        ${cfg.extraBuilderCommands}
+      '';
 
     project.packages.path = pkgs.buildEnv {
       name = "project-manager-path-for-${config.project.name}";
@@ -702,6 +702,7 @@ in {
           nativeBuildInputs = [
             config.programs.git.package
             config.programs.project-manager.package
+            pkgs.cacert
             pkgs.coreutils
           ];
 
@@ -714,7 +715,13 @@ in {
           cd $PRJ
           export HOME="$(mktemp --directory --tmpdir fake-home.XXXXXX)"
           mkdir -p "$HOME/.local/state/nix/profiles"
-          export NIX_CONFIG="extra-experimental-features = flakes nix-command"
+
+          export NIX_CONFIG=$(cat <<'CONFIG'
+          accept-flake-config = true
+          extra-experimental-features = flakes nix-command
+          CONFIG
+          )
+
           ## Record the current state of the repo
           git init
           git config user.email nix@localhost

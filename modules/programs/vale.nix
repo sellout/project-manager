@@ -78,6 +78,7 @@ in {
             ## TODO: Should be able to make this `"store"`.
             # minimum-persistence = "worktree";
             onChange = ''
+              export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
               ${cfg.package}/bin/vale sync
             '';
             text = lib.pm.generators.toINIWithGlobalSection {} {
@@ -116,6 +117,7 @@ in {
       checks.vale =
         flaky.lib.runEmptyCommand pkgs "vale" {
           nativeBuildInputs = [
+            pkgs.cacert
             pkgs.vale
             ## TODO: Conditinalize these dependencies based on whether the
             ##       user wants to lint these files types.

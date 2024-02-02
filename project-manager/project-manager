@@ -397,22 +397,13 @@ function doBuild() {
 }
 
 function doSwitch() {
-  setWorkDir
-
-  local generation
-
-  # Build the generation and run the activate script. Note, we
-  # specify an output link so that it is treated as a GC root. This
-  # prevents an unfortunately timed GC from removing the generation
-  # before activation completes.
-  generation="$WORK_DIR/generation"
-
   setFlakeAttribute
-  doBuildFlake \
+  nix run \
     "$FLAKE_CONFIG_URI.packages.activation" \
-    --out-link "$generation" \
     ${PRINT_BUILD_LOGS+--print-build-logs} \
-    && "$generation/activate" || return
+    ${VERBOSE+--verbose} \
+    "${PASSTHROUGH_OPTS[@]}" \
+    || return
 
   # presentNews
 }
