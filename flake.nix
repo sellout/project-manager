@@ -2,8 +2,11 @@
   description = "A configuration for managing flake-based projects.";
 
   nixConfig = {
-    ## https://github.com/NixOS/rfcs/blob/master/rfcs/0045-deprecate-url-syntax.md
-    extra-experimental-features = ["no-url-literals"];
+    extra-experimental-features = [
+      ## https://github.com/NixOS/rfcs/blob/master/rfcs/0045-deprecate-url-syntax.md
+      "no-url-literals"
+      "recursive-nix"
+    ];
     extra-substituters = ["https://cache.garnix.io"];
     extra-trusted-public-keys = [
       "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
@@ -118,7 +121,6 @@
               inputsFrom =
                 old.inputsFrom
                 or []
-                ++ builtins.attrValues self.projectConfigurations.${system}.sandboxedChecks
                 ++ builtins.attrValues self.packages.${system};
             });
         };

@@ -1,6 +1,7 @@
 {
   bash-strict-mode,
   config,
+  flaky,
   lib,
   pkgs,
   self,
@@ -646,28 +647,28 @@ in {
         ${activationCmds}
       '';
     in
-      bash-strict-mode.lib.checkedDrv pkgs (pkgs.runCommand
-        "project-manager-generation-for-${config.project.name}"
-        {
-          preferLocalBuild = true;
-        }
-        ''
-          mkdir -p $out
+      flaky.lib.runCommand pkgs
+      "project-manager-generation-for-${config.project.name}"
+      {
+        preferLocalBuild = true;
+        meta.mainProgram = "activate";
+      }
+      ''
+        mkdir -p $out/bin
 
-          echo "${config.project.version.full}" > $out/pm-version
+        echo "${config.project.version.full}" > $out/pm-version
 
-          cp ${activationScript} $out/activate
+        cp ${activationScript} $out/bin/activate
 
-          mkdir $out/bin
-          ln -s $out/activate $out/bin/project-manager-generation
+        ln -s $out/bin/activate $out/bin/project-manager-generation
 
-          substituteInPlace $out/activate \
-            --subst-var-by GENERATION_DIR $out
+        substituteInPlace $out/bin/activate \
+          --subst-var-by GENERATION_DIR $out
 
-          ln -s ${config.project-files} $out/project-files
+        ln -s ${config.project-files} $out/project-files
 
-          ${cfg.extraBuilderCommands}
-        '');
+        ${cfg.extraBuilderCommands}
+      '';
 
     project.packages.path = pkgs.buildEnv {
       name = "project-manager-path-for-${config.project.name}";
@@ -696,41 +697,42 @@ in {
     };
     project = {
       checks.project-manager-files =
-        bash-strict-mode.lib.checkedDrv
-        pkgs
-        (pkgs.runCommand "project-manager-files"
-          {
-            __noChroot = true;
+        flaky.lib.runEmptyCommand pkgs "project-manager-files"
+        {
+          nativeBuildInputs = [
+            config.programs.git.package
+            config.programs.project-manager.package
+            pkgs.cacert
+            pkgs.coreutils
+          ];
 
-            nativeBuildInputs = [
-              config.programs.git.package
-              config.programs.project-manager.package
-              pkgs.coreutils
-            ];
+          meta.description = "Check that the generated files are up-to-date.";
+        }
+        ''
+          PRJ="$(mktemp --directory --tmpdir project.XXXXXX)"
+          cp -r ${self}/. $PRJ
+          chmod -R a+w $PRJ
+          cd $PRJ
+          export HOME="$(mktemp --directory --tmpdir fake-home.XXXXXX)"
+          mkdir -p "$HOME/.local/state/nix/profiles"
 
-            meta.description = "Check that the generated files are up-to-date.";
-          }
-          ''
-            set -e
-            PRJ=$TMP/project
-            cp -r ${self} $PRJ
-            chmod -R a+w $PRJ
-            cd $PRJ
-            export HOME=$TMPDIR
-            mkdir -p "$HOME/.local/state/nix/profiles"
-            export NIX_CONFIG="extra-experimental-features = flakes nix-command"
-            ## Record the current state of the repo
-            git init
-            git config user.email nix@localhost
-            git config user.name Nix
-            git add .
-            git commit --message "current files"
-            ## Update everything
-            project-manager switch
-            ## Make sure there are no changes
-            git --no-pager diff --exit-code
-            touch $out
-          '');
+          export NIX_CONFIG=$(cat <<'CONFIG'
+          accept-flake-config = true
+          extra-experimental-features = flakes nix-command
+          CONFIG
+          )
+
+          ## Record the current state of the repo
+          git init
+          git config user.email nix@localhost
+          git config user.name Nix
+          git add .
+          git commit --message "current files"
+          ## Update everything
+          project-manager switch --verbose
+          ## Make sure there are no changes
+          git --no-pager diff --exit-code
+        '';
 
       sandboxedChecks =
         lib.filterAttrs
