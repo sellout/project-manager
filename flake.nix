@@ -168,7 +168,7 @@
 
     ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is
     ##       merged.
-    flake-schemas.url = "github:sellout/flake-schemas/patch-1";
+    flake-schemas.url = "github:sellout/flake-schemas";
 
     flake-utils.url = "github:numtide/flake-utils";
 
@@ -189,8 +189,9 @@
       inputs = {
         flake-schemas.follows = "flake-schemas";
         nixpkgs.follows = "nixpkgs-23_11";
+        nixpkgs-23-11.follows = "nixpkgs-23_11";
       };
-      url = "github:DeterminateSystems/nix/flake-schemas";
+      url = "github:DeterminateSystems/nix-src/flake-schemas";
     };
 
     ## We test against each supported version of nixpkgs, but build against the
