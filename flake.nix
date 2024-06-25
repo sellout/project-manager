@@ -92,6 +92,14 @@
       projectConfigurationsFor = pkgs:
         flaky.lib.projectConfigurations.default {inherit pkgs self;};
     in {
+      apps = {
+        default = self.apps.${system}.project-manager;
+        project-manager = {
+          program = "${self.packages.${system}.project-manager}/bin/project-manager";
+          type = "app";
+        };
+      };
+
       packages = let
         releaseInfo = import ./release.nix;
         docs = import ./docs {
