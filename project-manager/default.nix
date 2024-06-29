@@ -51,6 +51,8 @@ in
       ]
     }" \
       --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.bash}' \
+      --subst-var-by FLAKE_TEMPLATE '${../templates/default/flake.nix}' \
+      --subst-var-by CONFIG_TEMPLATE '${../templates/default/.config/project/default.nix}' \
       --subst-var-by OUT "$out"
 
     patchShebangs --host $out/bin/project-manager
