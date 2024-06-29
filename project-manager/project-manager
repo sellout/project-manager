@@ -19,7 +19,8 @@ function nixProfileList() {
 }
 
 function removeByName() {
-  nixProfileList "$1" | xargs "$VERBOSE" "$DRY_RUN_CMD" nix profile remove "$VERBOSE_ARG"
+  nixProfileList "$1" \
+    | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" nix profile remove "${VERBOSE_ARG[@]}"
 }
 
 function setNixProfileCommands() {
@@ -29,15 +30,15 @@ function setNixProfileCommands() {
 
 function setVerboseAndDryRun() {
   if [[ -v VERBOSE ]]; then
-    export VERBOSE_ARG="--verbose"
+    export VERBOSE_ARG=('--verbose')
   else
-    export VERBOSE_ARG=""
+    export VERBOSE_ARG=()
   fi
 
   if [[ -v DRY_RUN ]]; then
-    export DRY_RUN_CMD=echo
+    export DRY_RUN_CMD=('echo')
   else
-    export DRY_RUN_CMD=""
+    export DRY_RUN_CMD=()
   fi
 }
 
@@ -442,7 +443,7 @@ function doRmGenerations() {
       _i 'Cannot remove the current generation %s' "$generationId" >&2
     else
       _i 'Removing generation %s' "$generationId"
-      $DRY_RUN_CMD rm "$VERBOSE_ARG" "$linkName"
+      "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" "$linkName"
     fi
   done
 
@@ -592,19 +593,19 @@ function doUninstall() {
       echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
       doSwitch
-      $DRY_RUN_CMD $REMOVE_CMD project-manager-path || true
+      "${DRY_RUN_CMD[@]}" $REMOVE_CMD project-manager-path || true
       rm "$PROJECT_MANAGER_CONFIG"
 
       if [[ -e $PM_DATA_HOME ]]; then
-        $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_DATA_HOME"
+        "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" -r "$PM_DATA_HOME"
       fi
 
       if [[ -e $PM_STATE_DIR ]]; then
-        $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_STATE_DIR"
+        "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" -r "$PM_STATE_DIR"
       fi
 
       if [[ -e $PM_PROFILE_DIR ]]; then
-        $DRY_RUN_CMD rm $VERBOSE_ARG "$PM_PROFILE_DIR/project-manager"*
+        "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" "$PM_PROFILE_DIR/project-manager"*
       fi
       ;;
     *)

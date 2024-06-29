@@ -234,7 +234,7 @@ in {
       example = lib.literalMD ''
         {
           myActivationAction = lib.pm.dag.entryAfter ["writeBoundary"] '''
-            $DRY_RUN_CMD ln -s $VERBOSE_ARG \
+            "''${DRY_RUN_CMD[@]}" ln -s "''${VERBOSE_ARG[@]}" \
                 ''${builtins.toPath ./link-me-directly} $PROJECT_ROOT
           ''';
         }
@@ -539,7 +539,7 @@ in {
         }
 
         function nixRemoveProfileByName() {
-            nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
+            nixProfileList "$1" | xargs "''${VERBOSE_ARG[@]}" "''${DRY_RUN_CMD[@]}" nix profile remove "''${VERBOSE_ARG[@]}" --profile ${profileDir}
         }
 
         function nixReplaceProfile() {
@@ -547,7 +547,7 @@ in {
 
           nixRemoveProfileByName '${pathPackageName}'
 
-          $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
+          "''${DRY_RUN_CMD[@]}" $oldNix profile install --profile ${profileDir} $1
         }
 
         INSTALL_CMD="nix profile install --profile ${profileDir}"
