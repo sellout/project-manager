@@ -4,6 +4,7 @@
   lib,
   pkgs,
   self,
+  supportedSystems,
   ...
 }:
 with lib; let
@@ -42,11 +43,11 @@ in {
 
     ## Can’t build un-sandboxed derivations on Garnix (see garnix-io/issues#33)
     services.garnix.builds.exclude =
-      lib.concatLists (flaky.lib.garnixChecks
-        (sys:
-          map
-          (name: "checks.${sys}.${name}")
-          (builtins.attrNames self.projectConfigurations.${sys}.unsandboxedChecks)))
+      flaky.lib.forGarnixSystems supportedSystems (sys:
+        map
+        (name: "checks.${sys}.${name}")
+        (builtins.attrNames
+          self.projectConfigurations.${sys}.unsandboxedChecks))
       ++ ["devShells.*.lax-checks"];
   };
 }

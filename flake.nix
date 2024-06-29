@@ -43,7 +43,7 @@
         // import ./nix/schemas.nix {inherit flake-schemas;};
 
       lib = import ./nix/lib.nix {
-        inherit bash-strict-mode treefmt-nix;
+        inherit bash-strict-mode flake-utils supportedSystems treefmt-nix;
         project-manager = self;
       };
 
@@ -90,7 +90,9 @@
         };
 
       projectConfigurationsFor = pkgs:
-        flaky.lib.projectConfigurations.default {inherit pkgs self;};
+        flaky.lib.projectConfigurations.default {
+          inherit pkgs self supportedSystems;
+        };
     in {
       packages = let
         releaseInfo = import ./release.nix;
