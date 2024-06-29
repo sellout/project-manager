@@ -2,7 +2,7 @@ let
   ## This follows Semantic Versioning 2.0.0 (https://semver.org/)
   version = {
     major = 0;
-    minor = 5;
+    minor = 6;
     patch = 0;
   };
 in {

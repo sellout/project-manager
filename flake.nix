@@ -25,6 +25,7 @@
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
+    nixpkgs-24_05,
     nixpkgs-unstable,
     self,
     treefmt-nix,
@@ -133,6 +134,7 @@
             // checksWith nixpkgs-22_11
             // checksWith nixpkgs-23_05
             // checksWith nixpkgs-23_11
+            // checksWith nixpkgs-24_05
             // checksWith nixpkgs-unstable)
           ## For some reason, nix-hash is failing with these versions.
           [
@@ -189,6 +191,7 @@
     nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
+    nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
