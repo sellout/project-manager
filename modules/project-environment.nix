@@ -525,27 +525,12 @@ in {
         profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
         pathPackageName = "project-manager-path-for-${config.project.name}";
       in ''
-        function nixProfileList() {
-          # We attempt to use `--json` first (added in Nix 2.17). Otherwise
-          # attempt to parse the legacy output format.
-          {
-            nix profile list --profile ${profileDir} --json 2>/dev/null \
-              | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
-          } || {
-            nix profile list --profile ${profileDir} \
-              | { grep "$1\$" || test $? = 1; } \
-              | cut -d ' ' -f 4
-          }
-        }
-
-        function nixRemoveProfileByName() {
-            nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
-        }
+        export PM_PROFILE_DIR=${profileDir}
 
         function nixReplaceProfile() {
           local oldNix="$(command -v nix)"
 
-          nixRemoveProfileByName '${pathPackageName}'
+          removeProfileByName '${pathPackageName}'
 
           $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
         }
@@ -560,7 +545,7 @@ in {
           _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
           exit 1
         fi
-        unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
+        unset -f nixReplaceProfile
         unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
       ''
     );

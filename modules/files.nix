@@ -192,6 +192,7 @@ in {
 
         cleanOldGen
 
+        ## TODO: Replace this with `nixProfileList` from project-manager.bash
         function nixProfileList() {
           # We attempt to use `--json` first (added in Nix 2.17 / Nixpkgs
           # 23.11)). Otherwise attempt to parse the legacy output format.
