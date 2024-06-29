@@ -530,7 +530,7 @@ in {
         function nixReplaceProfile() {
           local oldNix="$(command -v nix)"
 
-          removeProfileByName '${pathPackageName}'
+          pm_removeProfileByName '${pathPackageName}'
 
           $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
         }

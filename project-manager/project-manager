@@ -13,7 +13,7 @@ export TEXTDOMAINDIR=@OUT@/share/locale
 # shellcheck disable=1091
 source @PROJECT_MANAGER_LIB@
 
-function doHelp() {
+function showHelp() {
   echo "Usage: $0 [OPTION] COMMAND"
   echo
   echo "Options"
@@ -125,7 +125,7 @@ while [[ $# -gt 0 ]]; do
       PRINT_BUILD_LOGS=1
       ;;
     -h | --help)
-      doHelp
+      showHelp
       exit 0
       ;;
     -n | --dry-run)
@@ -165,7 +165,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z $COMMAND ]]; then
-  doHelp >&2
+  showHelp >&2
   exit 1
 fi
 
@@ -178,46 +178,46 @@ export PROJECT_ROOT
 
 case $COMMAND in
   edit)
-    doEdit
+    pm_edit
     ;;
   build)
-    doBuild
+    pm_build
     ;;
   init)
-    doInit "${COMMAND_ARGS[@]}"
+    pm_init "${COMMAND_ARGS[@]}"
     ;;
   switch)
-    doSwitch
+    pm_switch
     ;;
   generations)
-    doListGens
+    pm_listGenerations
     ;;
   remove-generations)
-    doRmGenerations "${COMMAND_ARGS[@]}"
+    pm_removeGenerations "${COMMAND_ARGS[@]}"
     ;;
   expire-generations)
     if [[ ${#COMMAND_ARGS[@]} != 1 ]]; then
       _i 'expire-generations expects one argument, got %d.' "${#COMMAND_ARGS[@]}" >&2
       exit 1
     else
-      doExpireGenerations "${COMMAND_ARGS[@]}"
+      pm_expireGenerations "${COMMAND_ARGS[@]}"
     fi
     ;;
   packages)
-    doListPackages
+    pm_listPackages
     ;;
   news)
-    doShowNews --all
+    pm_showNews --all
     ;;
   uninstall)
-    doUninstall
+    pm_uninstall
     ;;
   help)
-    doHelp
+    showHelp
     ;;
   *)
     _iError 'Unknown command: %s' "$COMMAND" >&2
-    doHelp >&2
+    showHelp >&2
     exit 1
     ;;
 esac

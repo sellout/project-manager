@@ -88,7 +88,7 @@ else
   profileDir=""
 fi
 
-function nixProfileList() {
+function pm_listProfiles() {
   # We attempt to use `--json` first (added in Nix 2.17). Otherwise
   # attempt to parse the legacy output format.
   {
@@ -104,13 +104,13 @@ function nixProfileList() {
     | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
 }
 
-function removeProfileByName() {
-  nixProfileList "$1" | xargs $VERBOSE_ARG "$DRY_RUN_CMD" nix profile remove $VERBOSE_ARG $profileDir
+function pm_removeProfileByName() {
+  pm_listProfiles "$1" | xargs $VERBOSE_ARG "$DRY_RUN_CMD" nix profile remove $VERBOSE_ARG $profileDir
 }
 
 function setNixProfileCommands() {
   LIST_OUTPATH_CMD="nix profile list"
-  REMOVE_CMD="removeProfileByName"
+  REMOVE_CMD="pm_removeProfileByName"
 }
 
 function setVerboseAndDryRun() {
@@ -201,7 +201,7 @@ function setFlakeAttribute() {
   export FLAKE_CONFIG_URI="$flake#projectConfigurations.$name"
 }
 
-function doInit() {
+function pm_init() {
   # The directory where we should place the initial configuration.
   local confDir
 
@@ -383,7 +383,7 @@ EOF
     _i "Creating initial Project Manager generation..."
     echo
 
-    if doSwitch; then
+    if pm_switch; then
       # translators: The "%s" specifier will be replaced by a file path.
       _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
         "$confFile"
@@ -397,7 +397,7 @@ EOF
   fi
 }
 
-function doBuildFlake() {
+function pm_buildFlake() {
   local extraArgs=("$@")
 
   if [[ -v VERBOSE ]]; then
@@ -412,7 +412,7 @@ function doBuildFlake() {
 # Presents news to the user as specified by the `news.display` option.
 function presentNews() {
   local newsNixFile="$WORK_DIR/news.nix"
-  buildNews "$newsNixFile"
+  pm_buildNews "$newsNixFile"
 
   local newsDisplay
   newsDisplay="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.display" | xargs)"
@@ -441,13 +441,13 @@ function presentNews() {
       notify-send "Project Manager" "$msg" > /dev/null 2>&1 || true
     fi
   elif [[ $newsDisplay == "show" ]]; then
-    doShowNews --unread
+    pm_showNews --unread
   else
     _i 'Unknown "news.display" setting "%s".' "$newsDisplay" >&2
   fi
 }
 
-function doEdit() {
+function pm_edit() {
   if [[ ! -v EDITOR || -z $EDITOR ]]; then
     # shellcheck disable=2016
     _i 'Please set the $EDITOR environment variable' >&2
@@ -463,7 +463,7 @@ function doEdit() {
   exec $EDITOR "$PROJECT_MANAGER_CONFIG"
 }
 
-function doBuild() {
+function pm_build() {
   if [[ ! -w . ]]; then
     _i 'Cannot run build in read-only directory' >&2
     return 1
@@ -472,7 +472,7 @@ function doBuild() {
   setWorkDir
 
   setFlakeAttribute
-  doBuildFlake \
+  pm_buildFlake \
     "$FLAKE_CONFIG_URI.packages.activation" \
     ${DRY_RUN+--dry-run} \
     ${NO_OUT_LINK+--no-link} \
@@ -482,7 +482,7 @@ function doBuild() {
   # presentNews
 }
 
-function doSwitch() {
+function pm_switch() {
   setFlakeAttribute
   nix run \
     "$FLAKE_CONFIG_URI.packages.activation" \
@@ -494,7 +494,7 @@ function doSwitch() {
   # presentNews
 }
 
-function doListGens() {
+function pm_listGenerations() {
   setProjectManagerPathVariables
 
   # Whether to colorize the generations output.
@@ -513,7 +513,7 @@ function doListGens() {
 
 # Removes linked generations. Takes as arguments identifiers of
 # generations to remove.
-function doRmGenerations() {
+function pm_removeGenerations() {
   setProjectManagerPathVariables
   setVerboseAndDryRun
 
@@ -535,7 +535,7 @@ function doRmGenerations() {
   popd > /dev/null || exit
 }
 
-function doExpireGenerations() {
+function pm_expireGenerations() {
   setProjectManagerPathVariables
 
   local generations
@@ -546,13 +546,13 @@ function doExpireGenerations() {
 
   if [[ -n $generations ]]; then
     # shellcheck disable=2086
-    doRmGenerations $generations
+    pm_removeGenerations $generations
   elif [[ -v VERBOSE ]]; then
     _i "No generations to expire"
   fi
 }
 
-function doListPackages() {
+function pm_listPackages() {
   setNixProfileCommands
   local outPath
   outPath="$($LIST_OUTPATH_CMD | grep -o '/.*project-manager-path$')"
@@ -582,12 +582,12 @@ function newsReadIdsFile() {
 # Note, we suppress build output to remove unnecessary verbosity. We
 # put the output in the work directory to avoid the risk of an
 # unfortunately timed GC removing it.
-function buildNews() {
+function pm_buildNews() {
   local newsNixFile="$1"
   local newsJsonFile="$WORK_DIR/news.json"
 
   # TODO: Use check=false to make it more likely that the build succeeds.
-  doBuildFlake \
+  pm_buildFlake \
     "$FLAKE_CONFIG_URI.config.news.json.output" \
     --quiet \
     --out-link "$newsJsonFile" \
@@ -611,12 +611,12 @@ function buildNews() {
   #     > "$newsNixFile"
 }
 
-function doShowNews() {
+function pm_showNews() {
   setWorkDir
   setFlakeAttribute
 
   local newsNixFile="$WORK_DIR/news.nix"
-  buildNews "$newsNixFile"
+  pm_buildNews "$newsNixFile"
 
   local readIdsFile
   readIdsFile=$(newsReadIdsFile)
@@ -653,7 +653,7 @@ function doShowNews() {
   mv -f "$readIdsFileNew" "$readIdsFile"
 }
 
-function doUninstall() {
+function pm_uninstall() {
   setVerboseAndDryRun
   setNixProfileCommands
 
@@ -677,7 +677,7 @@ function doUninstall() {
       echo '  project.stateVersion = 0;' >> "$PROJECT_MANAGER_CONFIG"
       echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
-      doSwitch
+      pm_switch
       $DRY_RUN_CMD $REMOVE_CMD project-manager-path || true
       rm "$PROJECT_MANAGER_CONFIG"
 
