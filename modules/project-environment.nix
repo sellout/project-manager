@@ -525,12 +525,10 @@ in {
         profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
         pathPackageName = "project-manager-path-for-${config.project.name}";
       in ''
-        export PM_PROFILE_DIR=${profileDir}
-
         function nixReplaceProfile() {
           local oldNix="$(command -v nix)"
 
-          pm_removeProfileByName '${pathPackageName}'
+          pm_removePackagesBySuffix "${profileDir}" '${pathPackageName}'
 
           $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
         }

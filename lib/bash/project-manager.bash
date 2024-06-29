@@ -82,35 +82,27 @@ function _iNote() {
 
 ## Project Manager logic
 
-if [[ -v PM_PROFILE_DIR ]]; then
-  profileDir="--profile $PM_PROFILE_DIR"
-else
-  profileDir=""
-fi
-
-function pm_listProfiles() {
+function pm_listPackagesBySuffix() {
   # We attempt to use `--json` first (added in Nix 2.17). Otherwise
   # attempt to parse the legacy output format.
   {
-    nix profile list $profileDir --json 2>/dev/null \
-      | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+    nix profile list --profile "$1" --json 2>/dev/null \
+      | jq --raw-output --arg name "$2" '.elements[].storePaths[] | select(endswith($name))'
   } || {
-    nix profile list $profileDir \
-      | { grep "$1\$" || test $? = 1; } \
+    nix profile list --profile $1 \
+      | { grep "$2\$" || test $? = 1; } \
       | cut -d ' ' -f 4
   }
-
-  nix profile list --json \
-    | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
 }
 
-function pm_removeProfileByName() {
-  pm_listProfiles "$1" | xargs $VERBOSE_ARG "$DRY_RUN_CMD" nix profile remove $VERBOSE_ARG $profileDir
+function pm_removePackagesBySuffix() {
+  pm_listPackagesBySuffix "$1" "$2" \
+    | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$1"
 }
 
 function setNixProfileCommands() {
   LIST_OUTPATH_CMD="nix profile list"
-  REMOVE_CMD="pm_removeProfileByName"
+  REMOVE_CMD="pm_removePackagesBySuffix"
 }
 
 function setVerboseAndDryRun() {
@@ -678,7 +670,10 @@ function pm_uninstall() {
       echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
       pm_switch
-      $DRY_RUN_CMD $REMOVE_CMD project-manager-path || true
+      if [[ -e $PM_PROFILE_DIR ]]; then
+        $DRY_RUN_CMD $REMOVE_CMD "$PM_PROFILE_DIR/project-manager" project-manager-path || true
+      fi
+
       rm "$PROJECT_MANAGER_CONFIG"
 
       if [[ -e $PM_DATA_HOME ]]; then

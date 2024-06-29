@@ -192,25 +192,12 @@ in {
 
         cleanOldGen
 
-        ## TODO: Replace this with `pm_listProfiles` from project-manager.bash
-        function nixProfileList() {
-          # We attempt to use `--json` first (added in Nix 2.17 / Nixpkgs
-          # 23.11)). Otherwise attempt to parse the legacy output format.
-          {
-            nix profile list --profile $1 --json 2>/dev/null \
-              | jq --raw-output '.elements[].storePaths[]'
-          } || {
-            nix profile list --profile $1 | cut -d ' ' -f 4
-          }
-        }
-
         if [[ ! -v oldGenPath || "$oldGenPath" != "$newGenPath" ]] ; then
           _i "Creating profile generation %s" $newGenNum
           # Remove all packages from "$genProfilePath"
           # `nix profile remove '.*' --profile "$genProfilePath"` was not
           # working (NixOS/nix#7487), so here is a workaround:
-          nixProfileList "$genProfilePath" \
-            | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$genProfilePath"
+          pm_removePackagesBySuffix "$genProfilePath" ""
           $DRY_RUN_CMD nix profile install $VERBOSE_ARG --profile "$genProfilePath" "$newGenPath"
 
           $DRY_RUN_CMD nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
