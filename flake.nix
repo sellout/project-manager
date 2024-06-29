@@ -21,6 +21,7 @@
     flake-schemas,
     flake-utils,
     flaky,
+    nixpkgs,
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
@@ -31,10 +32,6 @@
     pname = "project-manager";
 
     supportedSystems = flaky.lib.defaultSystems;
-
-    ## The Nixpkgs release to use internally for building Project Manager
-    ## itself, regardless of the downstream package set.
-    buildNixpkgs = nixpkgs-23_11;
   in
     {
       schemas =
@@ -86,7 +83,7 @@
         releaseInfo = import ./release.nix;
         docs = import ./docs {
           inherit (releaseInfo) release isReleaseBranch;
-          pkgs = pkgsFrom buildNixpkgs;
+          pkgs = pkgsFrom nixpkgs;
         };
       in {
         default = self.packages.${system}.project-manager;
@@ -94,10 +91,10 @@
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
         project-manager =
-          (pkgsFrom buildNixpkgs).callPackage ./project-manager {};
+          (pkgsFrom nixpkgs).callPackage ./project-manager {};
       };
 
-      projectConfigurations = projectConfigurationsFor (pkgsFrom buildNixpkgs);
+      projectConfigurations = projectConfigurationsFor (pkgsFrom nixpkgs);
 
       devShells = let
         #   tests = import ./tests {inherit pkgs;};
@@ -117,9 +114,9 @@
 
       checks = let
         checksWith = nixpkgs:
-          buildNixpkgs.lib.mapAttrs'
+          nixpkgs.lib.mapAttrs'
           (name:
-            buildNixpkgs.lib.nameValuePair
+            nixpkgs.lib.nameValuePair
             (name
               + "-"
               ## TODO: Can’t have dots in output names unil garnix-io/issues#30
@@ -151,7 +148,7 @@
       inputs = {
         flake-utils.follows = "flake-utils";
         flaky.follows = "flaky";
-        nixpkgs.follows = "nixpkgs-23_11";
+        nixpkgs.follows = "nixpkgs";
       };
       url = "github:sellout/bash-strict-mode";
     };
@@ -166,11 +163,15 @@
       inputs = {
         bash-strict-mode.follows = "bash-strict-mode";
         flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs-23_11";
+        nixpkgs.follows = "nixpkgs";
         project-manager.follows = "";
       };
       url = "github:sellout/flaky";
     };
+
+    ## The Nixpkgs release to use internally for building Project Manager
+    ## itself, regardless of the downstream package set.
+    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
 
     ## We test against each supported version of nixpkgs, but build against the
     ## latest stable release.
@@ -183,7 +184,7 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
-      inputs.nixpkgs.follows = "nixpkgs-23_11";
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:numtide/treefmt-nix";
     };
   };

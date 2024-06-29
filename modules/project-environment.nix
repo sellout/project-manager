@@ -445,10 +445,12 @@ in {
         lib.listToAttrs
         (map (name: lib.nameValuePair name []) unsupportedVersions)
         // {
-          "22.11" = ["0.3" "0.4" "0.5"];
-          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5"];
-          "23.11" = ["0.3" "0.4" "0.5"];
-          "24.05" = ["0.3" "0.4" "0.5"];
+          "22.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5" "0.6"];
+          "23.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "24.05" = ["0.3" "0.4" "0.5" "0.6"];
+          ## NB: These versions are only “supported” on unstable, not 24.11.
+          "24.11" = ["0.3" "0.4" "0.5" "0.6"];
         };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;

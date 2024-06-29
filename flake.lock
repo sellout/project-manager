@@ -9,7 +9,7 @@
           "flaky"
         ],
         "nixpkgs": [
-          "nixpkgs-23_11"
+          "nixpkgs"
         ],
         "shellcheck-nix-attributes": "shellcheck-nix-attributes"
       },
@@ -71,7 +71,7 @@
         ],
         "home-manager": "home-manager",
         "nixpkgs": [
-          "nixpkgs-23_11"
+          "nixpkgs"
         ],
         "project-manager": []
       },
@@ -108,6 +108,22 @@
         "owner": "nix-community",
         "ref": "release-23.11",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1719755592,
+        "narHash": "sha256-aRElgc4fmNtzn2HKlse4ESGzO7lrTE+8vk/vbVLfu+w=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "8054da3570d226d9c3f343eb28787fb7564841d5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "release-23.11",
+        "repo": "nixpkgs",
         "type": "github"
       }
     },
@@ -181,6 +197,7 @@
         "flake-schemas": "flake-schemas",
         "flake-utils": "flake-utils",
         "flaky": "flaky",
+        "nixpkgs": "nixpkgs",
         "nixpkgs-22_11": "nixpkgs-22_11",
         "nixpkgs-23_05": "nixpkgs-23_05",
         "nixpkgs-23_11": "nixpkgs-23_11",
@@ -222,7 +239,7 @@
     "treefmt-nix": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs-23_11"
+          "nixpkgs"
         ]
       },
       "locked": {
