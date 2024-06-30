@@ -64,7 +64,7 @@ _i "Starting Project Manager activation"
 # Verify that we can connect to the Nix store and/or daemon. This will
 # also create the necessary directories in profiles and gcroots.
 "${VERBOSE_RUN[@]}" _i "Sanity checking Nix"
-nix-build --expr '{}' --no-out-link
+nix-build --expr '{}' --no-out-link --quiet
 
 setupVars
 
