@@ -58,9 +58,7 @@
       homeConfigurations =
         builtins.listToAttrs
         (builtins.map
-          (flaky.lib.homeConfigurations.example
-            "project-manager"
-            self
+          (flaky.lib.homeConfigurations.example self
             [({pkgs, ...}: {home.packages = [pkgs.project-manager];})])
           supportedSystems);
     }
