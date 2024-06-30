@@ -86,20 +86,10 @@ in {
   ## CI
   services.garnix = {
     enable = true;
-    builds.exclude =
-      [
-        # TODO: Remove once garnix-io/garnix#285 is fixed.
-        "homeConfigurations.x86_64-darwin-${config.project.name}-example"
-      ]
-      ## NB: Explicitly excluded because they’re not sandboxed, but since the
-      ##     checks are renamed, they’re not caught by the auto-exclusion.
-      ++ lib.concatMap
-      (nixpkgs: [
-        "checks.*.project-manager-files-${nixpkgs}"
-        "checks.*.vale-${nixpkgs}"
-      ])
-      ## For some reason, nix-hash is failing with these versions.
-      ["22_11" "23_05"];
+    builds.exclude = [
+      ## TODO: Remove once garnix-io/garnix#285 is fixed.
+      "homeConfigurations.x86_64-darwin-${config.project.name}-example"
+    ];
   };
   services.github.settings.branches.main.protection.required_status_checks.contexts =
     lib.mkForce

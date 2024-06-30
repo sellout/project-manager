@@ -128,11 +128,19 @@
           (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
 
         allChecks =
-          self.projectConfigurations.${system}.checks
-          // checksWith nixpkgs-22_11
-          // checksWith nixpkgs-23_05
-          // checksWith nixpkgs-23_11
-          // checksWith nixpkgs-unstable;
+          removeAttrs
+          (self.projectConfigurations.${system}.checks
+            // checksWith nixpkgs-22_11
+            // checksWith nixpkgs-23_05
+            // checksWith nixpkgs-23_11
+            // checksWith nixpkgs-unstable)
+          ## For some reason, nix-hash is failing with these versions.
+          [
+            "project-manager-files-22_11"
+            "project-manager-files-23_05"
+            "vale-22_11"
+            "vale-23_05"
+          ];
       in
         ## `basement`, a dependency of ShellCheck didn’t work on i686 in Nixpkgs
         #.#. 23.05.
