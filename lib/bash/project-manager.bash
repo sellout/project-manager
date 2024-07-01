@@ -97,25 +97,33 @@ function pm_listPackagesBySuffix() {
 
 function pm_removePackagesBySuffix() {
   pm_listPackagesBySuffix "$1" "$2" \
-    | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile "$1"
+    | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" nix profile remove "${VERBOSE_ARG[@]}" --profile "$1"
 }
 
 function setNixProfileCommands() {
-  LIST_OUTPATH_CMD="nix profile list"
-  REMOVE_CMD="pm_removePackagesBySuffix"
+  LIST_OUTPATH_CMD=('nix' 'profile' 'list')
+  REMOVE_CMD='pm_removePackagesBySuffix'
 }
 
-function setVerboseAndDryRun() {
+function pm_setVerboseAndDryRun() {
   if [[ -v VERBOSE ]]; then
-    export VERBOSE_ARG="--verbose"
+    export VERBOSE_ECHO='echo'
+    export VERBOSE_ARG=('--verbose')
+    export VERBOSE_RUN=()
   else
-    export VERBOSE_ARG=""
+    export VERBOSE_ECHO='true'
+    export VERBOSE_ARG=()
+    export VERBOSE_RUN=('true')
   fi
 
   if [[ -v DRY_RUN ]]; then
-    export DRY_RUN_CMD=echo
+    _i "This is a dry run"
+    export DRY_RUN_CMD=('echo')
+    export DRY_RUN_NULL="/dev/stdout"
   else
-    export DRY_RUN_CMD=""
+    "${VERBOSE_RUN[@]}" _i "This is a live run"
+    export DRY_RUN_CMD=()
+    export DRY_RUN_NULL=/dev/null
   fi
 }
 
@@ -507,7 +515,7 @@ function pm_listGenerations() {
 # generations to remove.
 function pm_removeGenerations() {
   setProjectManagerPathVariables
-  setVerboseAndDryRun
+  pm_setVerboseAndDryRun
 
   pushd "$PM_PROFILE_DIR" > /dev/null || exit
 
@@ -520,7 +528,7 @@ function pm_removeGenerations() {
       _i 'Cannot remove the current generation %s' "$generationId" >&2
     else
       _i 'Removing generation %s' "$generationId"
-      $DRY_RUN_CMD rm $VERBOSE_ARG "$linkName"
+      "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" "$linkName"
     fi
   done
 
@@ -547,7 +555,7 @@ function pm_expireGenerations() {
 function pm_listPackages() {
   setNixProfileCommands
   local outPath
-  outPath="$($LIST_OUTPATH_CMD | grep -o '/.*project-manager-path$')"
+  outPath="$("${LIST_OUTPATH_CMD[@]}" | grep -o '/.*project-manager-path$')"
   if [[ -n $outPath ]]; then
     nix-store -q --references "$outPath" | sed 's/[^-]*-//'
   else
@@ -646,7 +654,7 @@ function pm_showNews() {
 }
 
 function pm_uninstall() {
-  setVerboseAndDryRun
+  pm_setVerboseAndDryRun
   setNixProfileCommands
 
   _i 'This will remove Project Manager from your system.'
@@ -671,21 +679,21 @@ function pm_uninstall() {
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
       pm_switch
       if [[ -e $PM_PROFILE_DIR ]]; then
-        $DRY_RUN_CMD $REMOVE_CMD "$PM_PROFILE_DIR/project-manager" project-manager-path || true
+        "${DRY_RUN_CMD[@]}" "${REMOVE_CMD}" "$PM_PROFILE_DIR/project-manager" project-manager-path || true
       fi
 
       rm "$PROJECT_MANAGER_CONFIG"
 
       if [[ -e $PM_DATA_HOME ]]; then
-        $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_DATA_HOME"
+        "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" -r "$PM_DATA_HOME"
       fi
 
       if [[ -e $PM_STATE_DIR ]]; then
-        $DRY_RUN_CMD rm $VERBOSE_ARG -r "$PM_STATE_DIR"
+        "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" -r "$PM_STATE_DIR"
       fi
 
       if [[ -e $PM_PROFILE_DIR ]]; then
-        $DRY_RUN_CMD rm $VERBOSE_ARG "$PM_PROFILE_DIR/project-manager"*
+        "${DRY_RUN_CMD[@]}" rm "${VERBOSE_ARG[@]}" "$PM_PROFILE_DIR/project-manager"*
       fi
       ;;
     *)

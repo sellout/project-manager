@@ -96,7 +96,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -f | --file)
-      PROJECT_MANAGER_CONFIG="$1"
+      export PROJECT_MANAGER_CONFIG="$1"
       shift
       ;;
     --recreate-lock-file | --no-update-lock-file | --no-write-lock-file | --no-registries | --commit-lock-file | --refresh)
@@ -119,10 +119,10 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --no-out-link)
-      NO_OUT_LINK=1
+      export NO_OUT_LINK=1
       ;;
     -L | --print-build-logs)
-      PRINT_BUILD_LOGS=1
+      export PRINT_BUILD_LOGS=1
       ;;
     -h | --help)
       showHelp

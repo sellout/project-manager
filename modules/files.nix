@@ -96,16 +96,16 @@ in {
             targetPath="$PROJECT_ROOT/$relativePath"
             if [[ -e "$targetPath" && ! -L "$targetPath" ]] && cmp -s "$sourcePath" "$targetPath" ; then
               # The target exists but is identical – don’t do anything.
-              $VERBOSE_ECHO "Skipping '$relativePath' as it is identical to '$sourcePath'"
+              "''${VERBOSE_ECHO}" "Skipping '$relativePath' as it is identical to '$sourcePath'"
             else
               mkdir -p $(dirname "$relativePath")
               ## Try a symlink (if allowed), then a hard link, then a copy
               ([[ ''${persistence[$relativePath]} == worktree && ! ''${broken_symlink[$relativePath]} ]] \
-                  && $DRY_RUN_CMD ln -Tsf $VERBOSE_ARG "$sourcePath" "$targetPath") \
+                  && "''${DRY_RUN_CMD[@]}" ln -Tsf "''${VERBOSE_ARG[@]}" "$sourcePath" "$targetPath") \
                 || ([[ ''${persistence[$relativePath]} != store ]] \
-                      && ($DRY_RUN_CMD ln -Tf $VERBOSE_ARG "$sourcePath" "$targetPath" 2>/dev/null \
-                          || $DRY_RUN_CMD cp -T --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath" \
-                          || ($VERBOSE_ECHO "failed to create “$targetPath”" && exit 1))) \
+                      && ("''${DRY_RUN_CMD[@]}" ln -Tf "''${VERBOSE_ARG[@]}" "$sourcePath" "$targetPath" 2>/dev/null \
+                          || "''${DRY_RUN_CMD[@]}" cp -T --remove-destination "''${VERBOSE_ARG[@]}" "$sourcePath" "$targetPath" \
+                          || ("''${VERBOSE_ECHO}" "failed to create “$targetPath”" && exit 1))) \
                 || true
             fi
           }
@@ -139,10 +139,10 @@ in {
           for relativePath in "$@" ; do
             targetPath="$PROJECT_ROOT/$relativePath"
             if [[ -e "$newGenFiles/$relativePath" ]] ; then
-              $VERBOSE_ECHO "Checking $targetPath: exists"
+              "''${VERBOSE_ECHO}" "Checking $targetPath: exists"
             else
-              $VERBOSE_ECHO "Checking $targetPath: gone (deleting)"
-              $DRY_RUN_CMD rm $VERBOSE_ARG "$targetPath" || true
+              "''${VERBOSE_ECHO}" "Checking $targetPath: gone (deleting)"
+              "''${DRY_RUN_CMD[@]}" rm "''${VERBOSE_ARG[@]}" "$targetPath" || true
 
               # Recursively delete empty parent directories.
               targetDir="$(dirname "$relativePath")"
@@ -152,7 +152,7 @@ in {
                 # Call rmdir with a relative path excluding $PROJECT_ROOT.
                 # Otherwise, it might try to delete $PROJECT_ROOT and exit
                 # with a permission error.
-                $DRY_RUN_CMD rmdir $VERBOSE_ARG \
+                "''${DRY_RUN_CMD[@]}" rmdir "''${VERBOSE_ARG[@]}" \
                     -p --ignore-fail-on-non-empty \
                     "$targetDir" \
                   || true
@@ -198,9 +198,9 @@ in {
           # `nix profile remove '.*' --profile "$genProfilePath"` was not
           # working (NixOS/nix#7487), so here is a workaround:
           pm_removePackagesBySuffix "$genProfilePath" ""
-          $DRY_RUN_CMD nix profile install $VERBOSE_ARG --profile "$genProfilePath" "$newGenPath"
+          "''${DRY_RUN_CMD[@]}" nix profile install "''${VERBOSE_ARG[@]}" --profile "$genProfilePath" "$newGenPath"
 
-          $DRY_RUN_CMD nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
+          "''${DRY_RUN_CMD[@]}" nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
         else
           _i "No change so reusing latest profile generation %s" "$oldGenNum"
         fi

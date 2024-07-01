@@ -1,6 +1,8 @@
 {
   bash-strict-mode,
+  flake-utils,
   project-manager,
+  supportedSystems,
   treefmt-nix,
 }: {
   configuration = {
@@ -10,6 +12,7 @@
     lib ? pkgs.lib,
     extraSpecialArgs ? {},
     check ? true,
+    supportedSystems ? flake-utils.lib.defaultSystems,
   }:
     import ../modules {
       inherit check extraSpecialArgs lib pkgs;
@@ -18,9 +21,9 @@
           modules
           ++ [
             {
-              _module.args.bash-strict-mode = bash-strict-mode;
-              _module.args.self = self;
-              _module.args.treefmt-nix = treefmt-nix;
+              _module.args = {
+                inherit bash-strict-mode self supportedSystems treefmt-nix;
+              };
               programs.project-manager.path = toString ../.;
             }
           ];
