@@ -234,7 +234,7 @@ in {
       example = lib.literalMD ''
         {
           myActivationAction = lib.pm.dag.entryAfter ["writeBoundary"] '''
-            $DRY_RUN_CMD ln -s $VERBOSE_ARG \
+            "''${DRY_RUN_CMD[@]}" ln -s "''${VERBOSE_ARG[@]}" \
                 ''${builtins.toPath ./link-me-directly} $PROJECT_ROOT
           ''';
         }
@@ -445,10 +445,12 @@ in {
         lib.listToAttrs
         (map (name: lib.nameValuePair name []) unsupportedVersions)
         // {
-          "22.11" = ["0.3" "0.4" "0.5"];
-          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5"];
-          "23.11" = ["0.3" "0.4" "0.5"];
-          "24.05" = ["0.3" "0.4" "0.5"];
+          "22.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5" "0.6"];
+          "23.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "24.05" = ["0.3" "0.4" "0.5" "0.6"];
+          ## NB: These versions are only “supported” on unstable, not 24.11.
+          "24.11" = ["0.3" "0.4" "0.5" "0.6"];
         };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;
@@ -539,7 +541,7 @@ in {
         }
 
         function nixRemoveProfileByName() {
-            nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
+            nixProfileList "$1" | xargs "''${VERBOSE_ARG[@]}" "''${DRY_RUN_CMD[@]}" nix profile remove "''${VERBOSE_ARG[@]}" --profile ${profileDir}
         }
 
         function nixReplaceProfile() {
@@ -547,7 +549,7 @@ in {
 
           nixRemoveProfileByName '${pathPackageName}'
 
-          $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
+          "''${DRY_RUN_CMD[@]}" $oldNix profile install --profile ${profileDir} $1
         }
 
         INSTALL_CMD="nix profile install --profile ${profileDir}"

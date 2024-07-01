@@ -3,9 +3,10 @@
   flaky,
   lib,
   pkgs,
+  supportedSystems,
   ...
 }: let
-  testedNixpkgsVersions = ["22_11" "23_05" "23_11" "24_05"];
+  testedNixpkgsVersions = ["22_11" "23_05" "23_11" "24_05" "24_11"];
 in {
   project = {
     name = "project-manager";
@@ -16,8 +17,6 @@ in {
     ## contributable-to by non-Nix users. However, Nix-specific projects can
     ## lean into Project Manager and avoid committing extra files.
     commit-by-default = lib.mkForce false;
-
-    devPackages = [pkgs.nix-schema];
   };
 
   ## dependency management
@@ -87,37 +86,30 @@ in {
   ## CI
   services.garnix = {
     enable = true;
-    builds.exclude =
-      [
-        # TODO: Remove once garnix-io/garnix#285 is fixed.
-        "homeConfigurations.x86_64-darwin-${config.project.name}-example"
-      ]
-      ## NB: Explicitly excluded because they’re not sandboxed, but since the
-      ##     checks are renamed, they’re not caught by the auto-exclusion.
-      ++ lib.concatMap
-      (nixpkgs: [
-        "checks.*.project-manager-files-${nixpkgs}"
-        "checks.*.vale-${nixpkgs}"
-      ])
-      ## For some reason, nix-hash is failing with these versions.
-      ["22_11" "23_05"];
+    builds.exclude = [
+      ## TODO: Remove once garnix-io/garnix#285 is fixed.
+      "homeConfigurations.x86_64-darwin-example"
+    ];
   };
-  services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (lib.concatMap flaky.lib.garnixChecks ([
-      (sys: "check shellcheck [${sys}]")
-      (sys: "package docs-html [${sys}]")
-      (sys: "package docs-manpages [${sys}]")
-      (sys: "package default [${sys}]")
-      (sys: "package docs-json [${sys}]")
-      (sys: "package project-manager [${sys}]")
-      ## FIXME: These are duplicated from the base config
-      (sys: "check formatter [${sys}]")
-      (sys: "devShell default [${sys}]")
-    ]
-    ++ lib.concatMap (nixpkgs: [
-      (sys: "check formatter-${nixpkgs} [${sys}]")
-      (sys: "check shellcheck-${nixpkgs} [${sys}]")
-    ])
-    testedNixpkgsVersions));
+  services.github.settings.branches.main.protection.required_status_checks.contexts =
+    lib.mkForce
+    (flaky.lib.forGarnixSystems supportedSystems (sys:
+      [
+        "check shellcheck [${sys}]"
+        "package docs-html [${sys}]"
+        "package docs-manpages [${sys}]"
+        "package default [${sys}]"
+        "package docs-json [${sys}]"
+        "package project-manager [${sys}]"
+        ## FIXME: These are duplicated from the base config
+        "check formatter [${sys}]"
+        "devShell default [${sys}]"
+      ]
+      ++ lib.concatMap (nixpkgs: [
+        "check formatter-${nixpkgs} [${sys}]"
+        "check shellcheck-${nixpkgs} [${sys}]"
+      ])
+      testedNixpkgsVersions));
 
   ## publishing
   services.flakehub.enable = true;

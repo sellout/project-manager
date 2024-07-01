@@ -21,10 +21,11 @@
     flake-schemas,
     flake-utils,
     flaky,
-    nix-schema,
+    nixpkgs,
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
+    nixpkgs-24_05,
     nixpkgs-unstable,
     self,
     treefmt-nix,
@@ -32,10 +33,6 @@
     pname = "project-manager";
 
     supportedSystems = flaky.lib.defaultSystems;
-
-    ## The Nixpkgs release to use internally for building Project Manager
-    ## itself, regardless of the downstream package set.
-    buildNixpkgs = nixpkgs-23_11;
   in
     {
       schemas =
@@ -43,7 +40,7 @@
         // import ./nix/schemas.nix {inherit flake-schemas;};
 
       lib = import ./nix/lib.nix {
-        inherit bash-strict-mode treefmt-nix;
+        inherit bash-strict-mode flake-utils supportedSystems treefmt-nix;
         project-manager = self;
       };
 
@@ -61,9 +58,7 @@
       homeConfigurations =
         builtins.listToAttrs
         (builtins.map
-          (flaky.lib.homeConfigurations.example
-            "project-manager"
-            self
+          (flaky.lib.homeConfigurations.example self
             [({pkgs, ...}: {home.packages = [pkgs.project-manager];})])
           supportedSystems);
     }
@@ -75,28 +70,19 @@
           overlays = [
             bash-strict-mode.overlays.default
             self.overlays.default
-            (final: prev: {
-              nix-schema = nix-schema.packages.${system}.nix.overrideAttrs (old: {
-                doCheck = false;
-                postInstall =
-                  old.postInstall
-                  + ''
-                    mv $out/bin/nix $out/bin/nix-schema
-                  '';
-                doInstallCheck = false;
-              });
-            })
           ];
         };
 
       projectConfigurationsFor = pkgs:
-        flaky.lib.projectConfigurations.default {inherit pkgs self;};
+        flaky.lib.projectConfigurations.default {
+          inherit pkgs self supportedSystems;
+        };
     in {
       packages = let
         releaseInfo = import ./release.nix;
         docs = import ./docs {
           inherit (releaseInfo) release isReleaseBranch;
-          pkgs = pkgsFrom buildNixpkgs;
+          pkgs = pkgsFrom nixpkgs;
         };
       in {
         default = self.packages.${system}.project-manager;
@@ -104,10 +90,10 @@
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
         project-manager =
-          (pkgsFrom buildNixpkgs).callPackage ./project-manager {};
+          (pkgsFrom nixpkgs).callPackage ./project-manager {};
       };
 
-      projectConfigurations = projectConfigurationsFor (pkgsFrom buildNixpkgs);
+      projectConfigurations = projectConfigurationsFor (pkgsFrom nixpkgs);
 
       devShells = let
         #   tests = import ./tests {inherit pkgs;};
@@ -127,9 +113,9 @@
 
       checks = let
         checksWith = nixpkgs:
-          buildNixpkgs.lib.mapAttrs'
+          nixpkgs.lib.mapAttrs'
           (name:
-            buildNixpkgs.lib.nameValuePair
+            nixpkgs.lib.nameValuePair
             (name
               + "-"
               ## TODO: Can’t have dots in output names unil garnix-io/issues#30
@@ -141,11 +127,20 @@
           (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
 
         allChecks =
-          self.projectConfigurations.${system}.checks
-          // checksWith nixpkgs-22_11
-          // checksWith nixpkgs-23_05
-          // checksWith nixpkgs-23_11
-          // checksWith nixpkgs-unstable;
+          removeAttrs
+          (self.projectConfigurations.${system}.checks
+            // checksWith nixpkgs-22_11
+            // checksWith nixpkgs-23_05
+            // checksWith nixpkgs-23_11
+            // checksWith nixpkgs-24_05
+            // checksWith nixpkgs-unstable)
+          ## For some reason, nix-hash is failing with these versions.
+          [
+            "project-manager-files-22_11"
+            "project-manager-files-23_05"
+            "vale-22_11"
+            "vale-23_05"
+          ];
       in
         ## `basement`, a dependency of ShellCheck didn’t work on i686 in Nixpkgs
         #.#. 23.05.
@@ -161,7 +156,7 @@
       inputs = {
         flake-utils.follows = "flake-utils";
         flaky.follows = "flaky";
-        nixpkgs.follows = "nixpkgs-23_11";
+        nixpkgs.follows = "nixpkgs";
       };
       url = "github:sellout/bash-strict-mode";
     };
@@ -176,22 +171,15 @@
       inputs = {
         bash-strict-mode.follows = "bash-strict-mode";
         flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs-23_11";
+        nixpkgs.follows = "nixpkgs";
         project-manager.follows = "";
       };
       url = "github:sellout/flaky";
     };
 
-    ## Provides a version of `nix` that uses schemas. Helpful for validation.
-    ## This should be simplified once either DeterminateSystems/flake-schemas#14
-    ## or NixOS/nix#8892 is resolved.
-    nix-schema = {
-      inputs = {
-        flake-schemas.follows = "flake-schemas";
-        nixpkgs.follows = "nixpkgs-23_11";
-      };
-      url = "github:DeterminateSystems/nix/flake-schemas";
-    };
+    ## The Nixpkgs release to use internally for building Project Manager
+    ## itself, regardless of the downstream package set.
+    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
 
     ## We test against each supported version of nixpkgs, but build against the
     ## latest stable release.
@@ -201,10 +189,11 @@
     nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
+    nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
-      inputs.nixpkgs.follows = "nixpkgs-23_11";
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:numtide/treefmt-nix";
     };
   };
