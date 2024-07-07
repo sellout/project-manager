@@ -234,7 +234,7 @@ in {
       example = lib.literalMD ''
         {
           myActivationAction = lib.pm.dag.entryAfter ["writeBoundary"] '''
-            $DRY_RUN_CMD ln -s $VERBOSE_ARG \
+            "''${DRY_RUN_CMD[@]}" ln -s "''${VERBOSE_ARG[@]}" \
                 ''${builtins.toPath ./link-me-directly} $PROJECT_ROOT
           ''';
         }
@@ -445,10 +445,12 @@ in {
         lib.listToAttrs
         (map (name: lib.nameValuePair name []) unsupportedVersions)
         // {
-          "22.11" = ["0.3" "0.4" "0.5"];
-          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5"];
-          "23.11" = ["0.3" "0.4" "0.5"];
-          "24.05" = ["0.3" "0.4" "0.5"];
+          "22.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5" "0.6"];
+          "23.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "24.05" = ["0.3" "0.4" "0.5" "0.6"];
+          ## NB: These versions are only “supported” on unstable, not 24.11.
+          "24.11" = ["0.3" "0.4" "0.5" "0.6"];
         };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;
@@ -525,29 +527,12 @@ in {
         profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
         pathPackageName = "project-manager-path-for-${config.project.name}";
       in ''
-        function nixProfileList() {
-          # We attempt to use `--json` first (added in Nix 2.17). Otherwise
-          # attempt to parse the legacy output format.
-          {
-            nix profile list --profile ${profileDir} --json 2>/dev/null \
-              | jq --raw-output --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
-          } || {
-            nix profile list --profile ${profileDir} \
-              | { grep "$1\$" || test $? = 1; } \
-              | cut -d ' ' -f 4
-          }
-        }
-
-        function nixRemoveProfileByName() {
-            nixProfileList "$1" | xargs $VERBOSE_ARG $DRY_RUN_CMD nix profile remove $VERBOSE_ARG --profile ${profileDir}
-        }
-
         function nixReplaceProfile() {
           local oldNix="$(command -v nix)"
 
-          nixRemoveProfileByName '${pathPackageName}'
+          pm_removePackagesBySuffix "${profileDir}" '${pathPackageName}'
 
-          $DRY_RUN_CMD $oldNix profile install --profile ${profileDir} $1
+          "''${DRY_RUN_CMD[@]}" $oldNix profile install --profile ${profileDir} $1
         }
 
         INSTALL_CMD="nix profile install --profile ${profileDir}"
@@ -560,7 +545,7 @@ in {
           _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
           exit 1
         fi
-        unset -f nixProfileList nixRemoveProfileByName nixReplaceProfile
+        unset -f nixReplaceProfile
         unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
       ''
     );
