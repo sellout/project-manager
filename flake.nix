@@ -181,7 +181,7 @@
 
     ## The Nixpkgs release to use internally for building Project Manager
     ## itself, regardless of the downstream package set.
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-24.05";
 
     ## We test against each supported version of nixpkgs, but build against the
     ## latest stable release.
