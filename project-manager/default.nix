@@ -53,6 +53,10 @@ in
       --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.bash}' \
       --subst-var-by OUT "$out"
 
+    substituteInPlace $out/bin/project-manager \
+      --subst-var-by FLAKE_TEMPLATE '${../templates/default/flake.nix}' \
+      --subst-var-by CONFIG_TEMPLATE '${../templates/default/.config/project/default.nix}'
+
     patchShebangs --host $out/bin/project-manager
 
     install -D -m755 ${./completion.bash} \

@@ -39,6 +39,8 @@
         flake-schemas.schemas
         // import ./nix/schemas.nix {inherit flake-schemas;};
 
+      templates = import ./templates;
+
       lib = import ./nix/lib.nix {
         inherit bash-strict-mode flake-utils supportedSystems treefmt-nix;
         project-manager = self;
