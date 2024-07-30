@@ -4,6 +4,7 @@
   flaky,
   lib,
   pkgs,
+  pmPkgs,
   self,
   ...
 }: let
@@ -115,7 +116,7 @@ in {
       devPackages = [cfg.package];
 
       checks.vale =
-        flaky.lib.runEmptyCommand pkgs "vale" {
+        flaky.lib.runEmptyCommand pmPkgs "vale" {
           nativeBuildInputs = [
             pkgs.cacert
             pkgs.vale

@@ -33,6 +33,15 @@
     pname = "project-manager";
 
     supportedSystems = flaky.lib.defaultSystems;
+
+    pkgsFor = system:
+      import nixpkgs {
+        inherit system;
+        overlays = [
+          bash-strict-mode.overlays.default
+          self.overlays.default
+        ];
+      };
   in
     {
       schemas =
@@ -42,7 +51,7 @@
       templates = import ./templates;
 
       lib = import ./nix/lib.nix {
-        inherit bash-strict-mode flake-utils supportedSystems treefmt-nix;
+        inherit bash-strict-mode flake-utils pkgsFor treefmt-nix;
         project-manager = self;
       };
 
@@ -66,36 +75,28 @@
     }
     // flake-utils.lib.eachSystem supportedSystems
     (system: let
-      pkgsFrom = nixpkgs:
-        import nixpkgs {
-          inherit system;
-          overlays = [
-            bash-strict-mode.overlays.default
-            self.overlays.default
-          ];
-        };
-
       projectConfigurationsFor = pkgs:
         flaky.lib.projectConfigurations.default {
           inherit pkgs self supportedSystems;
         };
+
+      pkgs = pkgsFor system;
     in {
       packages = let
         releaseInfo = import ./release.nix;
         docs = import ./docs {
+          inherit pkgs;
           inherit (releaseInfo) release isReleaseBranch;
-          pkgs = pkgsFrom nixpkgs;
         };
       in {
         default = self.packages.${system}.project-manager;
         docs-html = docs.manual.html;
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
-        project-manager =
-          (pkgsFrom nixpkgs).callPackage ./project-manager {};
+        project-manager = pkgs.callPackage ./project-manager {};
       };
 
-      projectConfigurations = projectConfigurationsFor (pkgsFrom nixpkgs);
+      projectConfigurations = projectConfigurationsFor pkgs;
 
       devShells = let
         #   tests = import ./tests {inherit pkgs;};
@@ -126,26 +127,18 @@
               ["."]
               ["_"]
               nixpkgs.lib.trivial.release))
-          (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
+          (projectConfigurationsFor (import nixpkgs {inherit system;})).checks;
 
         allChecks =
-          removeAttrs
-          (self.projectConfigurations.${system}.checks
-            // checksWith nixpkgs-22_11
-            // checksWith nixpkgs-23_05
-            // checksWith nixpkgs-23_11
-            // checksWith nixpkgs-24_05
-            // checksWith nixpkgs-unstable)
-          ## For some reason, nix-hash is failing with these versions.
-          [
-            "project-manager-files-22_11"
-            "project-manager-files-23_05"
-            "vale-22_11"
-            "vale-23_05"
-          ];
+          self.projectConfigurations.${system}.checks
+          // checksWith nixpkgs-22_11
+          // checksWith nixpkgs-23_05
+          // checksWith nixpkgs-23_11
+          // checksWith nixpkgs-24_05
+          // checksWith nixpkgs-unstable;
       in
         ## `basement`, a dependency of ShellCheck didn’t work on i686 in Nixpkgs
-        #.#. 23.05.
+        ## 23.05.
         if system == "i686-linux"
         then removeAttrs allChecks ["formatter-23_05" "shellcheck-23_05"]
         else allChecks;
