@@ -84,32 +84,55 @@ in {
   };
 
   ## CI
-  services.garnix = {
+  services.garnix = let
+    ## Build certain outputs only on one platform (x86_64-linux)
+    ## TODO: Move this up to Flaky, and make the selected platform configurable.
+    singlePlatform = output: name:
+      flaky.lib.forGarnixSystems supportedSystems (sys:
+        if sys == "x86_64-linux"
+        then []
+        else ["${output}.${sys}.${name}"]);
+  in {
     enable = true;
-    builds.exclude = [
-      ## TODO: Remove once garnix-io/garnix#285 is fixed.
-      "homeConfigurations.x86_64-darwin-example"
-    ];
+    builds.exclude =
+      [
+        ## TODO: Remove once garnix-io/garnix#285 is fixed.
+        "homeConfigurations.x86_64-darwin-example"
+      ]
+      ++ lib.concatMap (singlePlatform "checks") [
+        "formatter"
+        ## FIXME: Would rather not restrict this one, because it’s easy for
+        ##        users to accidentally create situations where they generate
+        ##        different "repository"-persisted files depending on the
+        ##        system.
+        "project-manager-files"
+        "shellcheck"
+        "vale"
+      ];
   };
   services.github.settings.branches.main.protection.required_status_checks.contexts =
     lib.mkForce
     (flaky.lib.forGarnixSystems supportedSystems (sys:
-      [
-        "check shellcheck [${sys}]"
-        "package docs-html [${sys}]"
-        "package docs-manpages [${sys}]"
-        "package default [${sys}]"
-        "package docs-json [${sys}]"
-        "package project-manager [${sys}]"
-        ## FIXME: These are duplicated from the base config
-        "check formatter [${sys}]"
-        "devShell default [${sys}]"
-      ]
-      ++ lib.concatMap (nixpkgs: [
-        "check formatter-${nixpkgs} [${sys}]"
-        "check shellcheck-${nixpkgs} [${sys}]"
-      ])
-      testedNixpkgsVersions));
+        [
+          "package docs-html [${sys}]"
+          "package docs-manpages [${sys}]"
+          "package default [${sys}]"
+          "package docs-json [${sys}]"
+          "package project-manager [${sys}]"
+          ## FIXME: These are duplicated from the base config
+          "devShell default [${sys}]"
+        ]
+        ++ lib.concatMap (nixpkgs: [
+          "check formatter-${nixpkgs} [${sys}]"
+          "check shellcheck-${nixpkgs} [${sys}]"
+        ])
+        testedNixpkgsVersions)
+      ++ [
+        "check formatter [x86_64-linux]"
+        "check project-manager-files [x86_64-linux]"
+        "check shellcheck [x86_64-linux]"
+        "check vale [x86_64-linux]"
+      ]);
 
   ## publishing
   services.flakehub.enable = true;
