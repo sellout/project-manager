@@ -1,8 +1,8 @@
 {
   bash-strict-mode,
   flake-utils,
+  pkgsFor,
   project-manager,
-  supportedSystems,
   treefmt-nix,
 }: {
   configuration = {
@@ -23,6 +23,9 @@
             {
               _module.args = {
                 inherit bash-strict-mode self supportedSystems treefmt-nix;
+                ## The pkgs used by Project Manager itself, also used in modules
+                ## in certain cases.
+                pmPkgs = pkgsFor pkgs.system;
               };
               programs.project-manager.path = toString ../.;
             }

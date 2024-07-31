@@ -4,6 +4,7 @@
   flaky,
   lib,
   pkgs,
+  pmPkgs,
   self,
   ...
 }:
@@ -632,7 +633,7 @@ in {
         ${activationCmds}
       '';
     in
-      flaky.lib.runCommand pkgs
+      flaky.lib.runCommand pmPkgs
       "project-manager-generation-for-${config.project.name}"
       {
         preferLocalBuild = true;
@@ -682,7 +683,7 @@ in {
     };
     project = {
       checks.project-manager-files =
-        flaky.lib.runEmptyCommand pkgs "project-manager-files"
+        flaky.lib.runEmptyCommand pmPkgs "project-manager-files"
         {
           nativeBuildInputs = [
             config.programs.git.package
