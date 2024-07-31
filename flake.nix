@@ -33,6 +33,15 @@
     pname = "project-manager";
 
     supportedSystems = flaky.lib.defaultSystems;
+
+    pkgsFor = system:
+      import nixpkgs {
+        inherit system;
+        overlays = [
+          bash-strict-mode.overlays.default
+          self.overlays.default
+        ];
+      };
   in
     {
       schemas =
@@ -42,7 +51,7 @@
       templates = import ./templates;
 
       lib = import ./nix/lib.nix {
-        inherit bash-strict-mode flake-utils supportedSystems treefmt-nix;
+        inherit bash-strict-mode flake-utils pkgsFor treefmt-nix;
         project-manager = self;
       };
 
@@ -66,36 +75,28 @@
     }
     // flake-utils.lib.eachSystem supportedSystems
     (system: let
-      pkgsFrom = nixpkgs:
-        import nixpkgs {
-          inherit system;
-          overlays = [
-            bash-strict-mode.overlays.default
-            self.overlays.default
-          ];
-        };
-
       projectConfigurationsFor = pkgs:
         flaky.lib.projectConfigurations.default {
           inherit pkgs self supportedSystems;
         };
+
+      pkgs = pkgsFor system;
     in {
       packages = let
         releaseInfo = import ./release.nix;
         docs = import ./docs {
+          inherit pkgs;
           inherit (releaseInfo) release isReleaseBranch;
-          pkgs = pkgsFrom nixpkgs;
         };
       in {
         default = self.packages.${system}.project-manager;
         docs-html = docs.manual.html;
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
-        project-manager =
-          (pkgsFrom nixpkgs).callPackage ./project-manager {};
+        project-manager = pkgs.callPackage ./project-manager {};
       };
 
-      projectConfigurations = projectConfigurationsFor (pkgsFrom nixpkgs);
+      projectConfigurations = projectConfigurationsFor pkgs;
 
       devShells = let
         #   tests = import ./tests {inherit pkgs;};
@@ -114,7 +115,7 @@
         };
 
       checks = let
-        checksWith = nixpkgs:
+        checksWith = nixpkgs: overlay:
           nixpkgs.lib.mapAttrs'
           (name:
             nixpkgs.lib.nameValuePair
@@ -126,26 +127,48 @@
               ["."]
               ["_"]
               nixpkgs.lib.trivial.release))
-          (projectConfigurationsFor (pkgsFrom nixpkgs)).checks;
-
+          (projectConfigurationsFor (import nixpkgs {
+            inherit system;
+            overlays = [overlay];
+          }))
+          .checks;
         allChecks =
-          removeAttrs
-          (self.projectConfigurations.${system}.checks
-            // checksWith nixpkgs-22_11
-            // checksWith nixpkgs-23_05
-            // checksWith nixpkgs-23_11
-            // checksWith nixpkgs-24_05
-            // checksWith nixpkgs-unstable)
-          ## For some reason, nix-hash is failing with these versions.
-          [
-            "project-manager-files-22_11"
-            "project-manager-files-23_05"
-            "vale-22_11"
-            "vale-23_05"
-          ];
+          self.projectConfigurations.${system}.checks
+          // checksWith nixpkgs-22_11 (_: _: {})
+          // checksWith nixpkgs-23_05 (final: prev: {
+            haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
+              if final.system == "i686-linux"
+              then {
+                ## This is a dependency of ShellCheck. This patch is cobbled
+                ## together from haskell-foundation/foundation#573.
+                basement =
+                  final.haskell.lib.appendPatch hprev.basement
+                  (final.fetchpatch {
+                    name = "basement-i686-ghc-9.4.patch";
+                    url = "https://github.com/haskell-foundation/foundation/pull/573/commits/38be2c93acb6f459d24ed6c626981c35ccf44095.patch";
+                    sha256 = "17kz8glfim29vyhj8idw8bdh3id5sl9zaq18zzih3schfvyjppj7";
+                    stripLen = 1;
+                    ## FIXME: This doesn’t seem to modify the patch, so it
+                    ##        doesn’t actually work.
+                    postFetch = ''
+                      sed -i 's/+#if __GLASGOW_HASKELL__ >= 904/+#if __GLASGOW_HASKELL__ >= 902/g' "$out"
+                    '';
+                  });
+              }
+              else {});
+          })
+          // checksWith nixpkgs-23_11 (final: prev: {
+            haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
+              if final.system == "i686-linux"
+              then {
+                pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
+              }
+              else {});
+          })
+          // checksWith nixpkgs-24_05 (_: _: {})
+          // checksWith nixpkgs-unstable (_: _: {});
       in
-        ## `basement`, a dependency of ShellCheck didn’t work on i686 in Nixpkgs
-        #.#. 23.05.
+        ## FIXME: Because the basement override isn’t working.
         if system == "i686-linux"
         then removeAttrs allChecks ["formatter-23_05" "shellcheck-23_05"]
         else allChecks;
