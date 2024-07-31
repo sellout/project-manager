@@ -6,7 +6,13 @@
   supportedSystems,
   ...
 }: let
-  testedNixpkgsVersions = ["22_11" "23_05" "23_11" "24_05" "24_11"];
+  testedNixpkgsVersions = [
+    "22_11"
+    "23_05"
+    "23_11"
+    # "24_05" # tested, but covered by the Project Manager build
+    "24_11"
+  ];
 in {
   project = {
     name = "project-manager";
@@ -129,7 +135,6 @@ in {
         testedNixpkgsVersions)
       ++ [
         "check formatter [x86_64-linux]"
-        "check project-manager-files [x86_64-linux]"
         "check shellcheck [x86_64-linux]"
         "check vale [x86_64-linux]"
       ]);

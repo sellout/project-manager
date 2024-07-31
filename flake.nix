@@ -25,7 +25,6 @@
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
-    nixpkgs-24_05,
     nixpkgs-unstable,
     self,
     treefmt-nix,
@@ -166,7 +165,8 @@
               }
               else {});
           })
-          // checksWith nixpkgs-24_05 (_: _: {})
+          ## This is covered by the version used to build Project Manager
+          # // checksWith nixpkgs-24_05 (_: _: {})
           // checksWith nixpkgs-unstable (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
               if final.system == "i686-linux"
@@ -211,7 +211,6 @@
     nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
-    nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
