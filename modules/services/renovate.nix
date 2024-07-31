@@ -8,12 +8,12 @@ in {
   meta.maintainers = [lib.maintainers.sellout];
 
   options.services.renovate = {
-    enable = lib.mkEnableOption (lib.mdDoc "Renovate");
+    enable = lib.mkEnableOption "Renovate";
 
     settings = lib.mkOption {
       type = lib.types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Configuration written to {file}`$PROJECT_ROOT/renovate.json`.
         See <https://docs.renovatebot.com/> for documentation.
       '';

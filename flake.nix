@@ -25,7 +25,6 @@
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
-    nixpkgs-24_05,
     nixpkgs-unstable,
     self,
     treefmt-nix,
@@ -39,6 +38,7 @@
         inherit system;
         overlays = [
           bash-strict-mode.overlays.default
+          flaky.overlays.dependencies
           self.overlays.default
         ];
       };
@@ -85,7 +85,7 @@
       packages = let
         releaseInfo = import ./release.nix;
         docs = import ./docs {
-          inherit pkgs;
+          inherit pkgs self;
           inherit (releaseInfo) release isReleaseBranch;
         };
       in {
@@ -165,8 +165,18 @@
               }
               else {});
           })
-          // checksWith nixpkgs-24_05 (_: _: {})
-          // checksWith nixpkgs-unstable (_: _: {});
+          ## This is covered by the version used to build Project Manager
+          # // checksWith nixpkgs-24_05 (_: _: {})
+          // checksWith nixpkgs-unstable (final: prev: {
+            haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
+              if final.system == "i686-linux"
+              then {
+                unordered-containers =
+                  final.haskell.lib.dontCheck
+                  hprev.unordered-containers;
+              }
+              else {});
+          });
       in
         ## FIXME: Because the basement override isn’t working.
         if system == "i686-linux"
@@ -177,34 +187,21 @@
     });
 
   inputs = {
-    bash-strict-mode = {
-      inputs = {
-        flake-utils.follows = "flake-utils";
-        flaky.follows = "flaky";
-        nixpkgs.follows = "nixpkgs";
-      };
-      url = "github:sellout/bash-strict-mode";
+    ## Flaky should generally be the source of truth for its inputs.
+    flaky = {
+      inputs.project-manager.follows = "";
+      url = "github:sellout/flaky";
     };
+
+    bash-strict-mode.follows = "flaky/bash-strict-mode";
+    flake-utils.follows = "flaky/flake-utils";
+    ## The Nixpkgs release to use internally for building Project Manager
+    ## itself, regardless of the downstream package set.
+    nixpkgs.follows = "flaky/nixpkgs";
 
     ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is
     ##       merged.
     flake-schemas.url = "github:sellout/flake-schemas/patch-1";
-
-    flake-utils.url = "github:numtide/flake-utils";
-
-    flaky = {
-      inputs = {
-        bash-strict-mode.follows = "bash-strict-mode";
-        flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs";
-        project-manager.follows = "";
-      };
-      url = "github:sellout/flaky";
-    };
-
-    ## The Nixpkgs release to use internally for building Project Manager
-    ## itself, regardless of the downstream package set.
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
 
     ## We test against each supported version of nixpkgs, but build against the
     ## latest stable release.
@@ -214,7 +211,6 @@
     nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
-    nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {

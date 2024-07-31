@@ -18,10 +18,10 @@ in {
   meta.maintainers = [lib.maintainers.sellout];
 
   options.services.github = {
-    enable = lib.mkEnableOption (lib.mdDoc "GitHub");
+    enable = lib.mkEnableOption "GitHub";
 
     settings = lib.mkOption {
-      description = lib.mdDoc ''
+      description = ''
         Declarative GitHub settings, as provided by [Probot’s Settings
         app](https://probot.github.io/apps/settings/).
       '';
@@ -31,19 +31,19 @@ in {
           branches = lib.mkOption {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
-            description = lib.mdDoc ''
+            description = ''
               Labels for issues & PRs.
             '';
           };
           labels = lib.mkOption {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
-            description = lib.mdDoc ''
+            description = ''
               Branch-specific settings.
             '';
           };
           repository = lib.mkOption {
-            description = lib.mdDoc ''
+            description = ''
               Settings that affect the entire repository.
             '';
             type = lib.types.submodule {
@@ -51,7 +51,7 @@ in {
               options.topics = lib.mkOption {
                 default = [];
                 type = lib.types.listOf lib.types.str;
-                description = lib.mdDoc ''
+                description = ''
                   A list of GitHub “topics”.
                 '';
               };
@@ -63,7 +63,7 @@ in {
     };
 
     workflow = lib.mkOption {
-      description = lib.mdDoc ''
+      description = ''
         Attribute set of GitHub workflows.
       '';
       default = {};

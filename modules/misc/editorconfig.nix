@@ -17,12 +17,12 @@ in {
 
   options.editorconfig = {
     enable =
-      mkEnableOption (lib.mdDoc "EditorConfig project configuration file");
+      mkEnableOption "EditorConfig project configuration file";
 
     settings = mkOption {
       type = iniFormat.type;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Configuration written to {file}`$PROJECT_ROOT/.editorconfig`.
         `root = true` is automatically added to the file,
         it must not be added here.

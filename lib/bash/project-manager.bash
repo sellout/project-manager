@@ -86,10 +86,10 @@ function pm_listPackagesBySuffix() {
   # We attempt to use `--json` first (added in Nix 2.17). Otherwise
   # attempt to parse the legacy output format.
   {
-    nix profile list --profile "$1" --json 2>/dev/null \
+    nix profile list --profile "$1" --json 2> /dev/null \
       | jq --raw-output --arg name "$2" '.elements[].storePaths[] | select(endswith($name))'
   } || {
-    nix profile list --profile $1 \
+    nix profile list --profile "$1" \
       | { grep "$2\$" || test $? = 1; } \
       | cut -d ' ' -f 4
   }

@@ -9,7 +9,7 @@ in {
   meta.maintainers = [lib.maintainers.sellout];
 
   options.services.flakestry = {
-    enable = lib.mkEnableOption (lib.mdDoc "Flakestry");
+    enable = lib.mkEnableOption "Flakestry";
   };
 
   config = lib.mkIf cfg.enable {

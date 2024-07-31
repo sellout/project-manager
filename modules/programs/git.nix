@@ -29,7 +29,7 @@ with lib; let
       signByDefault = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Whether commits and tags should be signed by default.
         '';
       };
@@ -41,7 +41,7 @@ with lib; let
       condition = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Include this configuration only when {var}`condition`
           matches. Allowed conditions are described in
           {manpage}`git-config(1)`.
@@ -50,7 +50,7 @@ with lib; let
 
       path = mkOption {
         type = with types; either str path;
-        description = lib.mdDoc ''
+        description = ''
           Path of the configuration file to include.
         '';
       };
@@ -70,7 +70,7 @@ with lib; let
             };
           };
         '';
-        description = lib.mdDoc ''
+        description = ''
           Configuration to include. If empty then a path must be given.
 
           This follows the configuration structure as described in
@@ -81,7 +81,7 @@ with lib; let
       contentSuffix = mkOption {
         type = types.str;
         default = "gitconfig";
-        description = lib.mdDoc ''
+        description = ''
           Nix store name for the git configuration text file,
           when generating the configuration text from nix options.
         '';
@@ -96,9 +96,9 @@ in {
 
   options = {
     programs.git = {
-      enable = mkEnableOption (lib.mdDoc "Git");
+      enable = mkEnableOption "Git";
 
-      package = lib.mkPackageOptionMD pkgs "Git" ({
+      package = lib.mkPackageOption pkgs "Git" ({
           default = ["git"];
         }
         // (
@@ -119,7 +119,7 @@ in {
           core = {whitespace = "trailing-space,space-before-tab";};
           url."ssh://git@host".insteadOf = "otherhost";
         };
-        description = lib.mdDoc ''
+        description = ''
           Additional configuration to add.
         '';
       };
@@ -129,7 +129,7 @@ in {
       installConfig = mkOption {
         type = lib.types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Whether to have Project Manager link the generated config into
           $PROJECT_ROOT/.git/config.
         '';
@@ -138,7 +138,7 @@ in {
       signing = mkOption {
         type = types.nullOr signModule;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Options related to signing commits using GnuPG.
         '';
       };
@@ -160,7 +160,7 @@ in {
             pre-commit.source = ./pre-commit-script;
           }
         '';
-        description = lib.mdDoc ''
+        description = ''
           Configuration helper for Git hooks.
           See <https://git-scm.com/docs/githooks>
           for reference.
@@ -176,7 +176,7 @@ in {
         type = types.nullOr (types.listOf types.str);
         default = null;
         example = ["*~" "*.swp"];
-        description = lib.mdDoc ''
+        description = ''
           List of paths that should be globally ignored.
         '';
       };
@@ -185,7 +185,7 @@ in {
         type = types.nullOr (types.listOf types.str);
         default = null;
         example = ["*~" "*.swp"];
-        description = lib.mdDoc ''
+        description = ''
           List of revisions that should be ignored when assigning blame.
         '';
       };
@@ -194,7 +194,7 @@ in {
         type = types.listOf types.str;
         default = [];
         example = ["*.pdf diff=pdf"];
-        description = lib.mdDoc ''
+        description = ''
           List of defining attributes set globally.
         '';
       };
@@ -211,18 +211,18 @@ in {
             }
           ]
         '';
-        description = lib.mdDoc ''
+        description = ''
           List of configuration files to include.
         '';
       };
 
       lfs = {
-        enable = mkEnableOption (lib.mdDoc "Git Large File Storage");
+        enable = mkEnableOption "Git Large File Storage";
 
         skipSmudge = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = ''
             Skip automatic downloading of objects on clone or pull.
             This requires a manual {command}`git lfs pull`
             every time a new commit is checked out on your repository.

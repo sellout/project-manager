@@ -18,7 +18,7 @@ with lib; let
 in {
   options = {
     project.file = mkOption {
-      description = lib.mdDoc ''
+      description = ''
         Attribute set of files to link into the project root.
       '';
       default = {};
@@ -28,7 +28,7 @@ in {
     project-files = mkOption {
       type = types.package;
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         Package to contain all project files
       '';
     };
