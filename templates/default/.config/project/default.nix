@@ -2,15 +2,18 @@
 ##
 ## This is a Nix module (https://nixos.wiki/wiki/NixOS_modules) that is intended
 ## to produce both flake outputs and generated files in your project.
-
-{lib, pkgs, ...}: {
+{
+  lib,
+  pkgs,
+  ...
+}: {
   project = {
     name = "{{project.name}}";
     summary = "{{project.summary}}";
     ## NB: This follows the same structure as nixpkgs maintainers, so it can
     ##     contain references to that, like
     ##    `authors = [lib.maintainers.sellout];`.
-    authors = [{{project.author}}];
+    authors = ["{{project.author}}"];
     license = "{{project.license}}";
     ## The project.packages option allows you to install Nix packages into your
     ## environment.

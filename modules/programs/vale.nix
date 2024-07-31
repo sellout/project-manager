@@ -13,16 +13,16 @@ in {
   options.programs.vale = {
     ## TODO: Enabling this currently requires the flake to have
     ##      `nixConfig.sandbox = false;` to allow the check to run.
-    enable = lib.mkEnableOption (lib.mdDoc "Vale");
+    enable = lib.mkEnableOption "Vale";
 
-    package = lib.mkPackageOptionMD pkgs "Vale" {
+    package = lib.mkPackageOption pkgs "Vale" {
       default = ["vale"];
     };
 
     coreSettings = lib.mkOption {
       type = lib.types.nullOr lib.types.attrs;
       default = null;
-      description = lib.mdDoc ''
+      description = ''
         The .vale.ini file. The `target` is ignored.
       '';
     };
@@ -30,7 +30,7 @@ in {
     formatSettings = lib.mkOption {
       type = lib.types.nullOr (lib.types.attrsOf lib.types.attrs);
       default = null;
-      description = lib.mdDoc ''
+      description = ''
         The .vale.ini file. The `target` is ignored.
       '';
     };
@@ -38,7 +38,7 @@ in {
     vocab = lib.mkOption {
       type = lib.types.attrsOf (lib.types.attrsOf (lib.types.listOf lib.types.str));
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         An attrset with two optional keys, “accept” and “reject”. Each contains
         a list of words that are either accepted or rejected by Vale’s spell
         checker.
@@ -48,7 +48,7 @@ in {
     excludes = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = ''
         A list of glob patterns to skip when checking Vale compliance.
       '';
     };

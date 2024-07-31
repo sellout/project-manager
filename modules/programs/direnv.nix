@@ -19,13 +19,13 @@ in {
   meta.maintainers = [maintainers.sellout];
 
   options.programs.direnv = {
-    enable = mkEnableOption (lib.mdDoc "direnv, the environment switcher");
+    enable = mkEnableOption "direnv, the environment switcher";
 
     package = mkOption {
       type = types.package;
       default = pkgs.direnv;
       defaultText = lib.literalMD "pkgs.direnv";
-      description = lib.mdDoc ''
+      description = ''
         Direnv package to install.
       '';
     };
@@ -33,7 +33,7 @@ in {
     auto-allow = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = ''
         Whether running project-manager will implicitly run `direnv allow` for
         the user.
       '';
@@ -42,7 +42,7 @@ in {
     commit-envrc = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = ''
         Whether .envrc should be committed to the repo or only available
         locally. If this is false, then users will have to run
         `project-manager switch` before direnv will work.
@@ -51,7 +51,7 @@ in {
 
     envrc = mkOption {
       type = lib.types.lines;
-      description = lib.mdDoc ''
+      description = ''
         The contents of the .envrc file.
       '';
     };
@@ -59,7 +59,7 @@ in {
     layoutDir = mkOption {
       type = lib.types.nullOr lib.types.str;
       default = "${config.xdg.cacheDir}/direnv";
-      description = lib.mdDoc ''
+      description = ''
         Where to store direnv‘s cache. If null, this won’t be set.
       '';
     };

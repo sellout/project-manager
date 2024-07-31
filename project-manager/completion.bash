@@ -1,4 +1,5 @@
 #!/usr/bin/env strict-bash
+# shellcheck shell=bash
 
 ##################################################
 
@@ -154,18 +155,16 @@
 ##################################################
 # Dependencies:
 
-command -v project-manager >/dev/null
-command -v grep         >/dev/null
-command -v sed          >/dev/null
+command -v project-manager > /dev/null
+command -v grep > /dev/null
+command -v sed > /dev/null
 
 ##################################################
 # Code:
 
-_project-manager_list-generation-identifiers ()
+_project-manager_list-generation-identifiers() {
 
-{
-
-    project-manager generations  |  sed -n -e 's/^................ : id \([[:alnum:]]\+\) -> .*/\1/p'
+  project-manager generations | sed -n -e 's/^................ : id \([[:alnum:]]\+\) -> .*/\1/p'
 
 }
 
@@ -186,33 +185,30 @@ _project-manager_list-generation-identifiers ()
 #------------------------------------------------#
 
 # shellcheck disable=SC2120
-_project-manager_list-nix-attributes ()
+_project-manager_list-nix-attributes() {
+  local ProjectFile
+  local ProjectAttrsString
+  # local ProjectAttrsArray
+  # local ProjectAttr
 
-{
-    local ProjectFile
-    local ProjectAttrsString
-    # local ProjectAttrsArray
-    # local ProjectAttr
+  if [ -z "$1" ]; then
+    ProjectFile=$(readlink -f "$(_project-manager_get-default-project-file)")
+  else
+    ProjectFile="$1"
+  fi
 
-    if   [ -z "$1" ]
-    then
-        ProjectFile=$(readlink -f "$(_project-manager_get-default-project-file)")
-    else
-        ProjectFile="$1"
-    fi
+  ProjectAttrsString=$(nix-instantiate --eval -E "let project = import ${ProjectFile}; in (builtins.trace (builtins.toString (builtins.attrNames project)) null)" |& grep '^trace: ')
+  ProjectAttrsString="${ProjectAttrsString#trace: }"
 
-    ProjectAttrsString=$(nix-instantiate --eval -E "let project = import ${ProjectFile}; in (builtins.trace (builtins.toString (builtins.attrNames project)) null)" |& grep '^trace: ')
-    ProjectAttrsString="${ProjectAttrsString#trace: }"
+  echo "${ProjectAttrsString}"
 
-    echo "${ProjectAttrsString}"
-
-    # IFS=" " read -ar ProjectAttrsArray <<< "${ProjectAttrsString}"
-    #
-    # local ProjectAttr
-    # for ProjectAttr in "${ProjectAttrsArray[@]}"
-    # do
-    #     echo "${ProjectAttr}"
-    # done
+  # IFS=" " read -ar ProjectAttrsArray <<< "${ProjectAttrsString}"
+  #
+  # local ProjectAttr
+  # for ProjectAttr in "${ProjectAttrsArray[@]}"
+  # do
+  #     echo "${ProjectAttr}"
+  # done
 
 }
 
@@ -227,14 +223,12 @@ _project-manager_list-nix-attributes ()
 
 #------------------------------------------------#
 
-_project-manager_get-default-project-file ()
+_project-manager_get-default-project-file() {
+  local ProjectFileDefault
 
-{
-    local ProjectFileDefault
+  ProjectFileDefault="$(_project-manager_xdg-get-config-project)/nixpkgs/project.nix"
 
-    ProjectFileDefault="$(_project-manager_xdg-get-config-project)/nixpkgs/project.nix"
-
-    echo "${ProjectFileDefault}"
+  echo "${ProjectFileDefault}"
 }
 
 # e.g.:
@@ -246,128 +240,125 @@ _project-manager_get-default-project-file ()
 ##################################################
 # XDG-BaseDirs:
 
-_project-manager_xdg-get-config-project () {
+_project-manager_xdg-get-config-project() {
 
-    echo "${XDG_CONFIG_HOME:-$HOME/.config}"
+  echo "${XDG_CONFIG_HOME:-$HOME/.config}"
 
 }
 
 #------------------------------------------------#
 
-_project-manager_xdg-get-data-home () {
+_project-manager_xdg-get-data-home() {
 
-    echo "${XDG_DATA_HOME:-$HOME/.local/share}"
+  echo "${XDG_DATA_HOME:-$HOME/.local/share}"
 
 }
 
-
 #------------------------------------------------#
-_project-manager_xdg-get-cache-home () {
+_project-manager_xdg-get-cache-home() {
 
-    echo "${XDG_CACHE_HOME:-$HOME/.cache}"
+  echo "${XDG_CACHE_HOME:-$HOME/.cache}"
 
 }
 
 ##################################################
 
-_hm_subcommands=( "help" "edit" "build" "init" "switch" "generations" "remove-generations" "expire-generations" "packages" "news" "uninstall" )
+_hm_subcommands=("help" "edit" "build" "init" "switch" "generations" "remove-generations" "expire-generations" "packages" "news" "uninstall")
 declare -ra _hm_subcommands
 
 # Finds the active sub-command, if any.
 _project-manager_subcommand() {
-    local subcommand='' i=
-    for ((i = 1; i < ${#COMP_WORDS[@]}; i++)); do
-        local word="${COMP_WORDS[i]}"
-        if [[ " ${_hm_subcommands[*]} " == *" ${word} "* ]]; then
-            subcommand="$word"
-            break
-        fi
-    done
+  local subcommand='' i=
+  for ((i = 1; i < ${#COMP_WORDS[@]}; i++)); do
+    local word="${COMP_WORDS[i]}"
+    if [[ " ${_hm_subcommands[*]} " == *" ${word} "* ]]; then
+      subcommand="$word"
+      break
+    fi
+  done
 
-    echo "$subcommand"
+  echo "$subcommand"
 }
 
 # shellcheck disable=SC2207
-_project-manager_completions ()
-{
-    local Options
-    Options=( "-f" "--file" "-I" "-h" "--help" "-n" "--dry-run" "-v" \
-              "--verbose" "--cores" "--debug" "--impure" "--keep-failed" \
-              "--keep-going" "-j" "--max-jobs" "--no-substitute" "--no-out-link" \
-              "-L" "--print-build-logs" \
-              "--show-trace" "--substitute" "--builders" "--version" \
-              "--update-input" "--override-input" "--experimental-features" \
-              "--extra-experimental-features" "--refresh")
+_project-manager_completions() {
+  local Options
+  Options=("-f" "--file" "-I" "-h" "--help" "-n" "--dry-run" "-v"
+    "--verbose" "--cores" "--debug" "--impure" "--keep-failed"
+    "--keep-going" "-j" "--max-jobs" "--no-substitute" "--no-out-link"
+    "-L" "--print-build-logs"
+    "--show-trace" "--substitute" "--builders" "--version"
+    "--update-input" "--override-input" "--experimental-features"
+    "--extra-experimental-features" "--refresh")
 
-    # ^ « project-manager »'s options.
+  # ^ « project-manager »'s options.
 
-    #--------------------------#
+  #--------------------------#
 
-    local CurrentWord
-    CurrentWord="${COMP_WORDS[$COMP_CWORD]}"
+  local CurrentWord
+  CurrentWord="${COMP_WORDS[$COMP_CWORD]}"
 
-    # ^ the word currently being completed
+  # ^ the word currently being completed
 
-    local PreviousWord
-    if [ "$COMP_CWORD" -ge 1 ]
-    then
-        PreviousWord="${COMP_WORDS[COMP_CWORD-1]}"
-    else
-        PreviousWord=""
-    fi
+  local PreviousWord
+  if [ "$COMP_CWORD" -ge 1 ]; then
+    PreviousWord="${COMP_WORDS[COMP_CWORD - 1]}"
+  else
+    PreviousWord=""
+  fi
 
-    # ^ the word to the left of the current word.
-    #
-    #   e.g. in « project-manager -v -f ./<TAB> »:
-    #
-    #       PreviousWord="-f"
-    #       CurrentWord="./"
+  # ^ the word to the left of the current word.
+  #
+  #   e.g. in « project-manager -v -f ./<TAB> »:
+  #
+  #       PreviousWord="-f"
+  #       CurrentWord="./"
 
-    local CurrentCommand
-    CurrentCommand="$(_project-manager_subcommand)"
+  local CurrentCommand
+  CurrentCommand="$(_project-manager_subcommand)"
 
-    #--------------------------#
+  #--------------------------#
 
-    COMPREPLY=()
+  COMPREPLY=()
 
-    case "$CurrentCommand" in
-        "init")
+  case "$CurrentCommand" in
+    "init")
 
-            COMPREPLY+=( $( compgen -W "--switch" -- "$CurrentWord" ) )
-            COMPREPLY+=( $( compgen -A directory -- "$CurrentWord") )
-            ;;
+      COMPREPLY+=($(compgen -W "--switch" -- "$CurrentWord"))
+      COMPREPLY+=($(compgen -A directory -- "$CurrentWord"))
+      ;;
 
-        "remove-generations")
+    "remove-generations")
 
-            COMPREPLY+=( $( compgen -W "$(_project-manager_list-generation-identifiers)" -- "$CurrentWord" ) )
-            ;;
+      COMPREPLY+=($(compgen -W "$(_project-manager_list-generation-identifiers)" -- "$CurrentWord"))
+      ;;
+
+    *)
+      case "$PreviousWord" in
+
+        "-f" | "--file")
+
+          COMPREPLY+=($(compgen -A file -- "$CurrentWord"))
+          ;;
+
+        "-I")
+
+          COMPREPLY+=($(compgen -A directory -- "$CurrentWord"))
+          ;;
 
         *)
-            case "$PreviousWord" in
 
-                "-f"|"--file")
+          if [[ ! $CurrentCommand ]]; then
+            COMPREPLY+=($(compgen -W "${_hm_subcommands[*]}" -- "$CurrentWord"))
+          fi
+          COMPREPLY+=($(compgen -W "${Options[*]}" -- "$CurrentWord"))
+          ;;
 
-                    COMPREPLY+=( $( compgen -A file -- "$CurrentWord") )
-                    ;;
+      esac
+      ;;
+  esac
 
-                "-I")
-
-                    COMPREPLY+=( $( compgen -A directory -- "$CurrentWord") )
-                    ;;
-
-                *)
-
-                    if [[ ! $CurrentCommand ]]; then
-                        COMPREPLY+=( $( compgen -W "${_hm_subcommands[*]}" -- "$CurrentWord" ) )
-                    fi
-                    COMPREPLY+=( $( compgen -W "${Options[*]}" -- "$CurrentWord" ) )
-                    ;;
-
-            esac
-            ;;
-    esac
-
-    #--------------------------#
+  #--------------------------#
 }
 
 ##################################################

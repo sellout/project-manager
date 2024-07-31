@@ -12,14 +12,14 @@ in {
 
   options = {
     programs.project-manager = {
-      enable = mkEnableOption (lib.mdDoc "Project Manager");
+      enable = mkEnableOption "Project Manager";
 
       package = mkOption {
         type = types.package;
         default = pkgs.callPackage ../../project-manager {
           inherit (bash-strict-mode.packages.${pkgs.system}) bash-strict-mode;
         };
-        description = lib.mdDoc ''
+        description = ''
           The current Package Manager package.
         '';
       };
@@ -28,7 +28,7 @@ in {
         type = types.nullOr types.str;
         default = null;
         example = "$PROJECT_ROOT/devel/project-manager";
-        description = lib.mdDoc ''
+        description = ''
           The default path to use for Project Manager. When
           `null`, {file}`$PROJECT_ROOT/.config/nixpkgs/project-manager`
           will be attempted.
@@ -39,7 +39,7 @@ in {
         type = types.nullOr types.str;
         default = "now";
         example = "-30 days";
-        description = lib.mdDoc ''
+        description = ''
            If this is non-`null`, Project Manager will remove links to old
            generations during activation. This is akin to running
           `project-manager expire-generations {var}duration`. The default value

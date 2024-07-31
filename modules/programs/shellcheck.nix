@@ -13,7 +13,7 @@
       disable = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = ''
           Prevent ShellCheck from processing one or more warnings. A
           hyphen-separated range of errors can also be specified, handy when
           disabling things for the entire file. An alias `all` is available
@@ -24,7 +24,7 @@
       enable = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = ''
           Enables an optional check (since 0.7.0). To see a list of optional
           checks with examples, run shellcheck --list-optional. See
           https://github.com/koalaman/shellcheck/wiki/optional for more
@@ -35,7 +35,7 @@
       external-sources = lib.mkOption {
         type = lib.types.nullOr lib.types.bool;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Set whether or not to follow arbitrary file paths in source statements.
         '';
       };
@@ -43,7 +43,7 @@
       source-path = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = ''
           Give ShellCheck a path in which to search for sourced files. The special
           value `source-path=SCRIPTDIR` will search in the current script's
           directory, and it can be used as a relative path like
@@ -56,7 +56,7 @@
       shell = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Specify the shell for a script (similar to the shebang, if you for any
           reason don't want to add one).
         '';
@@ -65,9 +65,9 @@
   };
 in {
   options.programs.shellcheck = {
-    enable = lib.mkEnableOption (lib.mdDoc "ShellCheck");
+    enable = lib.mkEnableOption "ShellCheck";
 
-    package = lib.mkPackageOptionMD pkgs "ShellCheck" {
+    package = lib.mkPackageOption pkgs "ShellCheck" {
       default = ["shellcheck"];
     };
 
@@ -79,7 +79,7 @@ in {
         then config.project.wrapPrograms
         else p;
 
-      description = lib.mdDoc ''
+      description = ''
         Whether to wrap the executable to work without a config file in the
         worktree or to produce the config file. If null, this falls back to
         {var}`config.project.wrapPrograms`.
@@ -89,7 +89,7 @@ in {
     directives = lib.mkOption {
       type = directiveModule;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Shellcheck directives allow you to control how shellcheck works.
       '';
     };

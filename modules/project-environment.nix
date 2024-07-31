@@ -20,14 +20,14 @@ in {
       type = types.str;
       defaultText = lib.literalMD "undefined";
       example = "my-project";
-      description = lib.mdDoc "The project’s name (as an identifier).";
+      description = "The project’s name (as an identifier).";
     };
 
     summary = mkOption {
       type = types.str;
       defaultText = lib.literalMD "undefined";
       example = "Tooling for doing something I want.";
-      description = lib.mdDoc ''
+      description = ''
         A brief (approximately one line) description of the project.
       '';
     };
@@ -36,7 +36,7 @@ in {
       type = types.nonEmptyListOf types.attrs;
       defaultText = lib.literalMD "undefined";
       example = "[lib.maintainers.sellout]";
-      description = lib.mdDoc ''
+      description = ''
         Authors of this project. See
         https://github.com/NixOS/nixpkgs/tree/master/maintainers for the
         structure.
@@ -48,7 +48,7 @@ in {
       default = cfg.authors;
       defaultText = lib.literalMD "config.project.authors";
       example = "[lib.maintainers.sellout]";
-      description = lib.mdDoc ''
+      description = ''
         Current maintainers of this project. See
         https://github.com/NixOS/nixpkgs/tree/master/maintainers for the
         structure.
@@ -58,7 +58,7 @@ in {
     license = mkOption {
       type = types.str;
       defaultText = lib.literalMD "undefined";
-      description = lib.mdDoc ''
+      description = ''
         An SPDX license expression, see https://spdx.org/licenses/.
       '';
     };
@@ -69,7 +69,7 @@ in {
       internal = true;
       defaultText = lib.literalMD "$PROJECT_ROOT";
       example = "./.";
-      description = lib.mdDoc ''
+      description = ''
         The project’s root directory relative to this file.
       '';
     };
@@ -77,7 +77,7 @@ in {
     commit-by-default = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = ''
         Whether all files in this project should default to being committed.
         This can be useful if you have contributors that don’t use Nix and
         expect everything to live directly in the repo (e.g., Open Source
@@ -92,7 +92,7 @@ in {
         if p == null
         then !cfg.commit-by-default
         else p;
-      description = lib.mdDoc ''
+      description = ''
         Whether to default to wrapping programs instead of writing configuration
         files. If null, it falls back to the opposite of
         {var}`project.commit-by-default`.
@@ -108,7 +108,7 @@ in {
           "..." = "cd ../..";
         }
       '';
-      description = lib.mdDoc ''
+      description = ''
         An attribute set that maps aliases (the top level attribute names
         in this option) to command strings or directly to build outputs.
       '';
@@ -125,7 +125,7 @@ in {
         EDITOR = "emacs";
         GS_OPTIONS = "-sPAPERSIZE=a4";
       };
-      description = lib.mdDoc ''
+      description = ''
         Environment variables to always set at login.
 
         The values may refer to other environment variables using
@@ -161,7 +161,7 @@ in {
     sessionVariablesPackage = mkOption {
       type = types.package;
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         The package containing the
         {file}`pm-session-vars.sh` file.
       '';
@@ -175,7 +175,7 @@ in {
         "\${xdg.configHome}/emacs/bin"
         ".git/safe/../../bin"
       ];
-      description = lib.mdDoc ''
+      description = ''
         Extra directories to add to {env}`PATH`.
 
         These directories are added to the {env}`PATH` variable in a
@@ -190,7 +190,7 @@ in {
       type = types.lines;
       default = "";
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         Extra configuration to add to the
         {file}`pm-session-vars.sh` file.
       '';
@@ -199,7 +199,7 @@ in {
     devPackages = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = lib.mdDoc ''
+      description = ''
         The set of packages to appear in the project environment.
       '';
     };
@@ -208,7 +208,7 @@ in {
       type = types.listOf types.str;
       default = [];
       example = ["doc" "info" "devdoc"];
-      description = lib.mdDoc ''
+      description = ''
         List of additional package outputs of the packages
         {var}`project.devPackages` that should be installed into
         the user environment.
@@ -220,7 +220,7 @@ in {
       type = types.bool;
       default = true;
       defaultText = lib.literalMD "true";
-      description = lib.mdDoc ''
+      description = ''
         Whether the activation script should start with an empty
         {env}`PATH` variable. When `false` then the
         user's {env}`PATH` will be accessible in the script. It is
@@ -240,7 +240,7 @@ in {
           ''';
         }
       '';
-      description = lib.mdDoc ''
+      description = ''
         The activation scripts blocks to run when activating a Project
         Manager generation. Any entry here should be idempotent,
         meaning running twice or more times produces the same result
@@ -276,7 +276,7 @@ in {
       internal = true;
       type = types.attrsOf types.package;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Packages provided by the project configuration. These generally don’t
         need to be explicitly referenced, as they’re part of the usual
         functioning of Project Manager.
@@ -287,7 +287,7 @@ in {
       internal = true;
       type = types.attrsOf types.package;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Checks provided by the project configuration. These can be included in
         your flake’s checks.
       '';
@@ -296,7 +296,7 @@ in {
     sandboxedChecks = mkOption {
       internal = true;
       type = types.attrsOf types.package;
-      description = lib.mdDoc ''
+      description = ''
         The subset of `project.checks` that is sandboxed. You can use this
         instead of that in your flake to avoid disabling the sandbox.
       '';
@@ -305,7 +305,7 @@ in {
     unsandboxedChecks = mkOption {
       internal = true;
       type = types.attrsOf types.package;
-      description = lib.mdDoc ''
+      description = ''
         The subset of `project.checks` that is not sandboxed. These are also
         exposed via `project.devShells.lax-checks` which can be run outside of
         `nix flake check`.
@@ -315,7 +315,7 @@ in {
     devShells = mkOption {
       internal = true;
       type = types.attrsOf types.package;
-      description = lib.mdDoc ''
+      description = ''
         Packages providing shells with various tooling. There is always a
         `project.devShells.project-manager` which contains all the tooling
         declared in the project config. Other modules may also define their own
@@ -326,7 +326,7 @@ in {
 
     formatter = mkOption {
       type = types.package;
-      description = lib.mdDoc ''
+      description = ''
         Package to use as the flake’s formatter. This needs to be assigned to
         the flake’s formatter output.
       '';
@@ -335,7 +335,7 @@ in {
     filterRepositoryPersistedExcept = mkOption {
       internal = true;
       type = types.functionTo (types.functionTo (types.functionTo types.bool));
-      description = lib.mdDoc ''
+      description = ''
         Remove repository-persisted files from some `src`, except for those
         listed in `exceptions`.
       '';
@@ -344,7 +344,7 @@ in {
     filterRepositoryPersisted = mkOption {
       internal = true;
       type = types.functionTo (types.functionTo types.bool);
-      description = lib.mdDoc ''
+      description = ''
         Remove all repository-persisted files from some `src`.
       '';
     };
@@ -352,7 +352,7 @@ in {
     cleanRepositoryPersistedExcept = mkOption {
       internal = true;
       type = types.functionTo (types.functionTo types.attrs);
-      description = lib.mdDoc ''
+      description = ''
         Remove repository-persisted files from some `src`, except for those
         listed in `exceptions`.
       '';
@@ -361,7 +361,7 @@ in {
     cleanRepositoryPersisted = mkOption {
       internal = true;
       type = types.functionTo types.attrs;
-      description = lib.mdDoc ''
+      description = ''
         Remove all repository-persisted files from some `src`.
       '';
     };
@@ -370,7 +370,7 @@ in {
       internal = true;
       type = types.listOf types.package;
       default = [];
-      description = lib.mdDoc ''
+      description = ''
         Extra packages to add to {env}`PATH` within the activation
         script.
       '';
@@ -380,7 +380,7 @@ in {
       type = types.lines;
       default = "";
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         Extra commands to run in the Project Manager generation builder.
       '';
     };
@@ -389,7 +389,7 @@ in {
       type = types.lines;
       default = "";
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         Extra commands to run in the Project Manager profile builder.
       '';
     };
@@ -397,7 +397,7 @@ in {
     enableNixpkgsReleaseCheck = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = ''
         Determines whether to check for release version mismatch between Project
         Manager and Nixpkgs. Using mismatched versions is likely to cause errors
         and unexpected behavior. It is therefore highly recommended to use a

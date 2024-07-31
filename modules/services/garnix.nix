@@ -13,12 +13,12 @@ in {
   meta.maintainers = [maintainers.sellout];
 
   options.services.garnix = {
-    enable = mkEnableOption (lib.mdDoc "Garnix CI configuration");
+    enable = mkEnableOption "Garnix CI configuration";
 
     builds = mkOption {
       type = lib.types.nullOr (lib.types.attrsOf (lib.types.listOf lib.types.str));
       default = null;
-      description = lib.mdDoc ''
+      description = ''
         Configuration written to {file}`$PROJECT_ROOT/garnix.yaml`.
         See <https://garnix.io/docs/yaml_config> for documentation.
       '';

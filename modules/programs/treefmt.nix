@@ -9,14 +9,14 @@
   cfg = config.programs.treefmt;
 in {
   options.programs.treefmt = {
-    enable = lib.mkEnableOption (lib.mdDoc "treefmt");
+    enable = lib.mkEnableOption "treefmt";
 
-    package = lib.mkPackageOptionMD pkgs "treefmt" {};
+    package = lib.mkPackageOption pkgs "treefmt" {};
 
     projectRootFile = lib.mkOption {
       type = lib.types.str;
       default = "flake.nix";
-      description = lib.mdDoc ''
+      description = ''
         The file to use to identify the root of the project for formatting.
       '';
     };
@@ -24,7 +24,7 @@ in {
     programs = lib.mkOption {
       type = lib.types.attrsOf lib.types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Configuration for treefmt formatters. See
         https://github.com/numtide/treefmt-nix#configuration for details.
       '';
@@ -33,7 +33,7 @@ in {
     settings = lib.mkOption {
       type = lib.types.attrsOf lib.types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Settings for treefmt. See
         https://github.com/numtide/treefmt-nix#configuration for details.
       '';
