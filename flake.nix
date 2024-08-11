@@ -210,7 +210,7 @@
     ## TODO: Split these into separate flakes a la
     ##       https://github.com/NixOS/nix/issues/4193#issuecomment-1228967251
     ##       once garnix-io/issues#27 is fixed.
-    nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
+    nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
