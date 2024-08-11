@@ -16,9 +16,9 @@
     .fileContents;
 in {
   options.programs.just = {
-    enable = lib.mkEnableOption (lib.mdDoc "just (https://github.com/casey/just)");
+    enable = lib.mkEnableOption "just (https://github.com/casey/just)";
 
-    package = lib.mkPackageOptionMD pkgs "just" {};
+    package = lib.mkPackageOption pkgs "just" {};
 
     wrapProgram = lib.mkOption {
       type = lib.types.nullOr lib.types.bool;
@@ -28,7 +28,7 @@ in {
         then config.project.wrapPrograms
         else p;
 
-      description = lib.mdDoc ''
+      description = ''
         Whether to wrap the executable to work without a config file in the
         worktree or to produce the config file. If null, this falls back to
         {var}`config.project.wrapPrograms`.

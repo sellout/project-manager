@@ -13,9 +13,9 @@ function setupVars() {
   declare greatestGenNum
   greatestGenNum=$(
     nix profile history --profile "$genProfilePath" \
-      |tail -2 \
+      | tail -2 \
       | sed -E 's/.*m([[:digit:]]+).*/\1/' \
-      |head -1
+      | head -1
   )
 
   if [[ -n $greatestGenNum ]]; then

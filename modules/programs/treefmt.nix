@@ -1,7 +1,7 @@
 {
   config,
   lib,
-  pkgs,
+  pmPkgs,
   self,
   treefmt-nix,
   ...
@@ -9,14 +9,12 @@
   cfg = config.programs.treefmt;
 in {
   options.programs.treefmt = {
-    enable = lib.mkEnableOption (lib.mdDoc "treefmt");
-
-    package = lib.mkPackageOptionMD pkgs "treefmt" {};
+    enable = lib.mkEnableOption "treefmt";
 
     projectRootFile = lib.mkOption {
       type = lib.types.str;
       default = "flake.nix";
-      description = lib.mdDoc ''
+      description = ''
         The file to use to identify the root of the project for formatting.
       '';
     };
@@ -24,7 +22,7 @@ in {
     programs = lib.mkOption {
       type = lib.types.attrsOf lib.types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Configuration for treefmt formatters. See
         https://github.com/numtide/treefmt-nix#configuration for details.
       '';
@@ -33,7 +31,7 @@ in {
     settings = lib.mkOption {
       type = lib.types.attrsOf lib.types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = ''
         Settings for treefmt. See
         https://github.com/numtide/treefmt-nix#configuration for details.
       '';
@@ -42,7 +40,7 @@ in {
 
   config = lib.mkIf cfg.enable (let
     newExcludes = lib.mapAttrsToList (k: v: v.target) (lib.filterAttrs (k: v: v.persistence == "repository") config.project.file);
-    format = treefmt-nix.lib.evalModule pkgs {
+    format = treefmt-nix.lib.evalModule pmPkgs {
       inherit (cfg) projectRootFile programs;
       settings =
         cfg.settings
@@ -55,7 +53,7 @@ in {
     project = {
       checks.formatter = format.config.build.check self;
       formatter = format.config.build.wrapper;
-      devPackages = [cfg.package];
+      devPackages = [format.config.build.wrapper];
     };
   });
 }

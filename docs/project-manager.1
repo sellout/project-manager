@@ -1,0 +1,359 @@
+.Dd January 1, 1980
+.Dt project-manager 1
+.Os Project Manager
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" enable line breaks after slashes
+.cflags 4 /
+.Sh NAME
+.Nm project-manager
+.Nd reconfigure a user environment
+.
+.
+.
+.Sh SYNOPSIS
+.Nm project-manager
+.Bro
+.Cm build
+.Cm | init Op Fl -switch Ar dir
+.Cm | instantiate
+.Cm | edit
+.Cm | expire-generations Ar timestamp
+.Cm | generations
+.Cm | help
+.Cm | news
+.Cm | option Ar option.name
+.Cm | packages
+.Cm | remove-generations Ar ID \&...
+.Cm | uninstall
+.Brc
+.Op Fl A Ar attrPath
+.Op Fl I Ar path
+.Op Fl -flake Ar flake-uri
+.Op Fl b Ar ext
+.Op Bro Fl f | Fl -file Brc Ar path
+.Op Bro Fl h | Fl -help Brc
+.Op Fl -version
+.Op Bro Fl n | Fl -dry-run Brc
+.Op Fl -option Ar name Ar value
+.Op Fl -cores Ar number
+.Op Bro Fl j | Fl -max-jobs Brc Ar number
+.Op Fl -option
+.Op Fl -impure
+.Op Fl -keep-failed
+.Op Fl -keep-going
+.Op Bro Fl L | Fl -print-build-logs Brc
+.Op Fl -show-trace
+.Op Fl -(no-)substitute
+.Op Fl -no-out-link
+.Op Fl -refresh
+.Op Bro Fl v | Fl -verbose Brc
+.
+.Sh DESCRIPTION
+.Pp
+This command updates the user environment so that it corresponds to the configuration specified in
+$PROJECT_ROOT/flake.nix.
+.Pp
+All operations using this tool expects a sub-command that indicates the operation to perform. It must be one of
+.Pp
+.Bl -tag -width Ds
+
+.It Cm build
+.RS 4
+Build configuration into a result directory.
+.RE
+
+.It Cm init Op Fl -switch Op Ar dir
+.RS 14
+Generates an initial \&.config/project/default.nix file for the current user. If Nix flakes are
+enabled, then this command also generates a flake.nix file.
+.sp
+If a path
+.Ar dir
+is given then the configuration will be generated in that directory. Otherwise, the configuration will be generated in
+$PROJECT_ROOT/.config/project. The output directory will be created if it does not exist.
+.sp
+If the
+.Fl -switch
+option is given, then the generated configuration is activated.
+.sp
+Note, this command will not overwrite any existing files. It is therefore safe to initialize a configuration, edit it, and then re-run the
+.Cm init
+command with
+.Fl -switch
+enabled to activate the configuration.
+.RE
+.Pp
+
+.It Cm instantiate
+.RS 15
+Instantiate the configuration and print the resulting derivation\&.
+.RE
+.Pp
+
+.It Cm edit
+.RS 16
+Open the project configuration using the editor indicated by \fBEDITOR\fR\&.
+.RE
+.Pp
+
+.It Cm expire-generations Ar timestamp
+.RS 4
+Remove generations older than
+.Ar timestamp
+where
+.Ar timestamp
+is interpreted as in the
+.Fl d
+argument of the
+\fBdate\fR(1)
+tool. For example
+-30 days or 2018-01-01.
+.RE
+.PP
+
+.It Cm generations
+.RS 4
+List all project environment generations\&.
+.RE
+.Pp
+
+.It Cm help
+.RS 4
+Print tool help.
+.RE
+.Pp
+
+.It Cm news
+.RS 4
+Show news entries in a pager.
+.RE
+.PP
+
+.It Cm option Ar option.name
+.RS 4
+Inspect the given option name in the project configuration, like
+\fBnixos-option\fR(8)\&.
+.RE
+.Pp
+
+.It Cm packages
+.RS 4
+List all packages installed in project-manager-path.
+.RE
+.Pp
+
+.It Cm remove-generations Ar ID \&...
+.RS 4
+Remove indicated generations. Use the
+.Cm generations
+sub-command to find suitable generation numbers.
+.RE
+.Pp
+
+.It Cm switch
+.RS 4
+Build and activate the configuration\&.
+.RE
+.Pp
+
+.It Cm uninstall
+.RS 4
+Remove Project Manager from the project environment\&. This will
+.sp
+.RE
+.RS 4
+.Bl -bullet
+.It
+remove all managed files from the project directory,
+.RE
+.sp
+.RS 4
+.It
+remove packages installed through Project Manager from the project profile, and
+.RE
+.sp
+.RS 4
+.It
+remove all Project Manager generations and make them available for immediate garbage collection\&.
+.RE
+.El
+.sp
+.RE
+.El
+.
+.Sh OPTIONS
+.Pp
+The tool accepts the options
+.Pp
+.Bl -tag -width Ds
+.It Cm Fl b Ar extension
+.RS 4
+Enable automatic resolution of collisions between unmanaged and managed files\&. The name of the original file will be suffixed by the given extension\&. For example,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ \fBproject\-manager \-b bck switch\fR
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+will cause a colliding file
+~/\&.config/foo\&.conf
+to be moved to
+~/\&.config/foo\&.conf\&.bck\&.
+.RE
+.Pp
+
+.It Cm Fl f Ar path, Fl -file Ar path
+.RS 4
+Indicates the path to the Project Manager configuration file. If not given,
+$PROJECT_ROOT/\&.config/project/default.nix
+is used.
+.RE
+.Pp
+.It Cm Fl h, Fl -help
+.RS 4
+Prints usage information for the
+\fBproject\-manager\fR
+tool.
+.RE
+.Pp
+
+.It Cm Fl -version
+.RS 4
+Prints the version number of the
+\fBproject\-manager\fR
+tool.
+.RE
+.Pp
+.It Cm Fl n, Fl -dry-run
+.RS 4
+Perform a dry-run of the given operation, only prints what actions would be taken.
+.RE
+.Pp
+
+.It Cm Fl -option Ar name Ar value
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl -cores Ar number
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl j Ar number, Fl -max-jobs Ar number
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.\" TODO
+.Pp
+.It Cm Fl -debug
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+.It Cm Fl -impure
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl -keep-failed
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl -keep-going
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl L, Fl -print-build-logs
+.RS 4
+Passed on to
+\fBnix build\fR()
+when building from a flake\&.
+.RE
+.Pp
+
+.It Cm Fl -show-trace
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl -(no-)substitute
+.RS 4
+Passed on to
+\fBnix-build\fR(1)\&.
+.RE
+.Pp
+
+.It Cm Fl -no-out-link
+.RS 4
+Passed on to
+\fBnix-build\fR(1)
+when running
+\fBproject\-manager build\fR\&.
+.RE
+.Pp
+
+.It Cm Fl -refresh
+.RS 4
+Passed on to
+\fBnix-build\fR(1)
+.RE
+.Pp
+
+.It Cm Fl v, Fl -verbose
+.RS 4
+Activates verbose output\&.
+.RE
+.El
+
+.Sh FILES
+.Pp
+$PROJECT_ROOT/.local/state/project\-manager/news\-read\-ids
+.RS 4
+Identifiers of news items that have been shown\&. Can be deleted to reset the read news indicator\&.
+.RE
+
+.Sh BUGS
+.Pp
+Please report any bugs on the
+\m[blue]\fBproject issue tracker\fR\m[]\&.
+
+.Sh SEE ALSO
+.Pp
+\fBproject-configuration.nix\fR(5)
+
+.Sh AUTHOR
+.Pp
+\fBProject Manager contributors\fR
+.RS 4
+Author.
+.RE
+
+.Sh COPYRIGHT
+.br
+Copyright \(co 2017\(en2022 Home Manager contributors
+.br

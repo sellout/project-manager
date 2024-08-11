@@ -2,26 +2,35 @@
   pkgs,
   # Note, this should be "the standard library" + PM extensions.
   lib ? import ../modules/lib/stdlib-extended.nix pkgs.lib,
+  self,
   release,
   isReleaseBranch,
 }: let
-  nmdSrc = fetchTarball {
-    url = "https://git.sr.ht/~rycee/nmd/archive/824a380546b5d0d0eb701ff8cd5dbafb360750ff.tar.gz";
-    sha256 = "0vvj40k6bw8ssra8wil9rqbsznmfy1kwy7cihvm13rajwdg9ycgg";
-  };
-
-  nmd = import nmdSrc {
-    inherit lib;
-    # The DocBook output of `nixos-render-docs` doesn't have the change
-    # `nmd` uses to work around the broken stylesheets in
-    # `docbook-xsl-ns`, so we restore the patched version here.
-    pkgs =
-      pkgs
-      // {
-        docbook-xsl-ns =
-          pkgs.docbook-xsl-ns.override {withManOptDedupPatch = true;};
-      };
-  };
+  # Recursively replace each derivation in the given attribute set
+  # with the same derivation but with the `outPath` attribute set to
+  # the string `"\${pkgs.attribute.path}"`. This allows the
+  # documentation to refer to derivations through their values without
+  # establishing an actual dependency on the derivation output.
+  #
+  # This is not perfect, but it seems to cover a vast majority of use
+  # cases.
+  #
+  # Caveat: even if the package is reached by a different means, the
+  # path above will be shown and not e.g.
+  # `${config.services.foo.package}`.
+  scrubDerivations = prefixPath: attrs: let
+    scrubDerivation = name: value: let
+      pkgAttrName = prefixPath + "." + name;
+    in
+      if lib.isAttrs value
+      then
+        scrubDerivations pkgAttrName value
+        // lib.optionalAttrs (lib.isDerivation value) {
+          outPath = "\${${pkgAttrName}}";
+        }
+      else value;
+  in
+    lib.mapAttrs scrubDerivation attrs;
 
   # Make sure the used package is scrubbed to avoid actually
   # instantiating derivations.
@@ -29,7 +38,7 @@
     imports = [
       {
         _module.args = {
-          pkgs = lib.mkForce (nmd.scrubDerivations "pkgs" pkgs);
+          pkgs = lib.mkForce (scrubDerivations "pkgs" pkgs);
           pkgs_i686 = lib.mkForce {};
         };
       }
@@ -55,7 +64,12 @@
     includeModuleSystemOptions ? true,
     ...
   }: let
-    options = (lib.evalModules {inherit modules;}).options;
+    options =
+      (lib.evalModules {
+        inherit modules;
+        class = "projectManager";
+      })
+      .options;
   in
     pkgs.buildPackages.nixosOptionsDoc ({
         options =
@@ -70,7 +84,7 @@
             declarations = map (decl:
               if lib.hasPrefix pmPath (toString decl)
               then
-                gitHubDeclaration "sellout" "project-manager"
+                gitHubDeclaration "nix-community" "project-manager"
                 (lib.removePrefix "/" (lib.removePrefix pmPath (toString decl)))
               else if decl == "lib/modules.nix"
               then
@@ -88,39 +102,41 @@
       import ../modules/all-modules.nix {
         inherit lib pkgs;
         check = false;
-        modules = builtins.attrValues (import ../modules/modules.nix);
+        modules = builtins.attrValues self.projectModules;
       }
       ++ [scrubbedPkgsModule];
     variablelistId = "project-manager-options";
   };
 
-  docs = nmd.buildDocBookDocs {
-    pathName = "project-manager";
-    projectName = "Project Manager";
-    modulesDocs = [
-      {
-        docBook = pkgs.linkFarm "pm-module-docs-for-nmd" {
-          "nmd-result/project-manager-options.xml" = pmOptionsDocs.optionsDocBook;
-        };
-      }
-    ];
-    documentsDirectory = ./.;
-    documentType = "book";
-    chunkToc = ''
-      <toc>
-        <d:tocentry xmlns:d="http://docbook.org/ns/docbook" linkend="book-project-manager-manual"><?dbhtml filename="index.html"?>
-          <d:tocentry linkend="ch-options"><?dbhtml filename="options.html"?></d:tocentry>
-          <d:tocentry linkend="ch-nixos-options"><?dbhtml filename="nixos-options.html"?></d:tocentry>
-          <d:tocentry linkend="ch-nix-darwin-options"><?dbhtml filename="nix-darwin-options.html"?></d:tocentry>
-          <d:tocentry linkend="ch-tools"><?dbhtml filename="tools.html"?></d:tocentry>
-          <d:tocentry linkend="ch-release-notes"><?dbhtml filename="release-notes.html"?></d:tocentry>
-        </d:tocentry>
-      </toc>
+  release-config = import ../release.nix;
+  revision = "release-${release-config.release}";
+  # Generate the `man project-configuration.nix` package
+  project-configuration-manual =
+    pkgs.runCommand "project-configuration-reference-manpage" {
+      nativeBuildInputs = [pkgs.buildPackages.installShellFiles pkgs.nixos-render-docs];
+      allowedReferences = ["out"];
+    } ''
+      # Generate manpages.
+      mkdir -p $out/share/man/man5
+      mkdir -p $out/share/man/man1
+      nixos-render-docs -j $NIX_BUILD_CORES options manpage \
+        --revision ${revision} \
+        --header ${./project-configuration-nix-header.5} \
+        --footer ${./project-configuration-nix-footer.5} \
+        ${pmOptionsDocs.optionsJSON}/share/doc/nixos/options.json \
+        $out/share/man/man5/project-configuration.nix.5
+      cp ${./project-manager.1} $out/share/man/man1/project-manager.1
     '';
+  # Generate the HTML manual pages
+  project-manager-manual = pkgs.callPackage ./project-manager-manual.nix {
+    project-manager-options = {
+      project-manager = pmOptionsDocs.optionsJSON;
+    };
+    inherit revision;
   };
+  html = project-manager-manual;
+  htmlOpenTool = pkgs.callPackage ./html-open-tool.nix {} {inherit html;};
 in {
-  inherit nmdSrc;
-
   options = {
     # TODO: Use `pmOptionsDocs.optionsJSON` directly once upstream
     # `nixosOptionsDoc` is more customizable.
@@ -139,19 +155,21 @@ in {
       '';
   };
 
-  manPages = docs.manPages;
+  manPages = project-configuration-manual;
 
-  manual = {inherit (docs) html htmlOpenTool;};
+  manual = {inherit html htmlOpenTool;};
 
   # Unstable, mainly for CI.
   jsonModuleMaintainers = pkgs.writeText "pm-module-maintainers.json" (let
     result = lib.evalModules {
       modules =
-        import ../modules/modules.nix {
+        import ../modules/all-modules.nix {
           inherit lib pkgs;
           check = false;
+          modules = builtins.attrValues self.projectModules;
         }
         ++ [scrubbedPkgsModule];
+      class = "projectManager";
     };
   in
     builtins.toJSON result.config.meta.maintainers);

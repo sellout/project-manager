@@ -9,7 +9,7 @@ in {
   options = {
     project.stateVersion = mkOption {
       type = types.ints.between 0 releaseInfo.version.major;
-      description = lib.mdDoc ''
+      description = ''
         It is occasionally necessary for Project Manager to change configuration
         defaults in a way that is incompatible with stateful data. This could,
         for example, include switching the default data format or location of a

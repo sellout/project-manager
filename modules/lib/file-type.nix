@@ -32,7 +32,7 @@ in rec {
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = ''
             Whether this file should be generated. This option allows specific
             files to be disabled.
           '';
@@ -48,7 +48,7 @@ in rec {
           in
             removePrefix (projectDirectory + "/") absPath;
           defaultText = lib.literalMD "name";
-          description = lib.mdDoc ''
+          description = ''
             Path to target file relative to ${basePathDesc}.
           '';
         };
@@ -56,7 +56,7 @@ in rec {
         text = mkOption {
           default = null;
           type = types.nullOr types.lines;
-          description = lib.mdDoc ''
+          description = ''
             Text of the file. If this option is null then
             [](#opt-${opt}.${nameStr}.source)
             must be set.
@@ -65,7 +65,7 @@ in rec {
 
         source = mkOption {
           type = types.path;
-          description = lib.mdDoc ''
+          description = ''
             Path of the source file or directory. If
             [](#opt-${opt}.${nameStr}.text)
             is non-null then this option will automatically point to a file
@@ -76,7 +76,7 @@ in rec {
         storePath = mkOption {
           type = types.path;
           internal = true;
-          description = lib.mdDoc ''
+          description = ''
             The Nix store path for this file. This is used by Project Manager to
             reference files without having to link them into the working tree.
           '';
@@ -85,7 +85,7 @@ in rec {
         referenceViaStore = mkOption {
           type = types.functionTo types.bool;
           internal = true;
-          description = lib.mdDoc ''
+          description = ''
             Whether the file should be referenced from the store (as opposed to
             the working tree). The argument is where the reference will be used.
 
@@ -98,7 +98,7 @@ in rec {
         reference = mkOption {
           type = types.functionTo types.str;
           internal = true;
-          description = lib.mdDoc ''
+          description = ''
             The path that should be used for references to this file. If the
             file is store persisted, then this points to the store, otherwise it
             points into the worktree. The function takes the location that the
@@ -110,7 +110,7 @@ in rec {
         executable = mkOption {
           type = types.nullOr types.bool;
           default = null;
-          description = lib.mdDoc ''
+          description = ''
             Set the execute bit. If `null`, defaults to the mode
             of the {var}`source` file or to `false`
             for files created through the {var}`text` option.
@@ -120,7 +120,7 @@ in rec {
         recursive = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = ''
             If the file source is a directory, then this option
             determines whether the directory should be recursively
             linked to the target location. This option has no effect
@@ -137,7 +137,7 @@ in rec {
         onChange = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc ''
+          description = ''
             Shell commands to run when file has changed between
             generations. The script will be run
             *after* the new files have been linked
@@ -152,7 +152,7 @@ in rec {
           type = types.bool;
           default = false;
           visible = false;
-          description = lib.mdDoc ''
+          description = ''
             Whether the target path should be unconditionally replaced
             by the managed file source. Warning, this will silently
             delete the target regardless of whether it is a file or
@@ -163,7 +163,7 @@ in rec {
         minimum-persistence = mkOption {
           type = persistenceType;
           default = "repository";
-          description = lib.mdDoc ''
+          description = ''
             How we store the file. The options are “store” (file will be
             referenced by the worktree on demand), “worktree” (persist the file
             in the worktree), and “repository” (commit the file in the
@@ -176,7 +176,7 @@ in rec {
         broken-symlink = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = ''
             This option is only relevant when `minimum-persistence` isn’t
             “repository”. It indicates whether or not the file can be referenced
             with a symlink. If this is true, then the file will not be symlinked
@@ -190,7 +190,7 @@ in rec {
         commit-by-default = mkOption {
           type = types.nullOr types.bool;
           default = null;
-          description = lib.mdDoc ''
+          description = ''
             Whether to accept the `minimum-persistence` value (`false`) or to
             force the persistence to “repository” (`true`). The latter is useful
             when you want to use a file outside of its standard use case. E.g.,
@@ -203,7 +203,7 @@ in rec {
         persistence = mkOption {
           internal = true;
           type = persistenceType;
-          description = lib.mdDoc ''
+          description = ''
             How we store the file. The options are “store” (file will be
             referenced by the worktree on demand), “worktree” (persist the file
             in the worktree), and “repository” (commit the file in the

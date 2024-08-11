@@ -9,9 +9,9 @@ in {
   meta.maintainers = [lib.maintainers.sellout];
 
   options.services.flakehub = {
-    enable = lib.mkEnableOption (lib.mdDoc "FlakeHub");
+    enable = lib.mkEnableOption "FlakeHub";
 
-    package = lib.mkPackageOptionMD pkgs "FlakeHub" {
+    package = lib.mkPackageOption pkgs "FlakeHub" {
       default = ["fh"];
     };
 
@@ -19,14 +19,14 @@ in {
       type = lib.types.either lib.types.str (lib.types.attrsOf lib.types.str);
       default = "tagged";
       example = ''{rolling: "main";}'';
-      description = lib.mdDoc ''
+      description = ''
         This is either the string “tagged” or an attrset with the key “rolling”
         whose value names the branch to watch for rolling changes.
       '';
     };
 
     name = lib.mkOption {
-      description = lib.mdDoc ''
+      description = ''
         The name to publish as on FlakeHub. This defaults to “owner/repo”.
       '';
       type = lib.types.str;
@@ -34,7 +34,7 @@ in {
     };
 
     visibility = lib.mkOption {
-      description = lib.mdDoc ''
+      description = ''
         “unlisted” means that your flake can be accessed by Nix but only appears
         on the website if you directly navigate to it. “public” means that your
         flake can be found by searching.
