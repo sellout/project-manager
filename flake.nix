@@ -93,7 +93,9 @@
         docs-html = docs.manual.html;
         docs-json = docs.options.json;
         docs-manpages = docs.manPages;
-        project-manager = pkgs.callPackage ./project-manager {};
+        project-manager = pkgs.callPackage ./project-manager {
+          inherit (releaseInfo) release;
+        };
       };
 
       projectConfigurations = projectConfigurationsFor pkgs;

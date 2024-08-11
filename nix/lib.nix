@@ -22,7 +22,13 @@
           ++ [
             {
               _module.args = {
-                inherit bash-strict-mode self supportedSystems treefmt-nix;
+                inherit
+                  bash-strict-mode
+                  project-manager
+                  self
+                  supportedSystems
+                  treefmt-nix
+                  ;
                 ## The pkgs used by Project Manager itself, also used in modules
                 ## in certain cases.
                 pmPkgs = pkgsFor pkgs.system;
