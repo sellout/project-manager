@@ -3,6 +3,7 @@
   config,
   lib,
   pkgs,
+  project-manager,
   ...
 }:
 with lib; let
@@ -16,9 +17,8 @@ in {
 
       package = mkOption {
         type = types.package;
-        default = pkgs.callPackage ../../project-manager {
-          inherit (bash-strict-mode.packages.${pkgs.system}) bash-strict-mode;
-        };
+        default = project-manager.packages.${pkgs.system}.project-manager;
+        defaultText = "the instance used to build this configuration";
         description = ''
           The current Package Manager package.
         '';

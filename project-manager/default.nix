@@ -11,6 +11,7 @@
   less,
   ncurses,
   nix,
+  release,
   unixtools,
   # used for pkgs.path for nixos-option
   pkgs,
@@ -51,7 +52,8 @@ in
       ]
     }" \
       --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.bash}' \
-      --subst-var-by OUT "$out"
+      --subst-var-by OUT "$out" \
+      --subst-var-by VERSION "${release}"
 
     substituteInPlace $out/bin/project-manager \
       --subst-var-by FLAKE_TEMPLATE '${../templates/default/flake.nix}' \
