@@ -6,9 +6,7 @@ enforced by the Project Manager maintainers and to a lesser extent the Project
 Manager CI system.
 
 If you are uncertain how these rules affect the change you would like to
-make then feel free to start a discussion in the
-[#project-manager](https://webchat.oftc.net/?channels=project-manager) IRC
-channel, ideally before you start developing.
+make then feel free to start a discussion in [the Matrix room](https://matrix.to/#/%23project-manager:matrix.org). ideally before you start developing.
 
 ## Maintain backward compatibility {#sec-guidelines-back-compat}
 
@@ -105,7 +103,7 @@ entry. If you aren’t then you can add yourself to
 As a maintainer you are expected to respond to issues and
 pull-requests associated with your module.
 
-Maintainers are encouraged to join the IRC or Matrix channel and
+Maintainers are encouraged to join the Matrix room and
 participate when they have opportunity.
 
 ## Format your code {#sec-guidelines-code-style}
