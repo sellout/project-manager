@@ -144,11 +144,22 @@ function hasFlakeSupport() {
       | grep -q nix-command
 }
 
+function pm_setProjectRoot() {
+  ## TODO: Make the file we look for configurable, like treefmt’s
+  ##      `projectRootFile`. For now, this just finds the flake.
+  PROJECT_ROOT="$(nix flake metadata --json \
+    | jq -r ".resolvedUrl" \
+    | sed -e 's/^[^\/]*[\/]*\//\//')"
+  export PROJECT_ROOT
+}
+
 # Attempts to set the PROJECT_MANAGER_CONFIG global variable.
 #
 # If no configuration file can be found then this function will print
 # an error message and exit with an error code.
 function setConfigFile() {
+  pm_setProjectRoot
+
   if [[ -v PROJECT_MANAGER_CONFIG ]]; then
     if [[ -e $PROJECT_MANAGER_CONFIG ]]; then
       PROJECT_MANAGER_CONFIG="$(realpath "$PROJECT_MANAGER_CONFIG")"
@@ -179,6 +190,8 @@ function setConfigFile() {
 
 # Sets some useful Project Manager related paths as global read-only variables.
 function setProjectManagerPathVariables() {
+  pm_setProjectRoot
+
   # If called twice then just exit early.
   if [[ -v PM_DATA_HOME ]]; then
     return
@@ -199,103 +212,6 @@ function setFlakeAttribute() {
   local name
   name="$(nix eval --expr 'builtins.currentSystem' --impure --raw)"
   export FLAKE_CONFIG_URI="$flake#projectConfigurations.$name"
-}
-
-function pm_init() {
-  # The directory where we should place the initial configuration.
-  local confDir
-
-  # Whether we should immediate activate the configuration.
-  local switch
-
-  # Whether we should create a flake file.
-  local withFlake
-
-  if hasFlakeSupport; then
-    withFlake=1
-  fi
-
-  while (($# > 0)); do
-    local opt="$1"
-    shift
-
-    case $opt in
-      --no-flake)
-        unset withFlake
-        ;;
-      --switch)
-        switch=1
-        ;;
-      -*)
-        _iError "%s: unknown option '%s'" "$0" "$opt" >&2
-        exit 1
-        ;;
-      *)
-        if [[ -v confDir ]]; then
-          _i "Run '%s --help' for usage help" "$0" >&2
-          exit 1
-        else
-          confDir="$opt"
-        fi
-        ;;
-    esac
-  done
-
-  if [[ ! -v confDir ]]; then
-    confDir="${PROJECT_ROOT}/.config/project"
-  fi
-
-  if [[ ! -e $confDir ]]; then
-    mkdir -p "$confDir"
-  fi
-
-  if [[ ! -d $confDir ]]; then
-    _iError "%s: unknown option '%s'" "$0" "$opt" >&2
-    exit 1
-  fi
-
-  local confFile="$confDir/default.nix"
-  local flakeFile="${PROJECT_ROOT}/flake.nix"
-
-  if [[ -e $confFile ]]; then
-    _i 'The file %s already exists, leaving it unchanged...' "$confFile"
-  else
-    _i 'Creating %s...' "$confFile"
-
-    mkdir -p "$confDir"
-    cp '@CONFIG_TEMPLATE@' "$confFile"
-  fi
-
-  if [[ ! -v withFlake ]]; then
-    PROJECT_MANAGER_CONFIG="$confFile"
-  else
-    if [[ -e $flakeFile ]]; then
-      _i 'The file %s already exists, leaving it unchanged...' "$flakeFile"
-    else
-      _i 'Creating %s...' "$flakeFile"
-
-      mkdir -p "$confDir"
-      cp "@FLAKE_TEMPLATE@" "$flakeFile"
-    fi
-  fi
-
-  if [[ -v switch ]]; then
-    echo
-    _i "Creating initial Project Manager generation..."
-    echo
-
-    if pm_switch; then
-      # translators: The "%s" specifier will be replaced by a file path.
-      _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
-        "$confFile"
-      exit 0
-    else
-      # translators: The "%s" specifier will be replaced by a URL.
-      _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
-        "https://github.com/nix-community/project-manager/issues"
-      exit 1
-    fi
-  fi
 }
 
 function pm_buildFlake() {
@@ -384,6 +300,7 @@ function pm_build() {
 }
 
 function pm_switch() {
+  pm_setProjectRoot
   setFlakeAttribute
   nix run \
     "$FLAKE_CONFIG_URI.packages.activation" \

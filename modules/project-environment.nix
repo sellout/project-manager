@@ -714,8 +714,11 @@ in {
           git config user.name Nix
           git add .
           git commit --message "current files"
+          echo $PATH
           ## Update everything
           project-manager switch --verbose
+          echo "!!!finished switch!!!"
+          echo $PATH
           ## Make sure there are no changes
           git --no-pager diff --exit-code
         '';
