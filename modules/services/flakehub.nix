@@ -57,7 +57,7 @@ in {
               - "${cfg.mode.rolling}"
         jobs:
           flakehub-publish:
-            runs-on: "ubuntu-latest"
+            runs-on: "ubuntu-24.04"
             permissions:
               id-token: "write"
               contents: "read"
@@ -84,7 +84,7 @@ in {
                 required: true
         jobs:
           flakehub-publish:
-            runs-on: "ubuntu-latest"
+            runs-on: "ubuntu-24.04"
             permissions:
               id-token: "write"
               contents: "read"

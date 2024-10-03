@@ -31,7 +31,7 @@ in {
 
       jobs = {
         build = {
-          runs-on = "ubuntu-latest";
+          runs-on = "ubuntu-24.04";
           steps = [
             {
               name = "Checkout";
@@ -65,7 +65,7 @@ in {
             name = "github-pages";
             url = "\${{ steps.deployment.outputs.page_url }}";
           };
-          runs-on = "ubuntu-latest";
+          runs-on = "ubuntu-24.04";
           needs = "build";
           steps = [
             {
