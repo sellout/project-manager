@@ -181,7 +181,7 @@ affects, `{description}` is a very brief description of your change, and
 `{long description}` is an optional clarifying description. As a rare
 exception, if there is no clear component, or your change affects many
 components, then the `{component}` part is optional. See
-[example_title](#ex-commit-message) for a commit message that fulfills
+[the example commit](#ex-commit-message) for a commit message that fulfills
 these requirements.
 
 ## Example commit {#ex-commit-message}
