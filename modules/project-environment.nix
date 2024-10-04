@@ -446,12 +446,12 @@ in {
         lib.listToAttrs
         (map (name: lib.nameValuePair name []) unsupportedVersions)
         // {
-          "22.11" = ["0.3" "0.4" "0.5" "0.6"];
-          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5" "0.6"];
-          "23.11" = ["0.3" "0.4" "0.5" "0.6"];
-          "24.05" = ["0.3" "0.4" "0.5" "0.6"];
+          "22.11" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
+          "23.05" = ["0.1" "0.2" "0.3" "0.4" "0.5" "0.6" "0.7"];
+          "23.11" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
+          "24.05" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
           ## NB: These versions are only “supported” on unstable, not 24.11.
-          "24.11" = ["0.3" "0.4" "0.5" "0.6"];
+          "24.11" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
         };
       pmRelease = config.project.version.release;
       nixpkgsRelease = lib.trivial.release;
@@ -734,7 +734,13 @@ in {
         project-manager = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
           nativeBuildInputs = [config.project.packages.path];
-          shellHook = cfg.extraProfileCommands;
+          shellHook =
+            ''
+              ## Makes using the configured formatter faster, since it doesn’t
+              ## have to evaluate the flake each time.
+              alias flake-format="${config.project.formatter.meta.mainProgram}"
+            ''
+            + cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";
           };

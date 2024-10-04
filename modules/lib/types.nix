@@ -30,6 +30,24 @@
 in rec {
   inherit (typesDag) dagOf;
 
+  ## A list of “[globs](https://en.wikipedia.org/wiki/Glob_(programming))”. It
+  ## takes a predicate that returns `true` if a value of this type matches every
+  ## possible value (a “universal match”, e.g., a list like `["*"]` for standard
+  ## Unix-like globs). Universal matches are handled specially. They replace any
+  ## definition that has a lower priority than them, but are replaced by all
+  ## definitions that have a higher priority than them.
+  globList = isUniversal:
+    lib.types.listOf lib.types.str
+    // {
+      merge = _loc: defs:
+        lib.foldr (def: prev:
+          if isUniversal def || isUniversal prev
+          then def
+          else def ++ prev)
+        []
+        (lib.getValues defs);
+    };
+
   selectorFunction = mkOptionType {
     name = "selectorFunction";
     description =

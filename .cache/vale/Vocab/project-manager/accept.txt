@@ -1,10 +1,15 @@
 direnv
+formatter
 garnix
 [Nn]ix
 Pfeil
 ShellCheck
+alejandra
 babelfish
 [Bb]oolean
+composable
+DBus
+dconf
 declutter
 devenv
 devShell
