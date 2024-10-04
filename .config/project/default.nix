@@ -100,7 +100,7 @@ in {
         else ["${output}.${sys}.${name}"]);
   in {
     enable = true;
-    builds.exclude =
+    builds."*".exclude =
       [
         ## TODO: Remove once garnix-io/garnix#285 is fixed.
         "homeConfigurations.x86_64-darwin-example"
