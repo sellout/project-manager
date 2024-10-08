@@ -413,7 +413,7 @@ in {
   config = {
     assertions = [
       {
-        assertion = config.project.projectDirectory != "";
+        assertion = cfg.projectDirectory != "";
         message = "Project directory could not be determined";
       }
     ];
@@ -453,11 +453,11 @@ in {
           ## NB: These versions are only “supported” on unstable, not 24.11.
           "24.11" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
         };
-      pmRelease = config.project.version.release;
+      pmRelease = cfg.version.release;
       nixpkgsRelease = lib.trivial.release;
       allowedPmVersions = supportedVersions.${nixpkgsRelease};
       releaseMismatch =
-        config.project.enableNixpkgsReleaseCheck
+        cfg.enableNixpkgsReleaseCheck
         && !(lib.any
           (pmMinor: lib.hasPrefix "${pmMinor}." pmRelease)
           allowedPmVersions);
@@ -502,7 +502,7 @@ in {
       text =
         ''
           # Only source this once.
-          if [ -n "$__PM_SESS_VARS_SOURCED" ]; then return; fi
+          if [[ -v __PM_SESS_VARS_SOURCED ]]; then return; fi
           export __PM_SESS_VARS_SOURCED=1
 
           ${config.lib.shell.exportAll cfg.sessionVariables}
@@ -514,7 +514,7 @@ in {
     };
 
     project.devPackages = [
-      config.project.packages.sessionVariables
+      cfg.packages.sessionVariables
     ];
 
     # A dummy entry acting as a boundary between the activation
@@ -526,7 +526,7 @@ in {
     project.activation.installPackages = pm.dag.entryAfter ["writeBoundary"] (
       let
         profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
-        pathPackageName = "project-manager-path-for-${config.project.name}";
+        pathPackageName = "project-manager-path-for-${cfg.name}";
       in ''
         function nixReplaceProfile() {
           local oldNix="$(command -v nix)"
@@ -602,7 +602,7 @@ in {
               jq
               ncurses # For `tput`.
             ]
-            ++ config.project.extraActivationPath
+            ++ cfg.extraActivationPath
         )
         + (
           # Add path of the Nix binaries, if a Nix package is configured, then
@@ -627,14 +627,14 @@ in {
         ${builtins.readFile ./lib-bash/activation-init.bash}
 
         if [[ ! -v SKIP_SANITY_CHECKS ]]; then
-          checkProjectDirectory ${escapeShellArg config.project.projectDirectory}
+          checkProjectDirectory ${escapeShellArg cfg.projectDirectory}
         fi
 
         ${activationCmds}
       '';
     in
       flaky.lib.runCommand pmPkgs
-      "project-manager-generation-for-${config.project.name}"
+      "project-manager-generation-for-${cfg.name}"
       {
         preferLocalBuild = true;
         meta.mainProgram = "activate";
@@ -642,7 +642,7 @@ in {
       ''
         mkdir -p $out/bin
 
-        echo "${config.project.version.full}" > $out/pm-version
+        echo "${cfg.version.full}" > $out/pm-version
 
         cp ${activationScript} $out/bin/activate
 
@@ -657,7 +657,7 @@ in {
       '';
 
     project.packages.path = pkgs.buildEnv {
-      name = "project-manager-path-for-${config.project.name}";
+      name = "project-manager-path-for-${cfg.name}";
 
       paths = cfg.devPackages;
       inherit (cfg) extraOutputsToInstall;
@@ -723,24 +723,28 @@ in {
       sandboxedChecks =
         lib.filterAttrs
         (_: value: !(value.__noChroot or false))
-        config.project.checks;
+        cfg.checks;
 
       unsandboxedChecks =
         lib.filterAttrs
         (_: value: value.__noChroot or false)
-        config.project.checks;
+        cfg.checks;
+
+      ## Makes using the configured formatter faster, since it doesn’t have to
+      ## evaluate the flake each time.
+      sessionVariables = lib.mkIf (cfg ? formatter) {
+        __PM_FORMATTER = lib.getExe cfg.formatter;
+      };
+
+      extraProfileCommands = ''
+        source ${cfg.packages.sessionVariables}/etc/profile.d/pm-session-vars.sh
+      '';
 
       devShells = {
         project-manager = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
           inherit (pkgs) system;
-          nativeBuildInputs = [config.project.packages.path];
-          shellHook =
-            ''
-              ## Makes using the configured formatter faster, since it doesn’t
-              ## have to evaluate the flake each time.
-              alias flake-format="${config.project.formatter.meta.mainProgram}"
-            ''
-            + cfg.extraProfileCommands;
+          nativeBuildInputs = [cfg.packages.path];
+          shellHook = cfg.extraProfileCommands;
           meta = {
             description = "A shell provided by Project Manager.";
           };
@@ -749,7 +753,7 @@ in {
         ## This includes all unsandboxed checks as dependencies, so they can be
         ## run independently of `nix flake check`.
         lax-checks =
-          lib.mkIf (config.project.unsandboxedChecks != {})
+          lib.mkIf (cfg.unsandboxedChecks != {})
           (bash-strict-mode.lib.checkedDrv pkgs
             (pkgs.mkShell {
               meta.description = ''
@@ -757,7 +761,7 @@ in {
                 exits.
               '';
               nativeBuildInputs =
-                builtins.attrValues config.project.unsandboxedChecks;
+                builtins.attrValues cfg.unsandboxedChecks;
 
               shellHook = ''
                 exit

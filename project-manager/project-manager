@@ -74,6 +74,10 @@ function showHelp() {
   echo
   echo "  packages     List all packages installed in project-manager-path"
   echo
+  echo "  fmt"
+  echo "      Run the configured formatter. This is usually much faster than running"
+  echo "     ‘nix fmt’ because it avoids evaluating the flake."
+  echo
   echo "  news         Show news entries in a pager"
   echo
   echo "  uninstall    Remove Project Manager"
@@ -88,7 +92,7 @@ while [[ $# -gt 0 ]]; do
   opt="$1"
   shift
   case $opt in
-    build | init | edit | expire-generations | generations | help | news | packages | remove-generations | switch | uninstall)
+    build | init | edit | expire-generations | generations | fmt | help | news | packages | remove-generations | switch | uninstall)
       COMMAND="$opt"
       ;;
     -I)
@@ -151,7 +155,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       case $COMMAND in
-        init | expire-generations | remove-generations | option)
+        init | expire-generations | remove-generations | fmt | option)
           COMMAND_ARGS+=("$opt")
           ;;
         *)
@@ -205,6 +209,9 @@ case $COMMAND in
     ;;
   packages)
     pm_listPackages
+    ;;
+  fmt)
+    pm_format "${COMMAND_ARGS[@]}"
     ;;
   news)
     pm_showNews --all
