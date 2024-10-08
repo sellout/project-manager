@@ -27,11 +27,12 @@
     nixpkgs-23_11,
     nixpkgs-unstable,
     self,
+    systems,
     treefmt-nix,
   }: let
     pname = "project-manager";
 
-    supportedSystems = flaky.lib.defaultSystems;
+    supportedSystems = import systems;
 
     pkgsFor = system:
       import nixpkgs {
@@ -200,6 +201,7 @@
     ## The Nixpkgs release to use internally for building Project Manager
     ## itself, regardless of the downstream package set.
     nixpkgs.follows = "flaky/nixpkgs";
+    systems.follows = "flaky/systems";
 
     ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is
     ##       merged.

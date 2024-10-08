@@ -231,6 +231,10 @@
         "nixpkgs-23_05": "nixpkgs-23_05",
         "nixpkgs-23_11": "nixpkgs-23_11",
         "nixpkgs-unstable": "nixpkgs-unstable",
+        "systems": [
+          "flaky",
+          "systems"
+        ],
         "treefmt-nix": "treefmt-nix"
       }
     },
