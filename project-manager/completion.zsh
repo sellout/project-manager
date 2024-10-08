@@ -39,6 +39,7 @@ case "$state" in
       'remove-generations[remove generations]' \
       'expire-generations[expire generations]' \
       'packages[managed packages]' \
+      'fmt[format]' \
       'news[read the news]' \
       'uninstall[uninstall]' && ret=0
     ;;

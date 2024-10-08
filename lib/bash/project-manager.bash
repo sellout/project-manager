@@ -464,6 +464,18 @@ function pm_listPackages() {
   fi
 }
 
+function pm_format() {
+  local extraArgs=("$@")
+
+  if [[ -v __PM_FORMATTER ]]; then
+    "$__PM_FORMATTER" "${extraArgs[@]}"
+  else
+    _iWarn 'Not in a Project Manager environment. Attempting `nix fmt`, which is much slower' >&2
+    setFlakeAttribute
+    nix fmt "${extraArgs[@]}"
+  fi
+}
+
 function newsReadIdsFile() {
   local dataDir="${XDG_DATA_HOME:-$HOME/.local/share}/project-manager"
   local path="$dataDir/news-read-ids"
