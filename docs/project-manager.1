@@ -26,6 +26,7 @@
 .Cm | news
 .Cm | option Ar option.name
 .Cm | packages
+.Cm | fmt \&...
 .Cm | remove-generations Ar ID \&...
 .Cm | uninstall
 .Brc
@@ -142,6 +143,13 @@ Inspect the given option name in the project configuration, like
 .It Cm packages
 .RS 4
 List all packages installed in project-manager-path.
+.RE
+.Pp
+
+.It Cm fmt
+.RS 4
+Run the configured formatter. This is usually much faster than running
+\fBnix fmt\fR because it avoids evaluating the flake.
 .RE
 .Pp
 

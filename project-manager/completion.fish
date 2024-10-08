@@ -29,6 +29,7 @@ complete -c project-manager -n "__fish_use_subcommand" -f -a "build" -d "Build c
 complete -c project-manager -n "__fish_use_subcommand" -f -a "switch" -d "Build and activate configuration"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "generations" -d "List all project environment generations"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "packages" -d "List all packages installed in project-manager-path"
+complete -c project-manager -n "__fish_use_subcommand" -f -a "fmt" -d "Run the configured formatter. This is usually much faster than running ‘nix fmt’ because it avoids evaluating the flake."
 complete -c project-manager -n "__fish_use_subcommand" -f -a "news" -d "Show news entries in a pager"
 complete -c project-manager -n "__fish_use_subcommand" -f -a "uninstall" -d "Remove Project Manager"
 

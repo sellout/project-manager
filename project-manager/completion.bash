@@ -64,6 +64,7 @@
 # news
 # option
 # packages
+# fmt
 # remove-generations
 # switch
 # uninstall
@@ -94,6 +95,7 @@
 #   remove-generations
 #   expire-generations
 #   packages
+#   fmt
 #   news
 #   uninstall
 
@@ -147,6 +149,10 @@
 #       example "-30 days" or "2018-01-01".
 #
 #   packages     List all packages installed in project-manager-path
+#
+#   fmt
+#       Run the configured formatter. This is usually much faster than running"
+#       ‘nix fmt’ because it avoids evaluating the flake."
 #
 #   news         Show news entries in a pager
 #
@@ -263,7 +269,7 @@ _project-manager_xdg-get-cache-home() {
 
 ##################################################
 
-_hm_subcommands=("help" "edit" "build" "init" "switch" "generations" "remove-generations" "expire-generations" "packages" "news" "uninstall")
+_hm_subcommands=("help" "edit" "build" "init" "switch" "generations" "remove-generations" "expire-generations" "packages" "fmt" "news" "uninstall")
 declare -ra _hm_subcommands
 
 # Finds the active sub-command, if any.
@@ -365,4 +371,4 @@ _project-manager_completions() {
 
 complete -F _project-manager_completions -o default project-manager
 
-#complete -W "help edit option build switch generations remove-generations expire-generations packages news" project-manager
+#complete -W "help edit option build switch generations remove-generations expire-generations packages fmt news" project-manager

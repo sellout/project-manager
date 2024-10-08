@@ -67,14 +67,22 @@ in {
       enable = true;
       excludes = [
         "*.bash"
+        "*.css"
+        "*.scss"
         "*.xml" # TODO: Remove this once we get the XSL transform working.
+        "./docs/project-manager.1"
+        "./docs/project-configuration-nix-header.5"
         "./project-manager/project-manager"
         "./project-manager/completion.fish"
         "./project-manager/completion.zsh"
       ];
       vocab.${config.project.name}.accept = [
+        "alejandra"
         "babelfish"
         "[Bb]oolean"
+        "composable"
+        "DBus"
+        "dconf"
         "declutter"
         "devenv"
         "devShell"
@@ -100,7 +108,7 @@ in {
         else ["${output}.${sys}.${name}"]);
   in {
     enable = true;
-    builds.exclude =
+    builds."*".exclude =
       [
         ## TODO: Remove once garnix-io/garnix#285 is fixed.
         "homeConfigurations.x86_64-darwin-example"

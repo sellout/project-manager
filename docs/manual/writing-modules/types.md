@@ -182,8 +182,8 @@ or the order of activation script blocks in
 []{#sec-option-types-gvariant}`hm.types.gvariant`
 
 : This type is useful for options representing
-[GVariant](https://docs.gtk.org/glib/struct.Variant.html#description)
-values. The type accepts all primitive GVariant types as well as
+[`GVariant`](https://docs.gtk.org/glib/struct.Variant.html#description)
+values. The type accepts all primitive `GVariant` types as well as
 arrays, tuples, "maybe" types, and dictionaries.
 
     Some Nix values are automatically coerced to matching GVariant value

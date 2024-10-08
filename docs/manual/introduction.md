@@ -25,7 +25,7 @@ Since Project Manager is implemented in Nix, it provides several benefits:
 - Contents are reproducible — a project will be the exact same every time it’s built, unless of course, an intentional change is made.
   This also means you can have the exact same project on different hosts.
 - Significantly faster and more powerful than various backup strategies.
-- Unlike "dotfiles" repositories, Project Manager supports specifying programs, as well as their configurations.
+- Unlike "dot files" repositories, Project Manager supports specifying programs, as well as their configurations.
 - Supported by <http://cache.nixos.org/>, so that you don't have to build from source.
 - If you do want to build some programs from source, there is hardly a tool more useful than Nix for that, and the build instructions can be neatly integrated in your Project Manager usage.
 - Infinitely composable, so that values in different configuration files and build instructions can share a source of truth.

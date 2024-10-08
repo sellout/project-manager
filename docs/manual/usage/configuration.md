@@ -24,13 +24,13 @@ A fresh install of Project Manager will generate a minimal `$PROJECT_ROOT/.confi
 You can use this as a base for your further configurations.
 
 ::: {.note}
-If you are not very familiar with the Nix language and NixOS modules
+If you aren’t very familiar with the Nix language and NixOS modules
 then it’s encouraged to start with small and simple changes. As you
 learn you can gradually grow the configuration with confidence.
 :::
 
 As an example, let us expand the initial configuration file to also
-install the htop and fortune packages, install Emacs with a few extra
+install the `htop` and `fortune` packages, install Emacs with a few extra
 packages available, and enable the user gpg-agent service.
 
 To satisfy the above setup we should elaborate the `project.nix` file as

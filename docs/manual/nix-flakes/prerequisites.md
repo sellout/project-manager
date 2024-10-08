@@ -34,7 +34,7 @@
     $ project-manager --extra-experimental-features "nix-command flakes" <sub-commands>
     ```
 
-- Prepare your Projecte Manager configuration (`.config/project/default.nix`).
+- Prepare your Project Manager configuration (`.config/project/default.nix`).
 
   Unlike the channel-based setup, `.config/project/default.nix` will be evaluated when
   the flake is built, so it must be present before bootstrap of Project
