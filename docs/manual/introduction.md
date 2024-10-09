@@ -31,7 +31,6 @@ Since Project Manager is implemented in Nix, it provides several benefits:
 - Infinitely composable, so that values in different configuration files and build instructions can share a source of truth.
 - Connects you with the [most extensive](https://repology.org/repositories/statistics/total) and [most up-to-date](https://repology.org/repositories/statistics/newest) software package repository on earth, [Nixpkgs](https://github.com/NixOS/nixpkgs).
 
-
 Project Manager produces two things
 
 1. Nix expressions to be used in flakes and
@@ -41,6 +40,6 @@ Either of these can be used individually, but are designed to work together.
 
 The former are accessed via `self.projectConfigurations.${system}` in your flake, while the latter are created by running `project-manager switch`.
 
-## the `project-manager` devShell
-
-One of the most powerful combinations is `self.projectConfigurations.${system}.devShells.project-manager`. This provides a shell that has a PATH and other environment that have been produced by the Project Manager configuration. If you use this envrionment, you can often avoid producing files into your working tree, as the executables available here may be modified to look for their files directly in the Nix store.
+```{=include=} sections
+introduction/devShell.md
+```
