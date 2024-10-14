@@ -81,11 +81,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1728105636,
-        "narHash": "sha256-efED+H3XOT9dSS57FOroPwkWAEBab/IEiuT+K79hoQU=",
+        "lastModified": 1728360354,
+        "narHash": "sha256-Osz2JCa9Oqonh1KVRbHTd8Mf3HmzKWiCLcx1df2D7es=",
         "owner": "sellout",
         "repo": "flaky",
-        "rev": "14d693365c725a189934802146dbf5bdffc3760f",
+        "rev": "d874cf790aec13377da7c71652065a7f4879d03b",
         "type": "github"
       },
       "original": {
@@ -197,11 +197,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1728217273,
-        "narHash": "sha256-p/gvyVf24WFs0bted3c71uSQk++ZOYRWbg3bjRoePu4=",
+        "lastModified": 1728538411,
+        "narHash": "sha256-f0SBJz1eZ2yOuKUr5CA9BHULGXVSn6miBuUWdTyhUhU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "50b3bd3fed0442bcbf7f58355e990da84af1749d",
+        "rev": "b69de56fac8c2b6f8fd27f2eca01dcda8e0a4221",
         "type": "github"
       },
       "original": {
