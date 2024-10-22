@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   pmPkgs,
   self,
   treefmt-nix,
@@ -10,6 +11,8 @@
 in {
   options.programs.treefmt = {
     enable = lib.mkEnableOption "treefmt";
+
+    package = lib.mkPackageOption pkgs "treefmt" {};
 
     projectRootFile = lib.mkOption {
       type = lib.types.str;
@@ -41,7 +44,7 @@ in {
   config = lib.mkIf cfg.enable (let
     newExcludes = lib.mapAttrsToList (k: v: v.target) (lib.filterAttrs (k: v: v.persistence == "repository") config.project.file);
     format = treefmt-nix.lib.evalModule pmPkgs {
-      inherit (cfg) projectRootFile programs;
+      inherit (cfg) package projectRootFile programs;
       settings =
         cfg.settings
         // {
