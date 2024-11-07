@@ -1,5 +1,4 @@
 {
-  bash-strict-mode,
   config,
   lib,
   pkgs,

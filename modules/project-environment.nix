@@ -1,7 +1,5 @@
 {
-  bash-strict-mode,
   config,
-  flaky,
   lib,
   pkgs,
   pmPkgs,
@@ -633,7 +631,7 @@ in {
         ${activationCmds}
       '';
     in
-      flaky.lib.runCommand pmPkgs
+      pmPkgs.runStrictCommand
       "project-manager-generation-for-${cfg.name}"
       {
         preferLocalBuild = true;
@@ -683,8 +681,7 @@ in {
     };
     project = {
       checks.project-manager-files =
-        flaky.lib.runEmptyCommand pmPkgs "project-manager-files"
-        {
+        pmPkgs.runEmptyCommand "project-manager-files" {
           nativeBuildInputs = [
             config.programs.git.package
             config.programs.project-manager.package
@@ -693,8 +690,7 @@ in {
           ];
 
           meta.description = "Check that the generated files are up-to-date.";
-        }
-        ''
+        } ''
           PRJ="$(mktemp --directory --tmpdir project.XXXXXX)"
           cp -r ${self}/. $PRJ
           chmod -R a+w $PRJ
@@ -741,32 +737,29 @@ in {
       '';
 
       devShells = {
-        project-manager = bash-strict-mode.lib.checkedDrv pkgs (pkgs.mkShell {
+        project-manager = pkgs.checkedDrv (pkgs.mkShell {
           inherit (pkgs) system;
           nativeBuildInputs = [cfg.packages.path];
           shellHook = cfg.extraProfileCommands;
-          meta = {
-            description = "A shell provided by Project Manager.";
-          };
+          meta.description = "A shell provided by Project Manager.";
         });
 
         ## This includes all unsandboxed checks as dependencies, so they can be
         ## run independently of `nix flake check`.
         lax-checks =
           lib.mkIf (cfg.unsandboxedChecks != {})
-          (bash-strict-mode.lib.checkedDrv pkgs
-            (pkgs.mkShell {
-              meta.description = ''
-                This shell runs all of the checks that are unsandboxed, then
-                exits.
-              '';
-              nativeBuildInputs =
-                builtins.attrValues cfg.unsandboxedChecks;
+          (pkgs.checkedDrv (pkgs.mkShell {
+            meta.description = ''
+              This shell runs all of the checks that are unsandboxed, then
+              exits.
+            '';
+            nativeBuildInputs =
+              builtins.attrValues cfg.unsandboxedChecks;
 
-              shellHook = ''
-                exit
-              '';
-            }));
+            shellHook = ''
+              exit
+            '';
+          }));
       };
 
       filterRepositoryPersistedExcept = exceptions: _type: name:

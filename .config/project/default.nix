@@ -59,8 +59,18 @@ in {
       settings.formatter = let
         includes = ["project-manager/project-manager"];
       in {
-        shellcheck = {inherit includes;};
-        shfmt = {inherit includes;};
+        ## FIXME: These `command` values shouldn’t be necessary. I think it’s a
+        ## combination of not having the treefmt attrs merge properly, and then
+        ## inconsistent configuration causing it to conflict in some cases but
+        ## not others.
+        shellcheck = {
+          inherit includes;
+          command = lib.mkDefault pkgs.shellcheck;
+        };
+        shfmt = {
+          inherit includes;
+          command = lib.mkDefault pkgs.shfmt;
+        };
       };
     };
     vale = {

@@ -1,5 +1,5 @@
 {
-  runCommand,
+  runStrictCommand,
   lib,
   bash-strict-mode,
   callPackage,
@@ -21,7 +21,7 @@
     or (callPackage
       (pkgs.path + "/nixos/modules/installer/tools/nixos-option") {});
 in
-  runCommand "project-manager" {
+  runStrictCommand "project-manager" {
     preferLocalBuild = true;
     buildInputs = [bash-strict-mode];
     nativeBuildInputs = [gettext];
@@ -59,7 +59,8 @@ in
       --subst-var-by FLAKE_TEMPLATE '${../templates/default/flake.nix}' \
       --subst-var-by CONFIG_TEMPLATE '${../templates/default/.config/project/default.nix}'
 
-    patchShebangs --host $out/bin/project-manager
+    ## See NixOS/nixpkgs#247410.
+    (set +u; patchShebangs --host $out/bin/project-manager)
 
     install -D -m755 ${./completion.bash} \
       $out/share/bash-completion/completions/project-manager
