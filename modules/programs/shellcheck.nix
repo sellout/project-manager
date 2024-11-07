@@ -1,8 +1,8 @@
 {
-  bash-strict-mode,
   config,
   lib,
   pkgs,
+  pmPkgs,
   self,
   ...
 }: let
@@ -147,14 +147,15 @@ in {
       else cfg.package;
   in {
     project = {
-      checks.shellcheck = bash-strict-mode.lib.checkedDrv pkgs (pkgs.runCommand "shellcheck" {
+      checks.shellcheck =
+        pmPkgs.runStrictCommand "shellcheck" {
           nativeBuildInputs = [wrapped];
-          src = config.project.cleanRepositoryPersistedExcept [".shellcheckrc"] self;
-        }
-        ''
+          src =
+            config.project.cleanRepositoryPersistedExcept [".shellcheckrc"] self;
+        } ''
           shellcheck "$src/project-manager/project-manager"
           mkdir -p "$out"
-        '');
+        '';
 
       file.".shellcheckrc" = lib.mkIf (!cfg.wrapProgram) {
         text = lib.concatLines (lib.concatLists [

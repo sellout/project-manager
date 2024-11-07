@@ -1,7 +1,5 @@
 {
-  bash-strict-mode,
   config,
-  flaky,
   lib,
   pkgs,
   pmPkgs,
@@ -116,7 +114,7 @@ in {
       devPackages = [cfg.package];
 
       checks.vale =
-        flaky.lib.runEmptyCommand pmPkgs "vale" {
+        pmPkgs.runEmptyCommand "vale" {
           nativeBuildInputs = [
             pkgs.cacert
             pkgs.vale
