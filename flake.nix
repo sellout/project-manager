@@ -185,21 +185,15 @@
               if final.system == "i686-linux"
               then {
                 pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
-              }
-              else {});
-          })
-          ## This is covered by the version used to build Project Manager
-          # // checksWith nixpkgs-24_11 (_: _: {})
-          // checksWith nixpkgs-unstable (final: prev: {
-            haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
-              if final.system == "i686-linux"
-              then {
                 unordered-containers =
                   final.haskell.lib.dontCheck
                   hprev.unordered-containers;
               }
               else {});
-          });
+          })
+          ## This is covered by the version used to build Project Manager
+          # // checksWith nixpkgs-24_11 (_: _: {})
+          // checksWith nixpkgs-unstable (_: _: {});
       in
         ## FIXME: Because the basement override isn’t working.
         if system == "i686-linux"
