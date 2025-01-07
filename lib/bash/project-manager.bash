@@ -97,7 +97,8 @@ function pm_listPackagesBySuffix() {
 
 function pm_removePackagesBySuffix() {
   pm_listPackagesBySuffix "$1" "$2" \
-    | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" nix profile remove "${VERBOSE_ARG[@]}" --profile "$1"
+    | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" --no-run-if-empty \
+      nix profile remove "${VERBOSE_ARG[@]}" --profile "$1"
 }
 
 function setNixProfileCommands() {
