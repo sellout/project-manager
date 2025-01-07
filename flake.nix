@@ -145,7 +145,8 @@
           .checks;
         allChecks =
           self.projectConfigurations.${system}.checks
-          // checksWith nixpkgs-22_11 (final: _: {treefmt2 = final.treefmt;})
+          ## TODO: Reenable tests n 22.11 once we can build more packages on garnix.
+          # // checksWith nixpkgs-22_11 (final: _: {treefmt2 = final.treefmt;})
           // checksWith nixpkgs-23_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
               if final.system == "i686-linux"
