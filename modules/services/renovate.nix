@@ -30,7 +30,7 @@ in {
   in {
     project.file."${location}/renovate.json".text = lib.pm.generators.toJSON {} ({
         "$schema" = "https://docs.renovatebot.com/renovate-schema.json";
-        extends = ["config:base"];
+        extends = ["config:recommended"];
         nix.enabled = true;
       }
       // cfg.settings);
