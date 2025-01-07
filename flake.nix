@@ -17,7 +17,6 @@
   };
 
   outputs = {
-    bash-strict-mode,
     flake-schemas,
     flake-utils,
     flaky,
@@ -25,6 +24,7 @@
     nixpkgs-22_11,
     nixpkgs-23_05,
     nixpkgs-23_11,
+    nixpkgs-24_05,
     nixpkgs-unstable,
     self,
     systems,
@@ -35,14 +35,15 @@
     supportedSystems = import systems;
 
     pkgsFor = system:
-      import nixpkgs {
-        inherit system;
-        overlays = [
-          bash-strict-mode.overlays.default
-          flaky.overlays.dependencies
-          self.overlays.default
-        ];
+      nixpkgs.legacyPackages.${system}.appendOverlays [flaky.overlays.default];
+
+    releaseInfo = import ./release.nix;
+
+    localPackages = pkgs: {
+      project-manager = pkgs.callPackage ./project-manager {
+        inherit (releaseInfo) release;
       };
+    };
   in
     {
       schemas =
@@ -51,13 +52,24 @@
 
       templates = import ./templates;
 
-      lib = import ./nix/lib.nix {
-        inherit bash-strict-mode flake-utils pkgsFor treefmt-nix;
-        project-manager = self;
-      };
+      lib = import ./nix/lib {inherit flake-utils pkgsFor self treefmt-nix;};
 
-      overlays.default = final: prev: {
-        project-manager = self.packages.${final.system}.project-manager;
+      overlays = {
+        default =
+          nixpkgs.lib.composeExtensions
+          flaky.overlays.default
+          self.overlays.local;
+
+        local = final: prev:
+          {
+            lib =
+              prev.lib
+              // {
+                projectConfiguration = self.lib.configuration;
+                defaultProjectConfiguration = self.lib.defaultConfiguration;
+              };
+          }
+          // localPackages final;
       };
 
       ## All of the modules included in Project Manager. You generally don’t
@@ -77,27 +89,25 @@
     // flake-utils.lib.eachSystem supportedSystems
     (system: let
       projectConfigurationsFor = pkgs:
-        flaky.lib.projectConfigurations.default {
+        flaky.lib.projectConfigurations.nix {
           inherit pkgs self supportedSystems;
         };
 
       pkgs = pkgsFor system;
     in {
       packages = let
-        releaseInfo = import ./release.nix;
         docs = import ./docs {
           inherit pkgs self;
           inherit (releaseInfo) release isReleaseBranch;
         };
-      in {
-        default = self.packages.${system}.project-manager;
-        docs-html = docs.manual.html;
-        docs-json = docs.options.json;
-        docs-manpages = docs.manPages;
-        project-manager = pkgs.callPackage ./project-manager {
-          inherit (releaseInfo) release;
+      in
+        localPackages pkgs
+        // {
+          default = self.packages.${system}.project-manager;
+          docs-html = docs.manual.html;
+          docs-json = docs.options.json;
+          docs-manpages = docs.manPages;
         };
-      };
 
       projectConfigurations = projectConfigurationsFor pkgs;
 
@@ -130,14 +140,13 @@
               ["."]
               ["_"]
               nixpkgs.lib.trivial.release))
-          (projectConfigurationsFor (import nixpkgs {
-            inherit system;
-            overlays = [overlay];
-          }))
+          (projectConfigurationsFor
+            (nixpkgs.legacyPackages.${system}.appendOverlays [overlay]))
           .checks;
         allChecks =
           self.projectConfigurations.${system}.checks
-          // checksWith nixpkgs-22_11 (_: _: {})
+          ## TODO: Reenable tests n 22.11 once we can build more packages on garnix.
+          # // checksWith nixpkgs-22_11 (final: _: {treefmt2 = final.treefmt;})
           // checksWith nixpkgs-23_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
               if final.system == "i686-linux"
@@ -159,6 +168,8 @@
                   });
               }
               else {});
+
+            treefmt2 = final.treefmt;
           })
           // checksWith nixpkgs-23_11 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
@@ -167,19 +178,22 @@
                 pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
               }
               else {});
+            treefmt2 = final.treefmt;
           })
-          ## This is covered by the version used to build Project Manager
-          # // checksWith nixpkgs-24_05 (_: _: {})
-          // checksWith nixpkgs-unstable (final: prev: {
+          // checksWith nixpkgs-24_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
               if final.system == "i686-linux"
               then {
+                pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
                 unordered-containers =
                   final.haskell.lib.dontCheck
                   hprev.unordered-containers;
               }
               else {});
-          });
+          })
+          ## This is covered by the version used to build Project Manager
+          # // checksWith nixpkgs-24_11 (_: _: {})
+          // checksWith nixpkgs-unstable (_: _: {});
       in
         ## FIXME: Because the basement override isn’t working.
         if system == "i686-linux"
@@ -196,7 +210,6 @@
       url = "github:sellout/flaky";
     };
 
-    bash-strict-mode.follows = "flaky/bash-strict-mode";
     flake-utils.follows = "flaky/flake-utils";
     ## The Nixpkgs release to use internally for building Project Manager
     ## itself, regardless of the downstream package set.
@@ -215,6 +228,7 @@
     nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
+    nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {

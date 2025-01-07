@@ -52,6 +52,7 @@ in {
     shellcheck.enable = true;
     treefmt = {
       enable = true;
+      package = lib.mkForce pkgs.treefmt;
       ## Shell linter
       programs.shellcheck.enable = true;
       ## Shell formatter
