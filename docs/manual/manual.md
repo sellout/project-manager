@@ -1,6 +1,6 @@
 # Project Manager Manual {#project-manager-manual}
 
-## Version 24.05 (unstable)
+## Version 0.7.0 (unstable)
 
 ```{=include=} preface
 preface.md

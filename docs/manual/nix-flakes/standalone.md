@@ -4,17 +4,10 @@ To prepare an initial Project Manager configuration for your logged in
 user, you can run the Project Manager `init` command directly from its
 flake.
 
-For example, if you are using the unstable version of Nixpkgs or NixOS,
-then to generate and activate a basic configuration run the command
+For example, to generate and activate a basic configuration run the command
 
 ```shell
-$ nix run project-manager/master -- init --switch
-```
-
-For Nixpkgs or NixOS version 24.05 run
-
-```shell
-$ nix run project-manager/release-24.05 -- init --switch
+$ nix run github:sellout/project-manager -- init --switch
 ```
 
 This will generate a `flake.nix` and a `default.nix` file in
@@ -25,12 +18,10 @@ This is useful if you want to inspect and edit the configuration before
 activating it.
 
 ```shell
-$ nix run project-manager/$branch -- init
+$ nix run github:sellout/project-manager -- init
 $ # Edit files in ~/.config/project-manager
-$ nix run project-manager/$branch -- init --switch
+$ nix run github:sellout/project-manager -- init --switch
 ```
-
-Where `$branch` is one of `master` or `release-24.05`.
 
 After the initial activation has completed successfully then building
 and activating your flake-based configuration is as simple as
@@ -43,7 +34,7 @@ It’s possible to override the default configuration directory, if you
 want. For example,
 
 ```shell
-$ nix run project-manager/$branch -- init --switch ~/hmconf
+$ nix run github:sellout/project-manager -- init --switch ~/hmconf
 $ # And after the initial activation.
 $ project-manager switch --flake ~/hmconf
 ```
