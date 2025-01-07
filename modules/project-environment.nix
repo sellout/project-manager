@@ -512,8 +512,27 @@ in {
         + cfg.sessionVariablesExtra;
     };
 
+    project.packages.shellAliases = let
+      aliasesStr =
+        lib.concatLines
+        (lib.mapAttrsToList (k: v: "alias ${k}=${lib.escapeShellArg v}")
+          cfg.shellAliases);
+    in
+      pkgs.writeTextFile {
+        name = "pm-shell-aliases.sh";
+        destination = "/etc/profile.d/pm-shell-aliases.sh";
+        text = ''
+          # Only source this once.
+          if [[ -v __PM_SHELL_ALIASES_SOURCED ]]; then return; fi
+          export __PM_SHELL_ALIASES_SOURCED=1
+
+          ${aliasesStr}
+        '';
+      };
+
     project.devPackages = [
       cfg.packages.sessionVariables
+      cfg.packages.shellAliases
     ];
 
     # A dummy entry acting as a boundary between the activation
@@ -735,6 +754,7 @@ in {
 
       extraProfileCommands = ''
         source ${cfg.packages.sessionVariables}/etc/profile.d/pm-session-vars.sh
+        source ${cfg.packages.shellAliases}/etc/profile.d/pm-shell-aliases.sh
       '';
 
       devShells = {
