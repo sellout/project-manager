@@ -146,8 +146,7 @@
           .checks;
         allChecks =
           self.projectConfigurations.${system}.checks
-          ## TODO: Reenable tests n 22.11 once we can build more packages on garnix.
-          # // checksWith nixpkgs-22_11 (_: _: {})
+          // checksWith nixpkgs-22_11 (_: _: {})
           // checksWith nixpkgs-23_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
               if final.system == "i686-linux"

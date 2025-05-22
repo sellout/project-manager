@@ -113,8 +113,16 @@ in {
     enable = true;
     builds."*".exclude =
       [
-        ## TODO: Remove once garnix-io/garnix#285 is fixed.
-        "homeConfigurations.x86_64-darwin-example"
+        "checks.*.formatter-22_11"
+        "checks.*.formatter-23_05"
+        "checks.*.formatter-23_11"
+        "checks.*.formatter-24_05"
+        "checks.*.formatter-24_11"
+        "checks.*.shellcheck-22_11"
+        "checks.*.shellcheck-23_05"
+        "checks.*.shellcheck-23_11"
+        "checks.*.shellcheck-24_05"
+        "checks.*.shellcheck-24_11"
       ]
       ++ lib.concatMap (singlePlatform "checks") [
         "formatter"
