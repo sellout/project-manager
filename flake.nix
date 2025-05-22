@@ -12,8 +12,8 @@
       "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
     ];
     ## Isolate the build.
-    registries = false;
     sandbox = "relaxed";
+    use-registries = false;
   };
 
   outputs = {
@@ -25,6 +25,7 @@
     nixpkgs-23_05,
     nixpkgs-23_11,
     nixpkgs-24_05,
+    nixpkgs-24_11,
     nixpkgs-unstable,
     self,
     systems,
@@ -145,8 +146,7 @@
           .checks;
         allChecks =
           self.projectConfigurations.${system}.checks
-          ## TODO: Reenable tests n 22.11 once we can build more packages on garnix.
-          # // checksWith nixpkgs-22_11 (final: _: {treefmt2 = final.treefmt;})
+          // checksWith nixpkgs-22_11 (_: _: {})
           // checksWith nixpkgs-23_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
               if final.system == "i686-linux"
@@ -168,8 +168,6 @@
                   });
               }
               else {});
-
-            treefmt2 = final.treefmt;
           })
           // checksWith nixpkgs-23_11 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
@@ -178,7 +176,6 @@
                 pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
               }
               else {});
-            treefmt2 = final.treefmt;
           })
           // checksWith nixpkgs-24_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
@@ -191,8 +188,9 @@
               }
               else {});
           })
+          // checksWith nixpkgs-24_11 (_: _: {})
           ## This is covered by the version used to build Project Manager
-          # // checksWith nixpkgs-24_11 (_: _: {})
+          # // checksWith nixpkgs-25_05 (_: _: {})
           // checksWith nixpkgs-unstable (_: _: {});
       in
         ## FIXME: Because the basement override isn’t working.
@@ -229,6 +227,7 @@
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
     nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
+    nixpkgs-24_11.url = "github:NixOS/nixpkgs/release-24.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {

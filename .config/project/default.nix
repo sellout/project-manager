@@ -11,8 +11,9 @@
     "23_05"
     "23_11"
     "24_05"
-    "24_11" # tested, but covered by the Project Manager build
-    "25_05"
+    "24_11"
+    "25_05" # tested, but covered by the Project Manager build
+    "25_11"
   ];
 in {
   project = {
@@ -112,8 +113,16 @@ in {
     enable = true;
     builds."*".exclude =
       [
-        ## TODO: Remove once garnix-io/garnix#285 is fixed.
-        "homeConfigurations.x86_64-darwin-example"
+        "checks.*.formatter-22_11"
+        "checks.*.formatter-23_05"
+        "checks.*.formatter-23_11"
+        "checks.*.formatter-24_05"
+        "checks.*.formatter-24_11"
+        "checks.*.shellcheck-22_11"
+        "checks.*.shellcheck-23_05"
+        "checks.*.shellcheck-23_11"
+        "checks.*.shellcheck-24_05"
+        "checks.*.shellcheck-24_11"
       ]
       ++ lib.concatMap (singlePlatform "checks") [
         "formatter"
