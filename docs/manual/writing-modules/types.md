@@ -71,21 +71,21 @@ or the order of activation script blocks in
 
         would place `b` before `a` in the graph.
 
-    []{#sec-option-types-dag-entryBetween}`hm.dag.entryBetween (befores: list string) (afters: list string) (value: T) : DagEntry<T>`
+    []{#sec-option-types-dag-entryBetween}`hm.dag.entryBetween (afters: list string) (befores: list string) (value: T) : DagEntry<T>`
 
-    :   Indicates that `value` must be placed *before* the attribute
-        names in the first list and *after* the attribute names in the
+    :   Indicates that `value` must be placed *after* the attribute
+        names in the first list and *before* the attribute names in the
         second list. For example
 
         ``` nix
         foo.bar = {
           a = 0;
-          c = hm.dag.entryBetween [ "b" ] [ "a" ] 2;
+          c = hm.dag.entryBetween [ "a" ] [ "b" ] 2;
           b = 1;
         }
         ```
 
-        would place `c` before `b` and after `a` in the graph.
+        would place `c` after `a` and before `b` in the graph.
 
     There are also a set of functions that generate a DAG from a list.
     These are convenient when you just want to have a linear list of DAG
@@ -151,11 +151,11 @@ or the order of activation script blocks in
         foo.bar = {
           b = 0;
           a-0 = 1;
-          a-1 = hm.dag.entryBetween [ "b" ] [ "a-0" ] 2;
+          a-1 = hm.dag.entryBetween [ "a-0" ] [ "b" ] 2;
         }
         ```
 
-    []{#sec-option-types-dag-entriesBetween}`hm.dag.entriesBetween (tag: string) (befores: list string) (afters: list string) (values: [T]) : Dag<T>`
+    []{#sec-option-types-dag-entriesBetween}`hm.dag.entriesBetween (tag: string) (afters: list string) (befores: list string) (values: [T]) : Dag<T>`
 
     :   Creates a DAG with the given values with each entry labeled
         using the given tag. The list of values are placed *before* each
@@ -164,18 +164,18 @@ or the order of activation script blocks in
 
         ``` nix
         foo.bar =
-          { b = 0; c = 3; }
-          // hm.dag.entriesBetween "a" [ "b" ] [ "c" ] [ 1 2 ];
+          { a = 0; c = 3; }
+          // hm.dag.entriesBetween "b" [ "a" ] [ "c" ] [ 1 2 ];
         ```
 
         is equivalent to
 
         ``` nix
         foo.bar = {
-          b = 0;
+          a = 0;
           c = 3;
-          a-0 = hm.dag.entryAfter [ "c" ] 1;
-          a-1 = hm.dag.entryBetween [ "b" ] [ "a-0" ] 2;
+          b-0 = hm.dag.entryAfter [ "a" ] 1;
+          b-1 = hm.dag.entryBetween [ "b-0" ] [ "c" ] 2;
         }
         ```
 
