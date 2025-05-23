@@ -9,6 +9,7 @@
   # ./misc/vte.nix
   xdg = ./misc/xdg.nix;
   # ./programs/bash.nix
+  cabal2nix = ./programs/cabal2nix.nix;
   # ./programs/darcs.nix
   direnv = ./programs/direnv.nix;
   # ./programs/emacs.nix
@@ -18,6 +19,8 @@
   # ./programs/git-cliff.nix
   # ./programs/git-credential-oauth.nix
   git = ./programs/git;
+  hpack = ./programs/hpack.nix;
+  hpack-dhall = ./programs/hpack-dhall.nix;
   just = ./programs/just.nix;
   mercurial = ./programs/mercurial.nix;
   # ./programs/neovim.nix
