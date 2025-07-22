@@ -1,3 +1,5 @@
+### All available options for this file are listed in
+### https://sellout.github.io/project-manager/options.xhtml
 {
   config,
   flaky,

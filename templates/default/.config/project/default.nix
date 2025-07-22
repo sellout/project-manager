@@ -1,7 +1,10 @@
-## Welcome to your project configuration!
-##
-## This is a Nix module (https://nixos.wiki/wiki/NixOS_modules) that is intended
-## to produce both flake outputs and generated files in your project.
+### Welcome to your project configuration!
+###
+### This is a Nix module (https://nixos.wiki/wiki/NixOS_modules) that is
+### intended to produce both flake outputs and generated files in your project.
+###
+### All available options for this file are listed in
+### https://sellout.github.io/project-manager/options.xhtml
 {
   lib,
   pkgs,
