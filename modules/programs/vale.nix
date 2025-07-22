@@ -21,7 +21,18 @@ in {
       type = lib.types.nullOr lib.types.attrs;
       default = null;
       description = ''
-        The .vale.ini file. The `target` is ignored.
+        The [core settings](https://vale.sh/docs/vale-ini#core-settings) section
+        of the .vale.ini file.
+      '';
+    };
+
+    formatAssociations = lib.mkOption {
+      type = lib.types.nullOr (lib.types.attrsOf lib.types.str);
+      default = null;
+      description = ''
+        The [format
+        associations](https://vale.sh/docs/vale-ini#format-associations) section
+        of the .vale.ini file.
       '';
     };
 
@@ -29,7 +40,9 @@ in {
       type = lib.types.nullOr (lib.types.attrsOf lib.types.attrs);
       default = null;
       description = ''
-        The .vale.ini file. The `target` is ignored.
+        The [format-specific
+        settings](https://vale.sh/docs/vale-ini#format-specific-settings)
+        sections of the .vale.ini file.
       '';
     };
 
@@ -73,7 +86,10 @@ in {
     project = {
       file =
         {
-          ".vale.ini" = lib.mkIf (cfg.coreSettings != null || cfg.formatSettings != null) {
+          ".vale.ini" = lib.mkIf (cfg.coreSettings
+            != null
+            || cfg.formatAssociations != null
+            || cfg.formatSettings != null) {
             ## TODO: Should be able to make this `"store"`.
             # minimum-persistence = "worktree";
             onChange = ''
@@ -82,7 +98,13 @@ in {
             '';
             text = lib.pm.generators.toINIWithGlobalSection {} {
               globalSection = actualCoreSettings;
-              sections = cfg.formatSettings or {};
+              sections =
+                (
+                  if cfg.formatAssociations == null
+                  then {}
+                  else {formats = cfg.formatAssociations;}
+                )
+                // cfg.formatSettings or {};
             };
           };
         }
