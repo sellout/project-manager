@@ -47,12 +47,7 @@
 
   dontCheckDefinitions = {_module.check = false;};
 
-  gitHubDeclaration = user: repo: subpath: let
-    urlRef =
-      if isReleaseBranch
-      then "release-${release}"
-      else "master";
-  in {
+  gitHubDeclaration = user: repo: urlRef: subpath: {
     url = "https://github.com/${user}/${repo}/blob/${urlRef}/${subpath}";
     name = "<${repo}/${subpath}>";
   };
@@ -84,13 +79,18 @@
             declarations = map (decl:
               if lib.hasPrefix pmPath (toString decl)
               then
-                gitHubDeclaration "nix-community" "project-manager"
+                gitHubDeclaration "sellout" "project-manager"
+                (
+                  if isReleaseBranch
+                  then "v${release}"
+                  else "master"
+                )
                 (lib.removePrefix "/" (lib.removePrefix pmPath (toString decl)))
               else if decl == "lib/modules.nix"
               then
                 # TODO: handle this in a better way (may require upstream
                 # changes to nixpkgs)
-                gitHubDeclaration "NixOS" "nixpkgs" decl
+                gitHubDeclaration "NixOS" "nixpkgs" "master" decl
               else decl)
             opt.declarations;
           };
