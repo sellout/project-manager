@@ -24,6 +24,7 @@
   };
 
   outputs = {
+    cargo2nix,
     flake-schemas,
     flake-utils,
     flaky,
@@ -43,7 +44,14 @@
     supportedSystems = import systems;
 
     pkgsFor = system:
-      nixpkgs.legacyPackages.${system}.appendOverlays [flaky.overlays.default];
+      nixpkgs.legacyPackages.${system}.appendOverlays [
+        ## cargo2nix has two parts – the `cargo2nix` program that generates the
+        ## Cargo.nix file and the Nix functions that process that file. The
+        ## overlay only contains the latter, so this creates an ad-hoc overlay
+        ## for the former.
+        (prev: final: {inherit (cargo2nix.packages.${final.system}) cargo2nix;})
+        flaky.overlays.default
+      ];
 
     releaseInfo = import ./release.nix;
 
@@ -226,6 +234,17 @@
     ## itself, regardless of the downstream package set.
     nixpkgs.follows = "flaky/nixpkgs";
     systems.follows = "flaky/systems";
+
+    ## TODO: This could be removed if we could get cargo2nix to add the
+    ##       ./modules/programs/cargo2nix.nix as a `projectConfig` in their
+    ##       repo.
+    cargo2nix = {
+      inputs = {
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs";
+      };
+      url = "github:cargo2nix/cargo2nix";
+    };
 
     ## TODO: Switch back to upstream once DeterminateSystems/flake-schemas#15 is
     ##       merged.

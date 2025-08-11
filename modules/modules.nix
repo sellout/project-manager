@@ -10,6 +10,8 @@
   xdg = ./misc/xdg.nix;
   # ./programs/bash.nix
   cabal2nix = ./programs/cabal2nix.nix;
+  cargo = ./programs/cargo;
+  cargo2nix = ./programs/cargo2nix.nix;
   # ./programs/darcs.nix
   direnv = ./programs/direnv.nix;
   # ./programs/emacs.nix
