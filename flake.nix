@@ -96,6 +96,8 @@
 
       pkgs = pkgsFor system;
     in {
+      apps.tests = flake-utils.lib.mkApp {drv = self.checks.${system}.tests;};
+
       packages = let
         docs = import ./docs {
           inherit pkgs self;
@@ -112,11 +114,8 @@
 
       projectConfigurations = projectConfigurationsFor pkgs;
 
-      devShells = let
-        #   tests = import ./tests {inherit pkgs;};
-      in
+      devShells =
         self.projectConfigurations.${system}.devShells
-        # // tests.run
         // {
           default =
             self.devShells.${system}.project-manager.overrideAttrs
@@ -191,7 +190,14 @@
           // checksWith nixpkgs-24_11 (_: _: {})
           ## This is covered by the version used to build Project Manager
           # // checksWith nixpkgs-25_05 (_: _: {})
-          // checksWith nixpkgs-unstable (_: _: {});
+          // checksWith nixpkgs-unstable (_: _: {})
+          ## TODO: Run tests against all support Nixpkgs versions.
+          // {
+            tests = pkgs.writeShellScriptBin "tests" ''
+              exec env PATH="${pkgs.fzf}/bin:$PATH" \
+                ${nixpkgs.lib.getExe pkgs.python3} ${self}/testing/tests.py "$@"
+            '';
+          };
       in
         ## FIXME: Because the basement override isn’t working.
         if system == "i686-linux"

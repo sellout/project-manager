@@ -1,6 +1,6 @@
 {
   lib,
-  gvariant ? import ./gvariant.nix {inherit lib;},
+  gvariant ? import ../gvariant.nix {inherit lib;},
 }: let
   inherit
     (lib)
@@ -22,7 +22,7 @@
     types
     ;
 
-  typesDag = import ./types-dag.nix {inherit lib;};
+  typesDag = import ./dag.nix {inherit lib;};
 
   # Needed since the type is called gvariant and its merge attribute
   # must refer back to the type.

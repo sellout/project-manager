@@ -1,0 +1,3 @@
+{
+  flakehub-enabled = ./enabled;
+}

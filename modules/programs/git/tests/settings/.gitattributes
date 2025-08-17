@@ -1,0 +1,4 @@
+/some-file linguist-generated
+*.pdf diff=pdf
+meh important=100
+*.bin -diff important=50
