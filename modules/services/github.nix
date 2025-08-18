@@ -120,7 +120,11 @@ in {
       enable = true;
 
       attributes =
-        lib.mapAttrsToList (n: v: "/" + v.target + " linguist-generated")
+        lib.mapAttrs'
+        (_: v: {
+          name = "/" + v.target;
+          value.linguist-generated = true;
+        })
         generatedAndCommitted;
     };
 

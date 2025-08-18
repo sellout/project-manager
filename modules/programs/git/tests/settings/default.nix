@@ -1,12 +1,16 @@
 {
   programs.git = {
     enable = true;
-    attributes = [
-      "/some-file linguist-generated"
-      "*.pdf diff=pdf"
-      "meh important=100"
-      "*.bin -diff important=50"
-    ];
+    attributes = {
+      "/some-file".linguist-generated = true;
+      "*.pdf".diff = "pdf";
+      meh.important = 100;
+      "*.bin" = {
+        diff = false;
+        important = 50;
+      };
+      other.unset = null;
+    };
 
     includes = [
       {path = "~/some-extra/git/config.inc";}

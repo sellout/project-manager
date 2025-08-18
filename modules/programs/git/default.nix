@@ -9,6 +9,14 @@ with lib; let
 
   projectDirectory = config.project.projectDirectory;
 
+  ## Values that can be turned into a “simple” string (no newlines, but probably
+  ## should still check for spaces if necessary).
+  simplyStringType =
+    types.nullOr
+    (types.either
+      (types.either types.bool types.number)
+      (types.either (types.pathWith {}) types.singleLineStr));
+
   fileType =
     (import ../lib/file-type.nix {
       inherit projectDirectory lib pkgs;
@@ -184,18 +192,27 @@ in {
       ignoreRevs = mkOption {
         type = types.nullOr (types.listOf types.str);
         default = null;
-        example = ["*~" "*.swp"];
+        example = ["85aa90127b474729fecedfbfce566c8db1760cd1"];
         description = ''
           List of revisions that should be ignored when assigning blame.
         '';
       };
 
       attributes = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        example = ["*.pdf diff=pdf"];
+        type = types.attrsOf (types.attrsOf simplyStringType);
+        default = {};
+        example = {"*.pdf".diff = "pdf";};
         description = ''
-          List of defining attributes set globally.
+          An attribute set of file patterns. The values are git attributes, with
+          the following mappings:
+
+          - `foo = true` mapping to "foo",
+          - `foo = false` mapping to "-foo", and
+          - `foo = null` mapping to "!foo".
+          - `foo = "somestring"` mapping to "foo=somestring".
+          - `foo = 123` mapping to "foo=123".
+
+          See https://git-scm.com/docs/gitattributes for more.
         '';
       };
 
@@ -278,7 +295,19 @@ in {
         ##       of files in order to determine what to add to .gitattributes.
         file.".gitattributes" = {
           minimum-persistence = "worktree";
-          text = concatLines cfg.attributes;
+          text = lib.concatLines (lib.mapAttrsToList (pattern: attrs:
+            pattern
+            + " "
+            + concatStringsSep " " (lib.mapAttrsToList (attr: v:
+              if v == true
+              then attr
+              else if v == false
+              then "-" + attr
+              else if v == null
+              then "!" + attr
+              else attr + "=" + builtins.toString v)
+            attrs))
+          cfg.attributes);
         };
 
         devPackages = [cfg.package];

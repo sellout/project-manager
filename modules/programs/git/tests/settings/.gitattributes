@@ -1,4 +1,5 @@
-/some-file linguist-generated
-*.pdf diff=pdf
-meh important=100
 *.bin -diff important=50
+*.pdf diff=pdf
+/some-file linguist-generated
+meh important=100
+other !unset
