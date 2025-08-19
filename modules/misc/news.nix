@@ -48,7 +48,10 @@ with lib; let
     };
   });
 in {
-  meta.maintainers = [maintainers.rycee];
+  meta.maintainers = [
+    maintainers.sellout
+    maintainers.rycee
+  ];
 
   options = {
     news = {

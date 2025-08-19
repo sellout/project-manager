@@ -64,6 +64,8 @@
     };
   };
 in {
+  meta.maintainers = [lib.maintainers.sellout];
+
   options.programs.shellcheck = {
     enable = lib.mkEnableOption "ShellCheck";
 

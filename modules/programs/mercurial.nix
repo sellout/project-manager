@@ -9,6 +9,8 @@ with lib; let
 
   iniFormat = pkgs.formats.ini {};
 in {
+  meta.maintainers = [lib.maintainers.sellout];
+
   options = {
     programs.mercurial = {
       enable = mkEnableOption "Mercurial";
