@@ -14,6 +14,10 @@ export TEXTDOMAINDIR=@OUT@/share/locale
 source @PROJECT_MANAGER_LIB@
 
 function showHelp() {
+  ## NB: This output is intentionally over-wide. It’s set to 80 columns in the          |
+  ##     output, so each line can have content until column 89 (including the           |
+  ##     closing quote, aligned with the bars to the right of this comment)             |
+  ##     because it is indented 8 columns.                                              |
   echo "Usage: $0 [OPTION] COMMAND"
   echo
   echo "Options"
@@ -44,43 +48,64 @@ function showHelp() {
   echo "  --builders VALUE"
   echo "  --refresh                Consider all previously downloaded files out-of-date"
   echo
+  echo "Note: Some commands pass arbitrary arguments to some underlying command (for"
+  echo "      example, ‘format’ will pass everything Project Manager doesn’t understand"
+  echo "      to the formatter specified in the flake). These commands include ‘[ARG …]’"
+  echo "      in their summary."
+  echo
   echo "Commands"
   echo
-  echo "  help         Print this help"
+  echo "  help"
+  echo "      Print this help"
   echo
-  echo '  edit         Open the project configuration in $EDITOR'
+  echo "  kitchen-sink [ARG …]"
+  echo "  ks [ARG …]"
+  echo "      Run all of the file-updating subcommands (currently ‘switch’ then"
+  echo "     ‘format’) to get things updated in one fell swoop. Note that ‘ARG …’ are"
+  echo "      passed to the ‘format’ command and don’t affect ‘switch’."
   echo
-  echo "  build        Build configuration into result directory"
+  echo "  edit"
+  echo '      Open the project configuration in $EDITOR (currently'
+  echo "     ‘${EDITOR}’)"
   echo
-  echo "  init [--switch] [DIR]"
-  echo "      Initializes a configuration in the given directory. If the directory"
-  echo "      does not exist, then it will be created. The default directory is"
-  echo "      '~/.config/project-manager'."
+  echo "  build"
+  echo "      Build configuration into result directory"
+  echo
+  echo "  init [--switch] [DIR] [ARG …]"
+  echo "      Initializes a configuration in the given directory. If the directory does"
+  echo "      not exist, then it will be created. The default directory is"
+  echo "     ‘~/.config/project-manager’."
   echo
   echo "      --switch      Immediately activate the generated configuration."
   echo
-  echo "  switch       Build and activate configuration"
+  echo "  switch"
+  echo "      Build and activate configuration"
   echo
-  echo "  generations  List all project environment generations"
+  echo "  generations"
+  echo "      List all project environment generations"
   echo
-  echo "  remove-generations ID..."
-  echo "      Remove indicated generations. Use 'generations' command to"
+  echo "  remove-generations ID … [ARG …]"
+  echo "      Remove indicated generations. Use 'generations' command to find suitable"
   echo "      find suitable generation numbers."
   echo
-  echo "  expire-generations TIMESTAMP"
+  echo "  expire-generations TIMESTAMP [ARG …]"
   echo "      Remove generations older than TIMESTAMP where TIMESTAMP is"
-  echo "      interpreted as in the -d argument of the date tool. For"
-  echo '      example "-30 days" or "2018-01-01".'
+  echo '      interpreted as in the -d argument of the date tool. For example "-30 days"'
+  echo '      or "2018-01-01".'
   echo
-  echo "  packages     List all packages installed in project-manager-path"
+  echo "  packages"
+  echo "      List all packages installed in project-manager-path"
   echo
-  echo "  fmt"
+  echo "  format [ARG …]"
+  echo "  fmt [ARG …]"
   echo "      Run the configured formatter. This is usually much faster than running"
   echo "     ‘nix fmt’ because it avoids evaluating the flake."
   echo
-  echo "  news         Show news entries in a pager"
+  echo "  news"
+  echo "      Show news entries in a pager"
   echo
-  echo "  uninstall    Remove Project Manager"
+  echo "  uninstall"
+  echo "      Remove Project Manager"
 }
 
 EXTRA_NIX_PATH=()
@@ -92,8 +117,16 @@ while [[ $# -gt 0 ]]; do
   opt="$1"
   shift
   case $opt in
-    build | init | edit | expire-generations | generations | fmt | help | news | packages | remove-generations | switch | uninstall)
+    build | init | edit | expire-generations | generations | format | \
+      kitchen-sink | help | news | packages | remove-generations | switch | \
+      uninstall)
       COMMAND="$opt"
+      ;;
+    fmt)
+      COMMAND="format"
+      ;;
+    ks)
+      COMMAND="kitchen-sink"
       ;;
     -I)
       EXTRA_NIX_PATH+=("$1")
@@ -103,7 +136,8 @@ while [[ $# -gt 0 ]]; do
       export PROJECT_MANAGER_CONFIG="$1"
       shift
       ;;
-    --recreate-lock-file | --no-update-lock-file | --no-write-lock-file | --no-registries | --commit-lock-file | --refresh)
+    --recreate-lock-file | --no-update-lock-file | --no-write-lock-file | \
+      --no-registries | --commit-lock-file | --refresh)
       PASSTHROUGH_OPTS+=("$opt")
       ;;
     --update-input)
@@ -155,7 +189,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       case $COMMAND in
-        init | expire-generations | remove-generations | fmt | option)
+        init | expire-generations | remove-generations | format | kitchen-sink)
           COMMAND_ARGS+=("$opt")
           ;;
         *)
@@ -200,6 +234,10 @@ case $COMMAND in
   init)
     pm_init "${COMMAND_ARGS[@]}"
     ;;
+  kitchen-sink)
+    pm_switch
+    pm_format "${COMMAND_ARGS[@]}"
+    ;;
   switch)
     pm_switch
     ;;
@@ -220,7 +258,7 @@ case $COMMAND in
   packages)
     pm_listPackages
     ;;
-  fmt)
+  format)
     pm_format "${COMMAND_ARGS[@]}"
     ;;
   news)
