@@ -159,6 +159,17 @@ in {
         "check shellcheck [x86_64-linux]"
         "check vale [x86_64-linux]"
       ]);
+  services.nix-ci = {
+    enable = true;
+    ## Override this for specific project types (like Haskell and Rust), until I
+    ## get them off IFD.
+    allow-import-from-derivation = false;
+    cachix = {
+      name = "sellout";
+      public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";
+    };
+    fail-fast = false;
+  };
 
   ## publishing
   services.flakehub.enable = true;
