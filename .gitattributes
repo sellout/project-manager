@@ -10,3 +10,4 @@
 /garnix.yaml linguist-generated
 /nix-ci.nix linguist-generated
 /.github/workflows/pages.yml linguist-generated
+/.github/workflows/switch-pm-generation.yml linguist-generated
