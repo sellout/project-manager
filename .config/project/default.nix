@@ -75,6 +75,7 @@ in {
         "*.css"
         "*.scss"
         "*.xml" # TODO: Remove this once we get the XSL transform working.
+        "./docs/manual/manpage-urls.json"
         "./docs/project-manager.1"
         "./docs/project-configuration-nix-header.5"
         "./project-manager/project-manager"
@@ -89,12 +90,17 @@ in {
         "DBus"
         "dconf"
         "declutter"
+        "decluttered"
+        "decluttering"
         "devenv"
         "devShell"
         "Dhall"
-        "formatter"
+        "formatters"
+        "NixOS"
+        "Nixpkgs"
         "NMT"
         "sandboxed"
+        "subcommands"
         "systemd"
         "treefmt"
         "unsandboxed"
@@ -159,6 +165,17 @@ in {
         "check shellcheck [x86_64-linux]"
         "check vale [x86_64-linux]"
       ]);
+  services.nix-ci = {
+    enable = true;
+    ## Override this for specific project types (like Haskell and Rust), until I
+    ## get them off IFD.
+    allow-import-from-derivation = false;
+    cachix = {
+      name = "sellout";
+      public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";
+    };
+    fail-fast = false;
+  };
 
   ## publishing
   services.flakehub.enable = true;

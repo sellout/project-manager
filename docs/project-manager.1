@@ -18,6 +18,8 @@
 .Bro
 .Cm build
 .Cm | init Op Fl -switch Ar dir
+.Cm | kitchen-sink \&...
+.Cm | ks \&...
 .Cm | instantiate
 .Cm | edit
 .Cm | expire-generations Ar timestamp
@@ -26,6 +28,7 @@
 .Cm | news
 .Cm | option Ar option.name
 .Cm | packages
+.Cm | format \&...
 .Cm | fmt \&...
 .Cm | remove-generations Ar ID \&...
 .Cm | uninstall
@@ -146,10 +149,18 @@ List all packages installed in project-manager-path.
 .RE
 .Pp
 
+.It Cm format
 .It Cm fmt
 .RS 4
 Run the configured formatter. This is usually much faster than running
 \fBnix fmt\fR because it avoids evaluating the flake.
+.RE
+.Pp
+
+.It Cm kitchen-sink
+.It Cm ks
+.RS 4
+Run both \fBswitch\fR and \fBformat\fR commands.
 .RE
 .Pp
 
