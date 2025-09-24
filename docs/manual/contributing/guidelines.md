@@ -96,7 +96,7 @@ Every new module _must_ include a named maintainer using the
 `meta.maintainers` attribute. If you are a user of a module that
 currently lacks a maintainer then please consider adopting it.
 
-If you are present in the nixpkgs maintainer list then you can use that
+If you are present in the Nixpkgs maintainer list then you can use that
 entry. If you aren’t then you can add yourself to
 `modules/lib/maintainers.nix` in the Project Manager project.
 

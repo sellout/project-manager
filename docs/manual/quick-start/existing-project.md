@@ -11,9 +11,9 @@ nix run github:sellout/project-manager
 Note that this is similar to the command used by a new project. The differences are that
 
 1. we’re not providing a directory for it to create, so it will use the current directory and
-2. we are not providing `--switch` to avoid it immediately creating the new configuration.
+2. we’re not providing `--switch` to avoid it immediately creating the new configuration.
 
-If your project is already flake-based, this will _not_ overwrite the existing flake, so you will need to modify your flake to provide Project Manager integration.
+If your project is already flake-based, this _won’t_ overwrite the existing flake, so you will need to modify your flake to provide Project Manager integration.
 
 At a minimum, you need to have
 

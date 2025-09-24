@@ -29,8 +29,8 @@ through
 $ nix-shell --pure tests -A run.alacritty-empty-settings
 ```
 
-However, those invocations will impurely source the system’s nixpkgs,
-and may cause failures. To run against the nixpkgs from the flake.lock,
+However, those invocations will impurely source the system’s Nixpkgs,
+and may cause failures. To run against the Nixpkgs from the flake.lock,
 use instead e.g.
 
 ```shell
