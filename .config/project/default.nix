@@ -134,11 +134,6 @@ in {
       ]
       ++ lib.concatMap (singlePlatform "checks") [
         "formatter"
-        ## FIXME: Would rather not restrict this one, because it’s easy for
-        ##        users to accidentally create situations where they generate
-        ##        different "repository"-persisted files depending on the
-        ##        system.
-        "project-manager-files"
         "shellcheck"
         "vale"
       ];
