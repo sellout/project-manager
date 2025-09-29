@@ -143,28 +143,34 @@ in {
         "vale"
       ];
   };
-  services.github.settings.branches.main.protection.required_status_checks.contexts =
-    lib.mkForce
-    (flaky.lib.forGarnixSystems supportedSystems (sys:
-        [
-          "package docs-html [${sys}]"
-          "package docs-manpages [${sys}]"
-          "package default [${sys}]"
-          "package docs-json [${sys}]"
-          "package project-manager [${sys}]"
-          ## FIXME: These are duplicated from the base config
-          "devShell default [${sys}]"
-        ]
-        ++ lib.concatMap (nixpkgs: [
-          "check formatter-${nixpkgs} [${sys}]"
-          "check shellcheck-${nixpkgs} [${sys}]"
-        ])
-        testedNixpkgsVersions)
-      ++ [
-        "check formatter [x86_64-linux]"
-        "check shellcheck [x86_64-linux]"
-        "check vale [x86_64-linux]"
-      ]);
+  ## FIXME: The Project Manager module needs to be fixed so that these merge
+  ##        correctly, rather than having to use `lib.mkForce`.
+  services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (
+    ["All Garnix checks"]
+    ## For Garnix, these are covered by “All Garnix checks”, but for Nix CI, we
+    ## need to add them individually.
+    ++ lib.concatMap (sys:
+      [
+        "build checks.${sys}.formatter"
+        "build checks.${sys}.project-manager-files"
+        "build checks.${sys}.shellcheck"
+        "build checks.${sys}.vale"
+        "build devShells.${sys}.default"
+        "build devShells.${sys}.project-manager"
+        "build packages.${sys}.default"
+        "build packages.${sys}.docs-html"
+        "build packages.${sys}.docs-json"
+        "build packages.${sys}.docs-manpages"
+        "build packages.${sys}.project-manager"
+      ]
+      ++ lib.concatMap (nixpkgs: [
+        "build checks.${sys}.formatter-${nixpkgs}"
+        "build checks.${sys}.project-manager-files-${nixpkgs}"
+        "build checks.${sys}.shellcheck-${nixpkgs}"
+        "build checks.${sys}.vale-${nixpkgs}"
+      ])
+      testedNixpkgsVersions) ["x86_64-linux"]
+  );
   services.nix-ci = {
     enable = true;
     ## Override this for specific project types (like Haskell and Rust), until I
