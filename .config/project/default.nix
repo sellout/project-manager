@@ -114,7 +114,7 @@ in {
     ## TODO: Move this up to Flaky, and make the selected platform configurable.
     singlePlatform = output: name:
       flaky.lib.forGarnixSystems supportedSystems (sys:
-        if sys == "x86_64-linux"
+        if sys == "aarch64-darwin"
         then []
         else ["${output}.${sys}.${name}"]);
   in {
