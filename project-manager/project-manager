@@ -209,19 +209,14 @@ fi
 
 ## TODO: Make the file we look for configurable, like treefmt’s
 ##      `projectRootFile`. For now, this just finds the flake.
-set +e
-sus_trap="$(trap -p)"
-trap -- - ERR
-PROJECT_ROOT="$(nix flake metadata --json \
+if ! PROJECT_ROOT="$(nix flake metadata --json \
   | jq -r ".resolvedUrl" \
-  | sed -e 's/^[^\/]*[\/]*\//\//')"
-if [[ $? ]]; then
+  | sed -e 's/^[^\/]*[\/]*\//\//')"; then
   echo "WARN: Project Manager failed to find the project root via Nix, assuming"
   echo "      it’s the current directory."
   PROJECT_ROOT="${PWD}"
 fi
-"$sus_trap"
-set -e
+if [[ -v VERBOSE ]]; then echo "PROJECT_ROOT=$PROJECT_ROOT"; fi
 export PROJECT_ROOT
 
 case $COMMAND in
