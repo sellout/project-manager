@@ -1,8 +1,8 @@
 {
-  files = ./files.nix;
+  files = ./files;
   # ./misc/dconf.nix
   # ./misc/debug.nix
-  editorconfig = ./misc/editorconfig.nix;
+  editorconfig = ./misc/editorconfig;
   news = ./misc/news.nix;
   # ./misc/specialisation.nix
   version = ./misc/version.nix;
@@ -17,7 +17,7 @@
   # ./programs/gh-dash.nix
   # ./programs/git-cliff.nix
   # ./programs/git-credential-oauth.nix
-  git = ./programs/git.nix;
+  git = ./programs/git;
   just = ./programs/just.nix;
   mercurial = ./programs/mercurial.nix;
   # ./programs/neovim.nix
@@ -32,14 +32,14 @@
   # ./programs/zellij.nix
   # ./programs/zsh.nix
   project-environment = ./project-environment.nix;
-  flakehub = ./services/flakehub.nix;
+  flakehub = ./services/flakehub;
   flakestry = ./services/flakestry.nix;
   garnix = ./services/garnix.nix;
   github = ./services/github.nix;
   # ./services/git-sync.nix
   # ./services/lorri.nix
   nix-cx = ./services/nix-ci.nix;
-  renovate = ./services/renovate.nix;
+  renovate = ./services/renovate;
 }
 # // optional useNixpkgsModule ./misc/nixpkgs.nix
 # // optional (!useNixpkgsModule) ./misc/nixpkgs-disabled.nix

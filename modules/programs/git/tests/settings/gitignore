@@ -1,0 +1,6 @@
+/.gitattributes
+/.gitignore
+/.local/state/project-manager/
+/.local/state/nix/profiles/
+/.locally-generated
+/.cache

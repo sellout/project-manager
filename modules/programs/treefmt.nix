@@ -9,6 +9,8 @@
 }: let
   cfg = config.programs.treefmt;
 in {
+  meta.maintainers = [lib.maintainers.sellout];
+
   options.programs.treefmt = {
     enable = lib.mkEnableOption "treefmt";
 
@@ -42,7 +44,10 @@ in {
   };
 
   config = lib.mkIf cfg.enable (let
-    newExcludes = lib.mapAttrsToList (k: v: v.target) (lib.filterAttrs (k: v: v.persistence == "repository") config.project.file);
+    newExcludes =
+      lib.mapAttrsToList (k: v: v.target)
+      (lib.filterAttrs (k: v: v.persistence == "repository")
+        config.project.file);
     format = treefmt-nix.lib.evalModule pmPkgs {
       inherit (cfg) package projectRootFile programs;
       settings =

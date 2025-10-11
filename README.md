@@ -1,6 +1,7 @@
-[![built with garnix](https://img.shields.io/endpoint?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Fsellout%2Fproject-manager%3Fbranch%3Dmain)](https://garnix.io)
-
 # Project Manager (for Nix flakes)
+
+[![built with garnix](https://img.shields.io/endpoint?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Fsellout%2Fproject-manager)](https://garnix.io/repo/sellout/project-manager)
+[![Nix CI](https://nix-ci.com/badge/gh:sellout:project-manager)](https://nix-ci.com/gh:sellout:project-manager)
 
 Like [Home Manager](https://nix-community.github.io/home-manager/), but for repositories.
 

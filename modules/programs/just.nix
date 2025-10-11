@@ -15,8 +15,10 @@
     })
     .fileContents;
 in {
+  meta.maintainers = [lib.maintainers.sellout];
+
   options.programs.just = {
-    enable = lib.mkEnableOption "just (https://github.com/casey/just)";
+    enable = lib.mkEnableOption "[just](https://github.com/casey/just)";
 
     package = lib.mkPackageOption pkgs "just" {};
 

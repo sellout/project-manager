@@ -2,14 +2,21 @@
   description = "A configuration for managing flake-based projects.";
 
   nixConfig = {
+    ## NB: This is a consequence of using `self.pkgsLib.runEmptyCommand`, which
+    ##     allows us to sandbox derivations that otherwise can’t be.
+    allow-import-from-derivation = true;
     extra-experimental-features = [
       ## https://github.com/NixOS/rfcs/blob/master/rfcs/0045-deprecate-url-syntax.md
       "no-url-literals"
-      "recursive-nix"
+      # "recursive-nix"
     ];
-    extra-substituters = ["https://cache.garnix.io"];
+    extra-substituters = [
+      "https://cache.garnix.io"
+      "https://sellout.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
+      "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE="
     ];
     ## Isolate the build.
     sandbox = "relaxed";
@@ -96,6 +103,8 @@
 
       pkgs = pkgsFor system;
     in {
+      apps.tests = flake-utils.lib.mkApp {drv = self.checks.${system}.tests;};
+
       packages = let
         docs = import ./docs {
           inherit pkgs self;
@@ -112,11 +121,8 @@
 
       projectConfigurations = projectConfigurationsFor pkgs;
 
-      devShells = let
-        #   tests = import ./tests {inherit pkgs;};
-      in
+      devShells =
         self.projectConfigurations.${system}.devShells
-        # // tests.run
         // {
           default =
             self.devShells.${system}.project-manager.overrideAttrs
@@ -191,7 +197,14 @@
           // checksWith nixpkgs-24_11 (_: _: {})
           ## This is covered by the version used to build Project Manager
           # // checksWith nixpkgs-25_05 (_: _: {})
-          // checksWith nixpkgs-unstable (_: _: {});
+          // checksWith nixpkgs-unstable (_: _: {})
+          ## TODO: Run tests against all support Nixpkgs versions.
+          // {
+            tests = pkgs.writeShellScriptBin "tests" ''
+              exec env PATH="${pkgs.fzf}/bin:$PATH" \
+                ${nixpkgs.lib.getExe pkgs.python3} ${self}/testing/tests.py "$@"
+            '';
+          };
       in
         ## FIXME: Because the basement override isn’t working.
         if system == "i686-linux"

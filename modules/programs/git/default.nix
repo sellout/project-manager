@@ -256,9 +256,9 @@ in {
               if [[ ''${persistence[$relativePath]} == repository ]]; then
                 ## We use force here in case the file is covered by an ignore
                 ## somewhere.
-                ${pkgs.git}/bin/git add --force --intent-to-add "$relativePath"
+                ${lib.getExe pkgs.git} add --force --intent-to-add "$relativePath"
               else
-                ${pkgs.git}/bin/git rm --cached --ignore-unmatch "$relativePath"
+                ${lib.getExe pkgs.git} rm --cached --ignore-unmatch "$relativePath"
               fi
             done
           '';
@@ -273,9 +273,12 @@ in {
           updateGitStatuses || exit 1
         '');
 
+        ## TODO: This should be conditionally generated, but it creates a cycle
+        ##       with other modules (like github) that want to review the list
+        ##       of files in order to determine what to add to .gitattributes.
         file.".gitattributes" = {
           minimum-persistence = "worktree";
-          text = concatStringsSep "\n" cfg.attributes + "\n";
+          text = concatLines cfg.attributes;
         };
 
         devPackages = [cfg.package];

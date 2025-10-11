@@ -8,6 +8,8 @@
 }: let
   cfg = config.programs.vale;
 in {
+  meta.maintainers = [lib.maintainers.sellout];
+
   options.programs.vale = {
     ## TODO: Enabling this currently requires the flake to have
     ##      `nixConfig.sandbox = false;` to allow the check to run.

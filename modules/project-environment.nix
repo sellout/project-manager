@@ -323,7 +323,9 @@ in {
     };
 
     formatter = mkOption {
-      type = types.package;
+      type = types.nullOr types.package;
+      default = null;
+      example = pkgs.alejandra;
       description = ''
         Package to use as the flake’s formatter. This needs to be assigned to
         the flake’s formatter output.
@@ -629,7 +631,7 @@ in {
           # if config.nix.enable && config.nix.package != null then
           #   ":${config.nix.package}/bin"
           # else
-          ":$(${pkgs.coreutils}/bin/dirname $(${pkgs.coreutils}/bin/readlink -m $(type -p nix)))"
+          ":$(${lib.getExe' pkgs.coreutils "dirname"} $(${lib.getExe' pkgs.coreutils "readlink"} -m $(type -p nix)))"
         )
         + optionalString (!cfg.emptyActivationPath) "\${PATH:+:}$PATH";
 
@@ -749,7 +751,7 @@ in {
 
       ## Makes using the configured formatter faster, since it doesn’t have to
       ## evaluate the flake each time.
-      sessionVariables = lib.mkIf (cfg ? formatter) {
+      sessionVariables = lib.mkIf (cfg.formatter != null) {
         __PM_FORMATTER = lib.getExe cfg.formatter;
       };
 

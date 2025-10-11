@@ -1,0 +1,10 @@
+{
+  "project":
+    {
+      "name": "project-manager",
+      "summary": "Home Manager, but for repos.",
+      "description": "A configuration for managing flake-based projects.",
+      "repo": "sellout/project-manager",
+    },
+  "type": { "name": "nix" },
+}

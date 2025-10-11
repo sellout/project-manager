@@ -9,7 +9,7 @@
   # maintainers = import ./maintainers.nix;
   path = import ./path.nix {inherit lib;};
   strings = import ./strings.nix {inherit lib;};
-  types = import ./types.nix {inherit gvariant lib;};
+  types = import ./types {inherit gvariant lib;};
 
   shell = import ./shell.nix {inherit lib;};
   # zsh = import ./zsh.nix { inherit lib; };

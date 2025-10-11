@@ -61,11 +61,23 @@ in {
       programs.shellcheck.enable = true;
       ## Shell formatter
       programs.shfmt.enable = true;
-      settings.formatter = let
-        includes = ["project-manager/project-manager"];
-      in {
-        shellcheck = {inherit includes;};
-        shfmt = {inherit includes;};
+      settings = {
+        formatter = let
+          includes = ["project-manager/project-manager"];
+        in {
+          shellcheck = {inherit includes;};
+          shfmt = {inherit includes;};
+        };
+        ## TODO: This is overly broad. It captures the files that define the
+        ##       tests as well as the golden files. Consider refining the tests’
+        ##       filesystem structure to make it possible to capture only golden
+        ##       files.
+        ##
+        ##       In the mean time, it can be helpful to comment out this line,
+        ##       run `project-manager fmt` and then discard the formatting
+        ##       applied to golden files (running the tests and seeing what
+        ##       breaks should show you which files to revert).
+        global.excludes = ["*/tests/*"];
       };
     };
     vale = {
@@ -187,6 +199,5 @@ in {
 
   imports = [
     ./github-pages.nix
-    ./mustache.nix
   ];
 }
