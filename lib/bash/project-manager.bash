@@ -304,6 +304,12 @@ function pm_init() {
     _i "Creating initial Project Manager generation..."
     echo
 
+    ## TODO: We shouldn’t need to be in `PROJECT_ROOT` `switch`, but for now we
+    ##       do. We don’t need to exit, though, because we check this value for
+    ##       consistency later. Needing to exit here would mean we’re liable to
+    ##       do bad things when the user runs `switch`, so we shouldn’t change
+    ##       that.
+    cd "$PROJECT_ROOT" || true
     if pm_switch; then
       # translators: The "%s" specifier will be replaced by a file path.
       _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
