@@ -207,18 +207,6 @@ if [[ -z $COMMAND ]]; then
   exit 1
 fi
 
-## TODO: Make the file we look for configurable, like treefmt’s
-##      `projectRootFile`. For now, this just finds the flake.
-if ! PROJECT_ROOT="$(nix flake metadata --json \
-  | jq -r ".resolvedUrl" \
-  | sed -e 's/^[^\/]*[\/]*\//\//')"; then
-  echo "WARN: Project Manager failed to find the project root via Nix, assuming"
-  echo "      it’s the current directory."
-  PROJECT_ROOT="${PWD}"
-fi
-if [[ -v VERBOSE ]]; then echo "PROJECT_ROOT=$PROJECT_ROOT"; fi
-export PROJECT_ROOT
-
 case $COMMAND in
   edit)
     pm_edit
