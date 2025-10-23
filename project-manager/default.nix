@@ -51,13 +51,8 @@ in
         unixtools.hostname
       ]
     }" \
-      --subst-var-by PROJECT_MANAGER_LIB '${../lib/bash/project-manager.bash}' \
       --subst-var-by OUT "$out" \
       --subst-var-by VERSION "${release}"
-
-    substituteInPlace $out/bin/project-manager \
-      --subst-var-by FLAKE_TEMPLATE '${../templates/default/flake.nix}' \
-      --subst-var-by CONFIG_TEMPLATE '${../templates/default/.config/project/default.nix}'
 
     ## See NixOS/nixpkgs#247410.
     (set +u; patchShebangs --host $out/bin/project-manager)
@@ -71,6 +66,10 @@ in
 
     install -D -m755 ${../lib/bash/project-manager.bash} \
       "$out/share/bash/project-manager.bash"
+
+    substituteInPlace $out/share/bash/project-manager.bash \
+      --subst-var-by FLAKE_TEMPLATE '${../templates/default/flake.nix}' \
+      --subst-var-by CONFIG_TEMPLATE '${../templates/default/.config/project/default.nix}'
 
     # for path in {./po}/*.po; do
     #   lang="''${path##*/}"
