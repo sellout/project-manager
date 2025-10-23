@@ -87,11 +87,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1759726667,
-        "narHash": "sha256-AdVI8dA/kHfXibs86A7ubr7eNgJtfg4erDDPRQn3Nf4=",
+        "lastModified": 1760668400,
+        "narHash": "sha256-i2RlWOgSV4za8SnPqR0LLSxpzqGO3SID2a55NCVHvRs=",
         "owner": "sellout",
         "repo": "flaky",
-        "rev": "dca5c5fff860cdc69716d084af681fd8244137be",
+        "rev": "6f0f7c86a166dcf2049eb418f41a8aa79c20a59e",
         "type": "github"
       },
       "original": {
