@@ -647,7 +647,7 @@ in {
 
         ${builtins.readFile ./lib-bash/activation-init.bash}
 
-        if [[ ! -v SKIP_SANITY_CHECKS ]]; then
+        if [[ ! -v SKIP_CONSISTENCY_CHECKS ]]; then
           checkProjectDirectory ${escapeShellArg cfg.projectDirectory}
         fi
 
