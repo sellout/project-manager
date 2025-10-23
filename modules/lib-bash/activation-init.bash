@@ -41,7 +41,8 @@ function setupVars() {
 }
 
 function checkProjectDirectory() {
-  local expectedProject="$1"
+  local expectedProject
+  expectedProject=$(readlink --canonicalize-missing "$1")
 
   if ! [[ $PROJECT_ROOT -ef $expectedProject ]]; then
     _iError 'Error: PROJECT_ROOT is set to "%s" but we expect "%s"' "$PROJECT_ROOT" "$expectedProject"

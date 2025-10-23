@@ -254,7 +254,7 @@ function pm_init() {
           _i "Run '%s --help' for usage help" "$0" >&2
           exit 1
         else
-          projectDir="$opt"
+          projectDir=$(readlink --canonicalize-missing "$opt")
         fi
         ;;
     esac
