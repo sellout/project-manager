@@ -30,7 +30,7 @@ function setupVars() {
     oldGenPath="$(readlink -e "$genProfilePath")"
   fi
 
-  "${VERBOSE_RUN[@]}" _i "Sanity checking oldGenNum and oldGenPath"
+  "${VERBOSE_RUN[@]}" _i "Checking oldGenNum and oldGenPath for consistency"
   if [[ -v oldGenNum && ! -v oldGenPath ||
     ! -v oldGenNum && -v oldGenPath ]]; then
     _i $'The previous generation number and path are in conflict! These\nmust be either both empty or both set but are now set to\n\n    \'%s\' and \'%s\'\n\nIf you don\'t mind losing previous profile generations then\nthe easiest solution is probably to run\n\n   rm %s/project-manager*\n   rm %s/current-project\n\nand trying project-manager switch again. Good luck!' \
@@ -41,7 +41,8 @@ function setupVars() {
 }
 
 function checkProjectDirectory() {
-  local expectedProject="$1"
+  local expectedProject
+  expectedProject=$(readlink --canonicalize-missing "$1")
 
   if ! [[ $PROJECT_ROOT -ef $expectedProject ]]; then
     _iError 'Error: PROJECT_ROOT is set to "%s" but we expect "%s"' "$PROJECT_ROOT" "$expectedProject"
@@ -55,7 +56,7 @@ _i "Starting Project Manager activation"
 
 # Verify that we can connect to the Nix store and/or daemon. This will
 # also create the necessary directories in profiles and gcroots.
-"${VERBOSE_RUN[@]}" _i "Sanity checking Nix"
+"${VERBOSE_RUN[@]}" _i "Validating Nix installation"
 nix-build --expr '{}' --no-out-link --quiet
 
 setupVars

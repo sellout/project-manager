@@ -113,9 +113,13 @@ in {
           if lib.trivial.release == "22.11"
           then {}
           else {
+            nullable = true;
             extraDescription = ''
               Use {var}`pkgs.gitAndTools.gitFull` to gain access to
               {command}`git send-email` for instance.
+
+              If this is `null`, the system `git` will be used during
+              activation.
             '';
           }
         ));
@@ -249,194 +253,203 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (mkMerge [
-    {
-      project = {
-        activation.updateGitStatus = pm.dag.entryAfter ["linkGeneration"] (let
-          updateStatus = pkgs.writeText "updateStatus" ''
-            ${config.lib.bash.initProjectManagerLib}
+  config = mkIf cfg.enable (let
+    gitExe =
+      if cfg.package != null
+      then lib.getExe cfg.package
+      else "git";
+  in
+    mkMerge [
+      {
+        project = {
+          activation.updateGitStatus = pm.dag.entryAfter ["linkGeneration"] (let
+            updateStatus = pkgs.writeText "updateStatus" ''
+              ${config.lib.bash.initProjectManagerLib}
 
-            # A symbolic link whose target path matches this pattern will be
-            # considered part of a Project Manager generation.
-            projectFilePattern="$(readlink -e ${escapeShellArg builtins.storeDir})/*-project-manager-files/*"
+              # A symbolic link whose target path matches this pattern will be
+              # considered part of a Project Manager generation.
+              projectFilePattern="$(readlink -e ${escapeShellArg builtins.storeDir})/*-project-manager-files/*"
 
-            newGenFiles="$1"
-            shift
-            declare -A persistence=( )
-            while read -r var value; do
-              persistence[$var]=$value
-            done < "$newGenFiles/pm-metadata/persistence"
-            cd $PROJECT_ROOT
-            for sourcePath in "$@" ; do
-              [[ $sourcePath =~ pm-metadata ]] && continue
-              relativePath="''${sourcePath#$newGenFiles/}"
-              if [[ ''${persistence[$relativePath]} == repository ]]; then
-                ## We use force here in case the file is covered by an ignore
-                ## somewhere.
-                ${lib.getExe pkgs.git} add --force --intent-to-add "$relativePath"
-              else
-                ${lib.getExe pkgs.git} rm --cached --ignore-unmatch "$relativePath"
-              fi
-            done
-          '';
-        in ''
-          function updateGitStatuses() {
-            local newGenFiles
-            newGenFiles="$(readlink -e "$newGenPath/project-files")"
-            find "$newGenFiles" \( -type f -or -type l \) \
-                -exec bash ${updateStatus} "$newGenFiles" {} +
-          }
+              newGenFiles="$1"
+              shift
+              declare -A persistence=( )
+              while read -r var value; do
+                persistence[$var]=$value
+              done < "$newGenFiles/pm-metadata/persistence"
+              cd $PROJECT_ROOT
+              for sourcePath in "$@" ; do
+                [[ $sourcePath =~ pm-metadata ]] && continue
+                relativePath="''${sourcePath#$newGenFiles/}"
+                if [[ ''${persistence[$relativePath]} == repository ]]; then
+                  ## We use force here in case the file is covered by an ignore
+                  ## somewhere.
+                  ${gitExe} add --force --intent-to-add "$relativePath"
+                else
+                  ${gitExe} rm --cached --ignore-unmatch "$relativePath"
+                fi
+              done
+            '';
+          in ''
+            function updateGitStatuses() {
+              [[ $(${gitExe} rev-parse --is-inside-work-tree &>/dev/null) ]] ||
+                 ${gitExe} init
 
-          updateGitStatuses || exit 1
-        '');
+              local newGenFiles
+              newGenFiles="$(readlink -e "$newGenPath/project-files")"
+              find "$newGenFiles" \( -type f -or -type l \) \
+                  -exec bash ${updateStatus} "$newGenFiles" {} +
+            }
 
-        ## TODO: This should be conditionally generated, but it creates a cycle
-        ##       with other modules (like github) that want to review the list
-        ##       of files in order to determine what to add to .gitattributes.
-        file.".gitattributes" = {
-          minimum-persistence = "worktree";
-          text = lib.concatLines (lib.mapAttrsToList (pattern: attrs:
-            pattern
-            + " "
-            + concatStringsSep " " (lib.mapAttrsToList (attr: v:
-              if v == true
-              then attr
-              else if v == false
-              then "-" + attr
-              else if v == null
-              then "!" + attr
-              else attr + "=" + builtins.toString v)
-            attrs))
-          cfg.attributes);
+            updateGitStatuses || exit 1
+          '');
+
+          ## TODO: This should be conditionally generated, but it creates a cycle
+          ##       with other modules (like github) that want to review the list
+          ##       of files in order to determine what to add to .gitattributes.
+          file.".gitattributes" = {
+            minimum-persistence = "worktree";
+            text = lib.concatLines (lib.mapAttrsToList (pattern: attrs:
+              pattern
+              + " "
+              + concatStringsSep " " (lib.mapAttrsToList (attr: v:
+                if v == true
+                then attr
+                else if v == false
+                then "-" + attr
+                else if v == null
+                then "!" + attr
+                else attr + "=" + builtins.toString v)
+              attrs))
+            cfg.attributes);
+          };
+
+          devPackages = [cfg.package];
         };
 
-        devPackages = [cfg.package];
-      };
+        programs.vale.excludes = ["./.gitattributes"];
 
-      programs.vale.excludes = ["./.gitattributes"];
+        xdg.cacheFile."git/config" = {
+          minimum-persistence = "store";
+          onChange =
+            if cfg.installConfig
+            then ''
+              if $(${gitExe} config --get extensions.worktreeConfig); then
+                scope='--worktree'
+              else
+                scope='--local'
+              fi
 
-      xdg.cacheFile."git/config" = {
-        minimum-persistence = "store";
-        onChange =
-          if cfg.installConfig
-          then ''
-            if $(${pkgs.git}/bin/git config --get extensions.worktreeConfig); then
-              scope='--worktree'
-            else
-              scope='--local'
-            fi
+              ${gitExe} config "$scope" \
+                include.path "${config.xdg.cacheFile."git/config".reference config.xdg.cacheFile."git/config"}"
+            ''
+            else ''
+              if $(${gitExe} config --get extensions.worktreeConfig); then
+                scope='--worktree'
+              else
+                scope='--local'
+              fi
 
-            ${pkgs.git}/bin/git config "$scope" \
-              include.path "${config.xdg.cacheFile."git/config".reference config.xdg.cacheFile."git/config"}"
-          ''
-          else ''
-            if $(${pkgs.git}/bin/git config --get extensions.worktreeConfig); then
-              scope='--worktree'
-            else
-              scope='--local'
-            fi
+              ${gitExe} config "$scope" --unset include.path || true
+            '';
+          text = lib.pm.generators.toGitINI cfg.iniContent;
+        };
+      }
 
-            ${pkgs.git}/bin/git config "$scope" --unset include.path || true
-          '';
-        text = lib.pm.generators.toGitINI cfg.iniContent;
-      };
-    }
-
-    (mkIf (cfg.ignores != null) (let
-      ## NB: For user config, we use .git/info/exclude instead.
-      ignorePath = ".gitignore";
-    in {
-      ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
-      ##        actually be a copy, but can be added to itself, so we don’t need
-      ##        to commit it.
-      project.file."${ignorePath}" = {
-        minimum-persistence = "worktree";
-        broken-symlink = true;
-        text = concatLines (mapAttrsToList (n: v: "/" + v.target)
-          (filterAttrs (n: v: v.persistence == "worktree") config.project.file)
-          ++ cfg.ignores);
-      };
-    }))
-
-    (mkIf (cfg.signing != null) {
-      programs.git.iniContent = {
-        commit.gpgSign = mkDefault cfg.signing.signByDefault;
-        tag.gpgSign = mkDefault cfg.signing.signByDefault;
-      };
-    })
-
-    (mkIf (cfg.ignoreRevs != null) (let
-      ignoreRevsPath = "git/ignoreRevs";
-    in {
-      programs.git.iniContent.blame.ignoreRevsFile =
-        config.xdg.cacheFile."${ignoreRevsPath}".reference
-        config.xdg.cacheFile."git/config";
-      xdg.cacheFile."${ignoreRevsPath}" = {
-        minimum-persistence = "store";
-        text = concatLines cfg.ignoreRevs;
-      };
-    }))
-
-    (mkIf (cfg.hooks != null) {
-      xdg.cacheFile = lib.mapAttrs' (name: file:
-        lib.nameValuePair "git/hooks/${name}"
-        (lib.mkMerge [
-          file
-          {
-            executable = true;
-            minimum-persistence = "store";
-          }
-        ]))
-      cfg.hooks;
-
-      programs.git.iniContent.core.hooksPath =
-        if builtins.any (name: config.xdg.cacheFile."git/hooks/${name}".referenceViaStore config.xdg.cacheFile."git/config") (builtins.attrNames cfg.hooks)
-        then let
-          entries =
-            mapAttrsToList (name: file: {
-              inherit name;
-              path = config.xdg.cacheFile."git/hooks/${name}".reference config.xdg.cacheFile."git/config";
-            })
-            cfg.hooks;
-        in
-          toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries)
-        else lib.pm.path.routeFromFile config.xdg.cacheFile."git/config".target "${config.xdg.cacheDir}/git/hooks";
-    })
-
-    (mkIf (lib.isAttrs cfg.config) {
-      programs.git.iniContent = cfg.config;
-    })
-
-    (mkIf (cfg.includes != []) {
-      project.file.".git/config".text = let
-        include = i:
-          with i;
-            if condition != null
-            then {
-              includeIf.${condition}.path = "${path}";
-            }
-            else {
-              include.path = "${path}";
-            };
-      in
-        mkAfter
-        (concatStringsSep "\n" (map lib.pm.generators.toGitINI (map include cfg.includes)));
-    })
-
-    (mkIf cfg.lfs.enable {
-      project.devPackages = [pkgs.git-lfs];
-
-      programs.git.iniContent.filter.lfs = let
-        skipArg = optional cfg.lfs.skipSmudge "--skip";
+      (mkIf (cfg.ignores != null) (let
+        ## NB: For user config, we use .git/info/exclude instead.
+        ignorePath = ".gitignore";
       in {
-        clean = "git-lfs clean -- %f";
-        process =
-          concatStringsSep " " (["git-lfs" "filter-process"] ++ skipArg);
-        required = true;
-        smudge =
-          concatStringsSep " "
-          (["git-lfs" "smudge"] ++ skipArg ++ ["--" "%f"]);
-      };
-    })
-  ]);
+        ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
+        ##        actually be a copy, but can be added to itself, so we don’t need
+        ##        to commit it.
+        project.file."${ignorePath}" = {
+          minimum-persistence = "worktree";
+          broken-symlink = true;
+          text = concatLines (mapAttrsToList (n: v: "/" + v.target)
+            (filterAttrs (n: v: v.persistence == "worktree") config.project.file)
+            ++ cfg.ignores);
+        };
+      }))
+
+      (mkIf (cfg.signing != null) {
+        programs.git.iniContent = {
+          commit.gpgSign = mkDefault cfg.signing.signByDefault;
+          tag.gpgSign = mkDefault cfg.signing.signByDefault;
+        };
+      })
+
+      (mkIf (cfg.ignoreRevs != null) (let
+        ignoreRevsPath = "git/ignoreRevs";
+      in {
+        programs.git.iniContent.blame.ignoreRevsFile =
+          config.xdg.cacheFile."${ignoreRevsPath}".reference
+          config.xdg.cacheFile."git/config";
+        xdg.cacheFile."${ignoreRevsPath}" = {
+          minimum-persistence = "store";
+          text = concatLines cfg.ignoreRevs;
+        };
+      }))
+
+      (mkIf (cfg.hooks != null) {
+        xdg.cacheFile = lib.mapAttrs' (name: file:
+          lib.nameValuePair "git/hooks/${name}"
+          (lib.mkMerge [
+            file
+            {
+              executable = true;
+              minimum-persistence = "store";
+            }
+          ]))
+        cfg.hooks;
+
+        programs.git.iniContent.core.hooksPath =
+          if builtins.any (name: config.xdg.cacheFile."git/hooks/${name}".referenceViaStore config.xdg.cacheFile."git/config") (builtins.attrNames cfg.hooks)
+          then let
+            entries =
+              mapAttrsToList (name: file: {
+                inherit name;
+                path = config.xdg.cacheFile."git/hooks/${name}".reference config.xdg.cacheFile."git/config";
+              })
+              cfg.hooks;
+          in
+            toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries)
+          else lib.pm.path.routeFromFile config.xdg.cacheFile."git/config".target "${config.xdg.cacheDir}/git/hooks";
+      })
+
+      (mkIf (lib.isAttrs cfg.config) {
+        programs.git.iniContent = cfg.config;
+      })
+
+      (mkIf (cfg.includes != []) {
+        project.file.".git/config".text = let
+          include = i:
+            with i;
+              if condition != null
+              then {
+                includeIf.${condition}.path = "${path}";
+              }
+              else {
+                include.path = "${path}";
+              };
+        in
+          mkAfter
+          (concatStringsSep "\n" (map lib.pm.generators.toGitINI (map include cfg.includes)));
+      })
+
+      (mkIf cfg.lfs.enable {
+        project.devPackages = [pkgs.git-lfs];
+
+        programs.git.iniContent.filter.lfs = let
+          skipArg = optional cfg.lfs.skipSmudge "--skip";
+        in {
+          clean = "git-lfs clean -- %f";
+          process =
+            concatStringsSep " " (["git-lfs" "filter-process"] ++ skipArg);
+          required = true;
+          smudge =
+            concatStringsSep " "
+            (["git-lfs" "smudge"] ++ skipArg ++ ["--" "%f"]);
+        };
+      })
+    ]);
 }

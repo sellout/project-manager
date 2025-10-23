@@ -133,10 +133,13 @@ in {
         ## This should always have at least one `linguist-generated` entry (for
         ## .gitattributes itself), so we always commit.
         ".gitattributes".commit-by-default = true;
-        ".github/settings.yml".text =
+        ".github/settings.yml" =
           lib.mkIf (cfg.settings != null)
-          (lib.pm.generators.toYAML {}
-            (restructureBranches (restructureLabels (concatTopics cfg.settings))));
+          {
+            text =
+              lib.pm.generators.toYAML {}
+              (restructureBranches (restructureLabels (concatTopics cfg.settings)));
+          };
       }
       // cfg.workflow;
   });

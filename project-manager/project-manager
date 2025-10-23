@@ -11,7 +11,7 @@ export TEXTDOMAIN=project-manager
 export TEXTDOMAINDIR=@OUT@/share/locale
 
 # shellcheck disable=1091
-source @PROJECT_MANAGER_LIB@
+source @OUT@/share/bash/project-manager.bash
 
 function showHelp() {
   ## NB: This output is intentionally over-wide. It’s set to 80 columns in the          |
