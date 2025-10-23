@@ -145,11 +145,27 @@ function hasFlakeSupport() {
       | grep -q nix-command
 }
 
+function pm_setProjectRoot() {
+  pm_setVerboseAndDryRun
+  ## TODO: Make the file we look for configurable, like treefmt’s
+  ##      `projectRootFile`. For now, this just finds the flake.
+  if ! [ -v PROJECT_ROOT ] && ! PROJECT_ROOT="$(nix flake metadata --json \
+    | jq -r ".resolvedUrl" \
+    | sed -e 's/^[^\/]*[\/]*\//\//')"; then
+    _iWarn "Project Manager failed to find the project root via Nix, assuming it’s the current directory." >&2
+    PROJECT_ROOT="${PWD}"
+  fi
+  "${VERBOSE_ECHO}" "PROJECT_ROOT=$PROJECT_ROOT"
+  export PROJECT_ROOT
+}
+
 # Attempts to set the PROJECT_MANAGER_CONFIG global variable.
 #
 # If no configuration file can be found then this function will print
 # an error message and exit with an error code.
 function setConfigFile() {
+  pm_setProjectRoot
+
   if [[ -v PROJECT_MANAGER_CONFIG ]]; then
     if [[ -e $PROJECT_MANAGER_CONFIG ]]; then
       PROJECT_MANAGER_CONFIG="$(realpath "$PROJECT_MANAGER_CONFIG")"
@@ -185,6 +201,8 @@ function setProjectManagerPathVariables() {
     return
   fi
 
+  pm_setProjectRoot
+
   declare -r stateHome="$PROJECT_ROOT/.local/state"
   declare -r userNixStateDir="$stateHome/nix"
 
@@ -204,7 +222,7 @@ function setFlakeAttribute() {
 
 function pm_init() {
   # The directory where we should place the initial configuration.
-  local confDir
+  local projectDir
 
   # Whether we should immediate activate the configuration.
   local switch
@@ -232,19 +250,20 @@ function pm_init() {
         exit 1
         ;;
       *)
-        if [[ -v confDir ]]; then
+        if [[ -v projectDir ]]; then
           _i "Run '%s --help' for usage help" "$0" >&2
           exit 1
         else
-          confDir="$opt"
+          projectDir="$opt"
         fi
         ;;
     esac
   done
 
-  if [[ ! -v confDir ]]; then
-    confDir="${PROJECT_ROOT}/.config/project"
-  fi
+  PROJECT_ROOT="${projectDir:=$(pwd)}"
+  export PROJECT_ROOT
+
+  local confDir="${PROJECT_ROOT}/.config/project"
 
   if [[ ! -e $confDir ]]; then
     mkdir -p "$confDir"
@@ -293,7 +312,7 @@ function pm_init() {
     else
       # translators: The "%s" specifier will be replaced by a URL.
       _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
-        "https://github.com/nix-community/project-manager/issues"
+        "https://github.com/sellout/project-manager/issues"
       exit 1
     fi
   fi
@@ -385,6 +404,8 @@ function pm_build() {
 }
 
 function pm_switch() {
+  pm_setProjectRoot
+
   setFlakeAttribute
   nix run \
     "$FLAKE_CONFIG_URI.packages.activation" \
