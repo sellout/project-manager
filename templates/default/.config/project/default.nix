@@ -18,8 +18,8 @@
     ##    `authors = [lib.maintainers.sellout];`.
     authors = ["{{project.author}}"];
     license = "{{project.license}}";
-    ## The project.packages option allows you to install Nix packages into your
-    ## environment.
+    ## The `project.devPackages` option allows you to install Nix packages into
+    ## your environment.
     devPackages = [
       # # Adds the 'hello' command to your environment. It prints a friendly
       # # "Hello, world!" when run.

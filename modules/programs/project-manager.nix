@@ -56,7 +56,6 @@ in {
     project.activation.automaticallyExpireGenerations =
       mkIf (cfg.automaticallyExpireGenerations != null)
       (pm.dag.entryAfter ["linkGeneration"] ''
-
         pm_expireGenerations ${lib.escapeShellArg cfg.automaticallyExpireGenerations}
       '');
   };

@@ -48,11 +48,6 @@ function showHelp() {
   echo "  --builders VALUE"
   echo "  --refresh                Consider all previously downloaded files out-of-date"
   echo
-  echo "Note: Some commands pass arbitrary arguments to some underlying command (for"
-  echo "      example, ‘format’ will pass everything Project Manager doesn’t understand"
-  echo "      to the formatter specified in the flake). These commands include ‘[ARG …]’"
-  echo "      in their summary."
-  echo
   echo "Commands"
   echo
   echo "  help"
@@ -71,10 +66,10 @@ function showHelp() {
   echo "  build"
   echo "      Build configuration into result directory"
   echo
-  echo "  init [--switch] [DIR] [ARG …]"
-  echo "      Initializes a configuration in the given directory. If the directory does"
-  echo "      not exist, then it will be created. The default directory is"
-  echo "     ‘~/.config/project-manager’."
+  echo "  init [--switch] [DIR]"
+  echo "      Initializes a configuration for a project in the given directory. If the"
+  echo "      directory doesn’t exist, then it will be created. The default directory is"
+  echo "      is the directory the command is run from."
   echo
   echo "      --switch      Immediately activate the generated configuration."
   echo
@@ -84,11 +79,11 @@ function showHelp() {
   echo "  generations"
   echo "      List all project environment generations"
   echo
-  echo "  remove-generations ID … [ARG …]"
+  echo "  remove-generations ID …"
   echo "      Remove indicated generations. Use 'generations' command to find suitable"
   echo "      find suitable generation numbers."
   echo
-  echo "  expire-generations TIMESTAMP [ARG …]"
+  echo "  expire-generations TIMESTAMP"
   echo "      Remove generations older than TIMESTAMP where TIMESTAMP is"
   echo '      interpreted as in the -d argument of the date tool. For example "-30 days"'
   echo '      or "2018-01-01".'

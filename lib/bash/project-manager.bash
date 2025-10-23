@@ -312,7 +312,7 @@ function pm_init() {
     else
       # translators: The "%s" specifier will be replaced by a URL.
       _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
-        "https://github.com/nix-community/project-manager/issues"
+        "https://github.com/sellout/project-manager/issues"
       exit 1
     fi
   fi
