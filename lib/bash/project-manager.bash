@@ -149,9 +149,12 @@ function pm_setProjectRoot() {
   pm_setVerboseAndDryRun
   ## TODO: Make the file we look for configurable, like treefmt’s
   ##      `projectRootFile`. For now, this just finds the flake.
+  ## NB: The `\(?.*\)\?` is to remove query parameters that are added by certain
+  ##     things, but it does mean that some valid (but unusual) paths might not
+  ##     work.
   if ! [ -v PROJECT_ROOT ] && ! PROJECT_ROOT="$(nix flake metadata --json \
     | jq -r ".resolvedUrl" \
-    | sed -e 's/^[^\/]*[\/]*\//\//')"; then
+    | sed -e 's/^[^\/]*[\/]*\(\/.*\)\(?.*\)\?/\1/')"; then
     _iWarn "Project Manager failed to find the project root via Nix, assuming it’s the current directory." >&2
     PROJECT_ROOT="${PWD}"
   fi
