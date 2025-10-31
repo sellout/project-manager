@@ -16,7 +16,9 @@ decluttering
 devenv
 devShell
 Dhall
+formatter
 formatters
+IFD
 NixOS
 Nixpkgs
 NMT
