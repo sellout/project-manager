@@ -188,6 +188,11 @@ in {
           lib.mapAttrsToList (name: args:
             if args.enable
             then let
+              packageNix =
+                if args.target == null
+                ## TODO: I’d like this to live in `.local/state/project-manager/cabal2nix/${name}.nix`, but cabal2nix#684.
+                then "${name}.nix"
+                else args.target;
               options =
                 lib.optional args.benchmark "--benchmark"
                 ++ lib.optional (!args.check) "--no-check"
@@ -203,12 +208,10 @@ in {
             in ''
               ${lib.getExe cfg.package} \
                 ${lib.concatStringsSep " " options} \
-                "$PROJECT_ROOT/${args.source}" \
-                >${lib.escapeShellArg (
-                if args.target == null
-                then "${name}/package.nix"
-                else args.target
-              )}
+                ${lib.escapeShellArg args.source} \
+                >${lib.escapeShellArg packageNix}
+              ${lib.getExe pkgs.git} add --force --intent-to-add \
+                ${lib.escapeShellArg packageNix}
             ''
             else "")
           cfg.cabalPackage
