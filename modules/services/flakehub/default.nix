@@ -65,7 +65,7 @@ in {
                 id-token: "write"
                 contents: "read"
               steps:
-                - uses: "actions/checkout@v5"
+                - uses: "actions/checkout@v6"
                 - uses: "DeterminateSystems/nix-installer-action@main"
                 - uses: "DeterminateSystems/flakehub-push@main"
                   with:
@@ -92,7 +92,7 @@ in {
                 id-token: "write"
                 contents: "read"
               steps:
-                - uses: "actions/checkout@v5"
+                - uses: "actions/checkout@v6"
                   with:
                     ref: "''${{ (inputs.tag != null) && format('refs/tags/{0}', inputs.tag) || ''' }}"
                 - uses: "DeterminateSystems/nix-installer-action@main"
