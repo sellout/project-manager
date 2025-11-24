@@ -167,9 +167,9 @@ in
       (
         [
           # keep-sorted start
+          ../modules/files
           # ../modules/lib/generators
           ../modules/lib/types
-          ../modules/files
           # ../modules/project-environment
           # keep-sorted end
         ]
