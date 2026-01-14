@@ -452,8 +452,9 @@ in {
           "24.05" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
           "24.11" = ["0.3" "0.4" "0.5" "0.6" "0.7"];
           "25.05" = ["0.7"];
-          ## NB: These versions are only “supported” on unstable, not 25.11.
           "25.11" = ["0.7"];
+          ## NB: These versions are only “supported” on unstable, not 26.05.
+          "26.05" = ["0.7"];
         };
       pmRelease = cfg.version.release;
       nixpkgsRelease = lib.trivial.release;

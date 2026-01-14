@@ -33,6 +33,7 @@
     nixpkgs-23_11,
     nixpkgs-24_05,
     nixpkgs-24_11,
+    nixpkgs-25_05,
     nixpkgs-unstable,
     self,
     systems,
@@ -195,8 +196,9 @@
               else {});
           })
           // checksWith nixpkgs-24_11 (_: _: {})
+          // checksWith nixpkgs-25_05 (_: _: {})
           ## This is covered by the version used to build Project Manager
-          # // checksWith nixpkgs-25_05 (_: _: {})
+          # // checksWith nixpkgs-25_11 (_: _: {})
           // checksWith nixpkgs-unstable (_: _: {})
           ## TODO: Run tests against all support Nixpkgs versions.
           // {
@@ -241,6 +243,7 @@
     nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
     nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-24_11.url = "github:NixOS/nixpkgs/release-24.11";
+    nixpkgs-25_05.url = "github:NixOS/nixpkgs/release-25.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {

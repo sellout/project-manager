@@ -14,8 +14,9 @@
     "23_11"
     "24_05"
     "24_11"
-    "25_05" # tested, but covered by the Project Manager build
-    "25_11"
+    "25_05"
+    "25_11" # tested, but covered by the Project Manager build
+    "26_05"
   ];
 in {
   project = {
