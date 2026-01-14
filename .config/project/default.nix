@@ -188,6 +188,12 @@ in {
       name = "sellout";
       public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";
     };
+    doNotBuild = [
+      "checks.x86_64-linux.formatter-22_11"
+      "checks.x86_64-linux.formatter-23_05"
+      "checks.x86_64-linux.formatter-23_11"
+      "checks.x86_64-linux.formatter-24_05"
+    ];
     fail-fast = false;
   };
 
