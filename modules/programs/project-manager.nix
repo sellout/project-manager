@@ -16,7 +16,7 @@ in {
 
       package = mkOption {
         type = types.package;
-        default = project-manager.packages.${pkgs.system}.project-manager;
+        default = project-manager.packages.${pkgs.stdenv.hostPlatform.system}.project-manager;
         defaultText = "the instance used to build this configuration";
         description = ''
           The current Package Manager package.

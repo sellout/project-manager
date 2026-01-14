@@ -156,7 +156,7 @@
           // checksWith nixpkgs-22_11 (_: _: {})
           // checksWith nixpkgs-23_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
-              if final.system == "i686-linux"
+              if final.stdenv.hostPlatform.system == "i686-linux"
               then {
                 ## This is a dependency of ShellCheck. This patch is cobbled
                 ## together from haskell-foundation/foundation#573.
@@ -178,7 +178,7 @@
           })
           // checksWith nixpkgs-23_11 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
-              if final.system == "i686-linux"
+              if final.stdenv.hostPlatform.system == "i686-linux"
               then {
                 pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
               }
@@ -186,7 +186,7 @@
           })
           // checksWith nixpkgs-24_05 (final: prev: {
             haskellPackages = prev.haskellPackages.extend (hfinal: hprev:
-              if final.system == "i686-linux"
+              if final.stdenv.hostPlatform.system == "i686-linux"
               then {
                 pandoc_3_1_9 = final.haskell.lib.dontCheck hprev.pandoc_3_1_9;
                 unordered-containers =
