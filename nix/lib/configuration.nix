@@ -31,7 +31,7 @@ in
                   ;
                 ## The pkgs used by Project Manager itself, also used in modules
                 ## in certain cases.
-                pmPkgs = pkgsFor pkgs.system;
+                pmPkgs = pkgsFor pkgs.stdenv.hostPlatform.system;
               };
               programs.project-manager.path = toString ../.;
             }

@@ -3,7 +3,6 @@
 - Install Nix 2.4 or later, or have it in `nix-shell`.
 
 - Enable experimental features `nix-command` and `flakes`.
-
   - When using NixOS, add the following to your `configuration.nix`
     and rebuild your system.
 

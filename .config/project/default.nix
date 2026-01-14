@@ -14,8 +14,9 @@
     "23_11"
     "24_05"
     "24_11"
-    "25_05" # tested, but covered by the Project Manager build
-    "25_11"
+    "25_05"
+    "25_11" # tested, but covered by the Project Manager build
+    "26_05"
   ];
 in {
   project = {
@@ -187,6 +188,12 @@ in {
       name = "sellout";
       public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";
     };
+    doNotBuild = [
+      "checks.x86_64-linux.formatter-22_11"
+      "checks.x86_64-linux.formatter-23_05"
+      "checks.x86_64-linux.formatter-23_11"
+      "checks.x86_64-linux.formatter-24_05"
+    ];
     fail-fast = false;
   };
 
