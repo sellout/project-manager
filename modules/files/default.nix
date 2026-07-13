@@ -257,7 +257,7 @@ in {
       pkgs.runCommandLocal
       "project-manager-files-for-${config.project.name}"
       {
-        nativeBuildInputs = [pkgs.xorg.lndir];
+        nativeBuildInputs = [pkgs.lndir];
       }
       (''
           mkdir -p $out
