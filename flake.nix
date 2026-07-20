@@ -138,20 +138,26 @@
 
       checks = let
         checksWith = nixpkgs: overlay:
-          nixpkgs.lib.mapAttrs'
-          (name:
-            nixpkgs.lib.nameValuePair
-            (name
-              + "-"
-              ## TODO: Can’t have dots in output names unil garnix-io/issues#30
-              ##       is fixed.
-              + builtins.replaceStrings
-              ["."]
-              ["_"]
-              nixpkgs.lib.trivial.release))
-          (projectConfigurationsFor
-            (nixpkgs.legacyPackages.${system}.appendOverlays [overlay]))
-          .checks;
+        ## x86_64-darwin isn’t supported from Nixpkgs 26.11 on.
+          if
+            nixpkgs.lib.versionOlder nixpkgs.lib.trivial.release "26.11"
+            || system != "x86_64-darwin"
+          then
+            nixpkgs.lib.mapAttrs'
+            (name:
+              nixpkgs.lib.nameValuePair
+              (name
+                + "-"
+                ## TODO: Can’t have dots in output names unil garnix-io/issues#30
+                ##       is fixed.
+                + builtins.replaceStrings
+                ["."]
+                ["_"]
+                nixpkgs.lib.trivial.release))
+            (projectConfigurationsFor
+              (nixpkgs.legacyPackages.${system}.appendOverlays [overlay]))
+            .checks
+          else {};
         allChecks =
           self.projectConfigurations.${system}.checks
           // checksWith nixpkgs-22_11 (_: _: {})
