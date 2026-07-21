@@ -30,7 +30,7 @@ At a minimum, you need to have
   inputs = {
     # NB: This version doesn’t have to be current, Project Manager supports many
     #     older Nixpkgs releases as well as unstable (as much as is possible).
-    nixpkgs.url = "github:NixOS/nixpkgs/release-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-26.05";
     project-manager.url = "github:sellout/project-manager";
   }
 }

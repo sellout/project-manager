@@ -63,8 +63,6 @@
         babelfish
         fish
         ;
-
-      xorg = super.xorg.overrideScope (self: super: {inherit (pkgs.xorg) lndir;});
     };
 
     outer = self: super:

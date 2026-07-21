@@ -15,8 +15,9 @@
     "24_05"
     "24_11"
     "25_05"
-    "25_11" # tested, but covered by the Project Manager build
-    "26_05"
+    "25_11"
+    "26_05" # tested, but covered by the Project Manager build
+    "26_11"
   ];
 in {
   project = {
@@ -201,8 +202,11 @@ in {
   services.flakehub.enable = true;
   services.flakestry.enable = true;
   services.github.enable = true;
-  services.github.settings.repository.homepage = "https://sellout.github.io/${config.project.name}";
-  services.github.settings.repository.topics = ["development" "nix-flakes"];
+  services.github.settings.repository = {
+    homepage = "https://sellout.github.io/${config.project.name}";
+    private = false;
+    topics = ["development" "nix-flakes"];
+  };
 
   imports = [
     ./github-pages.nix

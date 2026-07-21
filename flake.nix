@@ -34,6 +34,7 @@
     nixpkgs-24_05,
     nixpkgs-24_11,
     nixpkgs-25_05,
+    nixpkgs-25_11,
     nixpkgs-unstable,
     self,
     systems,
@@ -137,20 +138,26 @@
 
       checks = let
         checksWith = nixpkgs: overlay:
-          nixpkgs.lib.mapAttrs'
-          (name:
-            nixpkgs.lib.nameValuePair
-            (name
-              + "-"
-              ## TODO: Can’t have dots in output names unil garnix-io/issues#30
-              ##       is fixed.
-              + builtins.replaceStrings
-              ["."]
-              ["_"]
-              nixpkgs.lib.trivial.release))
-          (projectConfigurationsFor
-            (nixpkgs.legacyPackages.${system}.appendOverlays [overlay]))
-          .checks;
+        ## x86_64-darwin isn’t supported from Nixpkgs 26.11 on.
+          if
+            nixpkgs.lib.versionOlder nixpkgs.lib.trivial.release "26.11"
+            || system != "x86_64-darwin"
+          then
+            nixpkgs.lib.mapAttrs'
+            (name:
+              nixpkgs.lib.nameValuePair
+              (name
+                + "-"
+                ## TODO: Can’t have dots in output names unil garnix-io/issues#30
+                ##       is fixed.
+                + builtins.replaceStrings
+                ["."]
+                ["_"]
+                nixpkgs.lib.trivial.release))
+            (projectConfigurationsFor
+              (nixpkgs.legacyPackages.${system}.appendOverlays [overlay]))
+            .checks
+          else {};
         allChecks =
           self.projectConfigurations.${system}.checks
           // checksWith nixpkgs-22_11 (_: _: {})
@@ -197,8 +204,9 @@
           })
           // checksWith nixpkgs-24_11 (_: _: {})
           // checksWith nixpkgs-25_05 (_: _: {})
+          // checksWith nixpkgs-25_11 (_: _: {})
           ## This is covered by the version used to build Project Manager
-          # // checksWith nixpkgs-25_11 (_: _: {})
+          # // checksWith nixpkgs-26_05 (_: _: {})
           // checksWith nixpkgs-unstable (_: _: {})
           ## TODO: Run tests against all support Nixpkgs versions.
           // {
@@ -244,6 +252,7 @@
     nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-24_11.url = "github:NixOS/nixpkgs/release-24.11";
     nixpkgs-25_05.url = "github:NixOS/nixpkgs/release-25.05";
+    nixpkgs-25_11.url = "github:NixOS/nixpkgs/release-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     treefmt-nix = {
