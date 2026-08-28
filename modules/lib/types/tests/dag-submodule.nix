@@ -35,7 +35,7 @@ in {
     tested.dag = {
       after = {};
       before = dag.entryBefore ["after"] {};
-      between = dag.entryBetween ["after"] ["before"] {};
+      between = dag.entryBetween ["before"] ["after"] {};
     };
 
     project.file."result.txt".text = result;

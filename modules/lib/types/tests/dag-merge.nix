@@ -37,11 +37,11 @@ in {
       }
       {before = dag.entryBefore ["after"] (mkIf true "before");}
       {
-        between = mkIf true (dag.entryBetween ["after"] ["before"] "between");
+        between = mkIf true (dag.entryBetween ["before"] ["after"] "between");
       }
       {merged = dag.entryBefore ["between"] "middle";}
       {merged = mkBefore "left";}
-      {merged = dag.entryBetween ["after"] ["before"] (mkAfter "right");}
+      {merged = dag.entryBetween ["before"] ["after"] (mkAfter "right");}
       {
         merged = dag.entryBefore ["between"] "middle";
       }
