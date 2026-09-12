@@ -132,7 +132,6 @@ in {
         then []
         else ["${output}.${sys}.${name}"]);
   in {
-    enable = true;
     builds."*".exclude =
       [
         "checks.*.formatter-22_11"
@@ -155,7 +154,7 @@ in {
   ## FIXME: The Project Manager module needs to be fixed so that these merge
   ##        correctly, rather than having to use `lib.mkForce`.
   services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (
-    ["All Garnix checks"]
+    []
     ## For Garnix, these are covered by “All Garnix checks”, but for Nix CI, we
     ## need to add them individually.
     ++ lib.concatMap (sys:
@@ -182,9 +181,6 @@ in {
   );
   services.nix-ci = {
     enable = true;
-    ## Override this for specific project types (like Haskell and Rust), until I
-    ## get them off IFD.
-    allow-import-from-derivation = false;
     cachix = {
       name = "sellout";
       public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";

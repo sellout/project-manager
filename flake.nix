@@ -10,12 +10,8 @@
       "no-url-literals"
       # "recursive-nix"
     ];
-    extra-substituters = [
-      "https://cache.garnix.io"
-      "https://sellout.cachix.org"
-    ];
+    extra-substituters = ["https://sellout.cachix.org"];
     extra-trusted-public-keys = [
-      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
       "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE="
     ];
     ## Isolate the build.
