@@ -502,7 +502,7 @@ function pm_format() {
   if [[ -v __PM_FORMATTER ]]; then
     "$__PM_FORMATTER" "${extraArgs[@]}"
   else
-    _iWarn 'Not in a Project Manager environment. Attempting `nix fmt`, which is much slower' >&2
+    _iWarn "Not in a Project Manager environment. Attempting ‘nix fmt’, which is much slower" >&2
     setFlakeAttribute
     nix fmt "${extraArgs[@]}"
   fi

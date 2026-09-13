@@ -60,7 +60,7 @@ function showHelp() {
   echo "      passed to the ‘format’ command and don’t affect ‘switch’."
   echo
   echo "  edit"
-  echo '      Open the project configuration in $EDITOR (currently'
+  echo "      Open the project configuration in ‘EDITOR’ (currently"
   echo "     ‘${EDITOR}’)"
   echo
   echo "  build"

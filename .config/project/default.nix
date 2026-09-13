@@ -20,6 +20,10 @@
     "26_11"
   ];
 in {
+  imports = [
+    ./github-pages.nix
+  ];
+
   project = {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
@@ -31,33 +35,18 @@ in {
     commit-by-default = lib.mkForce false;
   };
 
-  ## dependency management
-  services.renovate.enable = true;
-
   ## development
   programs = {
-    direnv = {
-      enable = true;
-      ## See the reasoning on `project.commit-by-default`.
-      commit-envrc = false;
-    };
-    git = {
-      # This should default by whether there is a .git file/dir (and whether
-      # it’s a file (worktree) or dir determines other things – like where hooks
-      # are installed.
-      enable = true;
-      ignoreRevs = [
-        "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
-      ];
-    };
+    ## See the reasoning on `project.commit-by-default`.
+    direnv.commit-envrc = false;
+    git.ignoreRevs = [
+      "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
+    ];
   };
 
   ## formatting
-  editorconfig.enable = true;
   programs = {
-    shellcheck.enable = true;
     treefmt = {
-      enable = true;
       package = lib.mkForce pkgs.treefmt;
       ## Shell linter
       programs.shellcheck.enable = true;
@@ -83,7 +72,6 @@ in {
       };
     };
     vale = {
-      enable = true;
       excludes = [
         "*.bash"
         "*.css"
@@ -179,32 +167,17 @@ in {
       ])
       testedNixpkgsVersions) ["x86_64-linux"]
   );
-  services.nix-ci = {
-    enable = true;
-    cachix = {
-      name = "sellout";
-      public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";
-    };
-    doNotBuild = [
-      "checks.x86_64-linux.formatter-22_11"
-      "checks.x86_64-linux.formatter-23_05"
-      "checks.x86_64-linux.formatter-23_11"
-      "checks.x86_64-linux.formatter-24_05"
-    ];
-    fail-fast = false;
-  };
+  services.nix-ci.doNotBuild = [
+    "checks.x86_64-linux.formatter-22_11"
+    "checks.x86_64-linux.formatter-23_05"
+    "checks.x86_64-linux.formatter-23_11"
+    "checks.x86_64-linux.formatter-24_05"
+  ];
 
   ## publishing
-  services.flakehub.enable = true;
-  services.flakestry.enable = true;
-  services.github.enable = true;
   services.github.settings.repository = {
     homepage = "https://sellout.github.io/${config.project.name}";
     private = false;
     topics = ["development" "nix-flakes"];
   };
-
-  imports = [
-    ./github-pages.nix
-  ];
 }
