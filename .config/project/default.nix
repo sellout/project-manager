@@ -56,6 +56,12 @@ in {
         formatter = let
           includes = ["project-manager/project-manager"];
         in {
+          ## TODO: This one should be automatically excluded, not sure why it’s
+          ##       causing `nix flake check` to fail.
+          alejandra.excludes = ["nix-ci.nix"];
+          prettier.excludes = [
+            "modules/services/renovate/tests/simple/renovate.json"
+          ];
           shellcheck = {inherit includes;};
           shfmt = {inherit includes;};
         };
@@ -83,6 +89,8 @@ in {
         "./project-manager/project-manager"
         "./project-manager/completion.fish"
         "./project-manager/completion.zsh"
+        "./modules/programs/git/tests/settings/git/config"
+        "./modules/programs/git/tests/settings/gitignore"
       ];
       vocab.${config.project.name}.accept = [
         "alejandra"

@@ -72,7 +72,7 @@ checks = self.projectConfigurations.${system}.checks // {
 };
 ```
 
-There are two other attribute sets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules (like Vale) that fail in the sandbox.
+Project Manager has two other attribute sets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules (like Vale) that fail in the sandbox.
 
 If that's the case, you have a couple options. You can either
 
@@ -115,7 +115,7 @@ You shouldn’t need to use the `Except` variants, because modules that rely on 
 
 ### persistence
 
-One of the ideas underlying the decluttering here is that of “persistence”. _How_ do different files persist? There are three levels, from strongest to weakest:
+One of the ideas underlying the decluttering here is that of “persistence”. _How_ do different files persist? Project Manager has three levels, from strongest to weakest:
 
 #### `repository`
 
@@ -143,7 +143,7 @@ Finally, there is a `project.commit-by-default` (which defaults to `false`) and 
 
 ## comparisons
 
-There are a couple other projects that apply Nix modules to your flakes. However, they differ from Project Manager in various ways, and so far I believe they’re all complementary. One thing that could be improved is making it easier to share different modules between the systems.
+There exist a couple other projects that apply Nix modules to your flakes. However, they differ from Project Manager in various ways, and so far I believe they’re all complementary. One thing that could be improved is making it easier to share different modules between the systems.
 
 ### [devenv](https://devenv.sh/)
 

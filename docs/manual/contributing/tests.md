@@ -2,7 +2,7 @@
 
 Project Manager includes a basic test suite and it‘s highly recommended to include at least one test when adding a module. Tests are typically in the form of “golden tests“ where, for example, a generated configuration file is compared to a known correct file.
 
-It‘s relatively easy to create tests by modeling the existing tests, found in the `tests` project directory.
+You can look at the existing tests in the `tests` project directory to see how to create new tests.
 
 ## Writing Basic Tests {#sec-tests-basic}
 
@@ -45,7 +45,7 @@ modules/programs/git
     ┊   └── gitignore      ← expected output files
 ```
 
-**NB**: Many tests involve multiple modules, but generally one module is clearly the one that’s being tested (for example, adding `programs.git.enable = true;` to a test case isn’t a test of the `git` module, but a test that the other module configured in the test case behaves correctly when `git` is enabled). Think about which module the logic you’re testing is in, and that’s likely where the test belongs.
+**NB**: Many tests involve multiple modules, but generally one module is the one that’s being tested (for example, adding `programs.git.enable = true;` to a test case isn’t a test of the `git` module, but a test that the other module configured in the test case behaves correctly when `git` is enabled). Think about which module the logic you’re testing is in, and that’s likely where the test belongs.
 
 The `…/tests/default.nix` file should list all test cases:
 
