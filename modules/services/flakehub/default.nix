@@ -61,7 +61,7 @@ in {
                 - "${cfg.mode.rolling}"
           jobs:
             flakehub-publish:
-              runs-on: "ubuntu-24.04"
+              runs-on: "${config.services.github.runners.latest.linux-x64}"
               permissions:
                 id-token: "write"
                 contents: "read"
@@ -89,7 +89,7 @@ in {
                   required: true
           jobs:
             flakehub-publish:
-              runs-on: "ubuntu-24.04"
+              runs-on: "${config.services.github.runners.latest.linux-x64}"
               permissions:
                 id-token: "write"
                 contents: "read"

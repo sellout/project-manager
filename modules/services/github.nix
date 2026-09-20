@@ -62,6 +62,24 @@ in {
       default = null;
     };
 
+    runners.latest = lib.mkOption {
+      description = ''
+        Encodes the latest runners as specified by
+        https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories.
+        This is meant to be a static version of those, so you don’t get breakage
+        in PRs that don’t explicitly update the Project Manager version.
+      '';
+      readOnly = true;
+      default = {
+        linux-x64 = "ubuntu-26.04";
+        windows-x64 = "windows-2025";
+        linux-arm64 = "ubuntu-26.04-arm";
+        windows-arm64 = "windows-11-arm";
+        macos-intel = "macos-26-intel";
+        macos-arm64 = "macos-26";
+      };
+    };
+
     workflow = lib.mkOption {
       description = ''
         Attribute set of GitHub workflows.

@@ -1,4 +1,8 @@
-{lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   defaultBranch = "main";
 in {
   services.github = {
@@ -31,7 +35,7 @@ in {
 
       jobs = {
         build = {
-          runs-on = "ubuntu-24.04";
+          runs-on = "${config.services.github.runners.latest.linux-x64}";
           steps = [
             {
               name = "Checkout";
@@ -65,7 +69,7 @@ in {
             name = "github-pages";
             url = "\${{ steps.deployment.outputs.page_url }}";
           };
-          runs-on = "ubuntu-24.04";
+          runs-on = "${config.services.github.runners.latest.linux-x64}";
           needs = "build";
           steps = [
             {
