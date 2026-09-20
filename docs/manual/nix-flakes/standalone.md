@@ -24,7 +24,7 @@ $ nix run github:sellout/project-manager -- init --switch
 ```
 
 After the initial activation has completed successfully then building
-and activating your flake-based configuration is as simple as
+and activating your flake-based configuration is done with
 
 ```shell
 $ project-manager switch

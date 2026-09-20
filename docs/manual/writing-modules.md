@@ -7,7 +7,7 @@ the [Writing NixOS
 Modules](https://nixos.org/nixos/manual/index.html#sec-writing-modules)
 chapter of the NixOS manual.
 
-Overall the basic option types are the same in Project Manager as Home Manager. There are some extra options provided in the file-type submodule.
+Overall the basic option types are the same in Project Manager as Home Manager. Project Manager does provide some extra options in the file-type submodule.
 
 ```{=include=} sections
 writing-modules/types.md

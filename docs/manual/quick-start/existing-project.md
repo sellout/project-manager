@@ -36,7 +36,7 @@ At a minimum, you need to have
 }
 ```
 
-But project manager offers many attributes to integrate with other parts of your flake. For example., you may also include
+Project manager also offers many attributes to integrate with other parts of your flake. For example., you may also include
 
 ```nix
 {

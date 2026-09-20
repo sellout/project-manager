@@ -22,7 +22,7 @@ would make available to a user the `git` executable and man pages and a configur
 
 Since Project Manager is implemented in Nix, it provides several benefits:
 
-- Contents are reproducible — a project will be the exact same every time it’s built, unless of course, an intentional change is made.
+- Contents are reproducible — a project will be the exact same every time it’s built, unless an intentional change is made.
   This also means you can have the exact same project on different hosts.
 - Significantly faster and more powerful than various backup strategies.
 - Unlike "dot files" repositories, Project Manager supports specifying programs, as well as their configurations.

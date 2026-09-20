@@ -14,7 +14,7 @@ usage.md
 nix-flakes.md
 writing-modules.md
 contributing.md
-3rd-party.md
+third-party.md
 faq.md
 ```
 

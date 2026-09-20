@@ -20,6 +20,10 @@
     "26_11"
   ];
 in {
+  imports = [
+    ./github-pages.nix
+  ];
+
   project = {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
@@ -31,33 +35,18 @@ in {
     commit-by-default = lib.mkForce false;
   };
 
-  ## dependency management
-  services.renovate.enable = true;
-
   ## development
   programs = {
-    direnv = {
-      enable = true;
-      ## See the reasoning on `project.commit-by-default`.
-      commit-envrc = false;
-    };
-    git = {
-      # This should default by whether there is a .git file/dir (and whether
-      # it’s a file (worktree) or dir determines other things – like where hooks
-      # are installed.
-      enable = true;
-      ignoreRevs = [
-        "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
-      ];
-    };
+    ## See the reasoning on `project.commit-by-default`.
+    direnv.commit-envrc = false;
+    git.ignoreRevs = [
+      "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
+    ];
   };
 
   ## formatting
-  editorconfig.enable = true;
   programs = {
-    shellcheck.enable = true;
     treefmt = {
-      enable = true;
       package = lib.mkForce pkgs.treefmt;
       ## Shell linter
       programs.shellcheck.enable = true;
@@ -67,6 +56,12 @@ in {
         formatter = let
           includes = ["project-manager/project-manager"];
         in {
+          ## TODO: This one should be automatically excluded, not sure why it’s
+          ##       causing `nix flake check` to fail.
+          alejandra.excludes = ["nix-ci.nix"];
+          prettier.excludes = [
+            "modules/services/renovate/tests/simple/renovate.json"
+          ];
           shellcheck = {inherit includes;};
           shfmt = {inherit includes;};
         };
@@ -83,7 +78,6 @@ in {
       };
     };
     vale = {
-      enable = true;
       excludes = [
         "*.bash"
         "*.css"
@@ -95,6 +89,8 @@ in {
         "./project-manager/project-manager"
         "./project-manager/completion.fish"
         "./project-manager/completion.zsh"
+        "./modules/programs/git/tests/settings/git/config"
+        "./modules/programs/git/tests/settings/gitignore"
       ];
       vocab.${config.project.name}.accept = [
         "alejandra"
@@ -132,7 +128,6 @@ in {
         then []
         else ["${output}.${sys}.${name}"]);
   in {
-    enable = true;
     builds."*".exclude =
       [
         "checks.*.formatter-22_11"
@@ -155,7 +150,7 @@ in {
   ## FIXME: The Project Manager module needs to be fixed so that these merge
   ##        correctly, rather than having to use `lib.mkForce`.
   services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (
-    ["All Garnix checks"]
+    []
     ## For Garnix, these are covered by “All Garnix checks”, but for Nix CI, we
     ## need to add them individually.
     ++ lib.concatMap (sys:
@@ -180,35 +175,17 @@ in {
       ])
       testedNixpkgsVersions) ["x86_64-linux"]
   );
-  services.nix-ci = {
-    enable = true;
-    ## Override this for specific project types (like Haskell and Rust), until I
-    ## get them off IFD.
-    allow-import-from-derivation = false;
-    cachix = {
-      name = "sellout";
-      public-key = "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=";
-    };
-    doNotBuild = [
-      "checks.x86_64-linux.formatter-22_11"
-      "checks.x86_64-linux.formatter-23_05"
-      "checks.x86_64-linux.formatter-23_11"
-      "checks.x86_64-linux.formatter-24_05"
-    ];
-    fail-fast = false;
-  };
+  services.nix-ci.doNotBuild = [
+    "checks.x86_64-linux.formatter-22_11"
+    "checks.x86_64-linux.formatter-23_05"
+    "checks.x86_64-linux.formatter-23_11"
+    "checks.x86_64-linux.formatter-24_05"
+  ];
 
   ## publishing
-  services.flakehub.enable = true;
-  services.flakestry.enable = true;
-  services.github.enable = true;
   services.github.settings.repository = {
     homepage = "https://sellout.github.io/${config.project.name}";
     private = false;
     topics = ["development" "nix-flakes"];
   };
-
-  imports = [
-    ./github-pages.nix
-  ];
 }

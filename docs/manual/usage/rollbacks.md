@@ -1,8 +1,7 @@
 # Rollbacks {#sec-usage-rollbacks}
 
-While the `project-manager` tool doesn’t explicitly support rollbacks at
-the moment it’s relatively easy to perform one manually. The steps to
-do so are
+While the `project-manager` tool doesn’t explicitly support rollbacks at the
+moment it’s possible to perform one manually. The steps to do so are
 
 1.  Run `project-manager generations` to determine which generation you
     wish to rollback to:

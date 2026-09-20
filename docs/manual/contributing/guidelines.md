@@ -175,12 +175,11 @@ should follow the template
     {long description}
 
 where `{component}` refers to the code component (or module) your change
-affects, `{description}` is a very brief description of your change, and
-`{long description}` is an optional clarifying description. As a rare
-exception, if there is no clear component, or your change affects many
-components, then the `{component}` part is optional. See
-[the example commit](#ex-commit-message) for a commit message that fulfills
-these requirements.
+affects, `{description}` is a brief description of your change, and `{long
+description}` is an optional clarifying description. As a rare exception, if
+there is no clear component, or your change affects many components, then the
+`{component}` part is optional. See [the example commit](#ex-commit-message) for
+a commit message that fulfills these requirements.
 
 ## Example commit {#ex-commit-message}
 
@@ -197,9 +196,9 @@ contains the commit message
 
 which ticks all the boxes necessary to be accepted in Project Manager.
 
-Finally, when adding a new module, say `programs/foo.nix`, we use the
-fixed commit format `foo: add module`. You can, of course, still include
-a long description if you wish.
+Finally, when adding a new module, say `programs/foo.nix`, we use the fixed
+commit format `foo: add module`. You can still include a long description if you
+wish.
 
 ## Code Style {#sec-code-style}
 

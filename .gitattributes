@@ -9,5 +9,4 @@
 /.github/workflows/pages.yml linguist-generated
 /.github/workflows/switch-pm-generation.yml linguist-generated
 /.vale.ini linguist-generated
-/garnix.yaml linguist-generated
 /nix-ci.nix linguist-generated

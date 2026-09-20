@@ -1,6 +1,6 @@
 {
   project.file."meh".text = ''
-    This is a very simple file.
+    Hello. A file.
   '';
 
   nmt.script = ''

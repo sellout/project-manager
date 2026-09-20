@@ -24,8 +24,8 @@ A fresh install of Project Manager will generate a minimal `$PROJECT_ROOT/.confi
 You can use this as a base for your further configurations.
 
 ::: {.note}
-If you aren’t very familiar with the Nix language and NixOS modules
-then it’s encouraged to start with small and simple changes. As you
+If you aren’t familiar with the Nix language and NixOS modules
+then it’s encouraged to start with small changes. As you
 learn you can gradually grow the configuration with confidence.
 :::
 

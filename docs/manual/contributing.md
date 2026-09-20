@@ -1,6 +1,6 @@
 # Contributing {#ch-contributing}
 
-Contributions to Project Manager are very welcome. To make the process as
+Contributions to Project Manager are more than welcome. To make the process as
 smooth as possible for both you and the Project Manager maintainers we
 provide some guidelines that we ask you to follow. See [Getting
 started](#sec-contrib-getting-started) for information on how to set up

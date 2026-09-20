@@ -2,7 +2,72 @@
 
 Project Manager includes a basic test suite and it‘s highly recommended to include at least one test when adding a module. Tests are typically in the form of “golden tests“ where, for example, a generated configuration file is compared to a known correct file.
 
-It‘s relatively easy to create tests by modeling the existing tests, found in the `tests` project directory.
+You can look at the existing tests in the `tests` project directory to see how to create new tests.
+
+## Running tests {#sec-tests-running}
+
+Project Manager provides a convenient `tests` command for discovering and running tests:
+
+```shell
+# List all available tests
+$ nix run .#tests -- -l
+
+# List tests matching a pattern
+$ nix run .#tests -- -l alacritty
+
+# Run all tests matching a pattern
+$ nix run .#tests -- alacritty
+
+# Run a specific test
+$ nix run .#tests -- test-alacritty-empty-settings
+
+# Run integration tests
+$ nix run .#tests -- -t -l
+
+# Interactive test selection
+$ nix run .#tests
+
+# Pass additional nix build flags
+$ nix run .#tests -- alacritty -- --verbose
+```
+
+### Manual test commands {#sec-tests-manual}
+
+For advanced usage or CI environments, you can also run tests manually using nix build commands.
+
+The full Project Manager test suite can be run by executing
+
+```shell
+$ nix-build --pure --option allow-import-from-derivation false testing -A build.all
+```
+
+in the project root. List all test cases through
+
+```shell
+$ nix-build --pure testing --option allow-import-from-derivation false -A list
+```
+
+and run an individual test, for example `alacritty-empty-settings`, through
+
+```shell
+$ nix-build --pure testing --option allow-import-from-derivation false -A build.alacritty-empty-settings
+```
+
+However, those invocations will impurely source the system’s Nixpkgs, and may cause failures. To run against the Nixpkgs from the `flake.lock` file, use instead for example
+
+```shell
+$ nix build --reference-lock-file flake.lock --option allow-import-from-derivation false ./testing#test-all
+```
+
+or
+
+```shell
+$ nix build --reference-lock-file flake.lock --option allow-import-from-derivation false ./tests#test-alacritty-empty-settings
+```
+
+## Debugging tests {#sec-tests-debugging}
+
+If you run an individual test, the contents will be in `./result/tested/`. This may help you figure out what happened (for example, did a file get written to an unexpected directory).
 
 ## Writing Basic Tests {#sec-tests-basic}
 
@@ -45,7 +110,7 @@ modules/programs/git
     ┊   └── gitignore      ← expected output files
 ```
 
-**NB**: Many tests involve multiple modules, but generally one module is clearly the one that’s being tested (for example, adding `programs.git.enable = true;` to a test case isn’t a test of the `git` module, but a test that the other module configured in the test case behaves correctly when `git` is enabled). Think about which module the logic you’re testing is in, and that’s likely where the test belongs.
+**NB**: Many tests involve multiple modules, but generally one module is the one that’s being tested (for example, adding `programs.git.enable = true;` to a test case isn’t a test of the `git` module, but a test that the other module configured in the test case behaves correctly when `git` is enabled). Think about which module the logic you’re testing is in, and that’s likely where the test belongs.
 
 The `…/tests/default.nix` file should list all test cases:
 
@@ -165,68 +230,3 @@ lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
 ```
 
 For cross-platform modules that have packages which need to be stubbed on Darwin, add the package names to `tests/darwinScrublist.nix` to prevent build failures during cross-platform test runs.
-
-## Using the tests command {#sec-tests-command}
-
-Project Manager provides a convenient `tests` command for discovering and running tests:
-
-```shell
-# List all available tests
-$ nix run .#tests -- -l
-
-# List tests matching a pattern
-$ nix run .#tests -- -l alacritty
-
-# Run all tests matching a pattern
-$ nix run .#tests -- alacritty
-
-# Run a specific test
-$ nix run .#tests -- test-alacritty-empty-settings
-
-# Run integration tests
-$ nix run .#tests -- -t -l
-
-# Interactive test selection
-$ nix run .#tests
-
-# Pass additional nix build flags
-$ nix run .#tests -- alacritty -- --verbose
-```
-
-## Manual test commands {#sec-tests-manual}
-
-For advanced usage or CI environments, you can also run tests manually using nix build commands.
-
-The full Project Manager test suite can be run by executing
-
-```shell
-$ nix-build --pure --option allow-import-from-derivation false testing -A build.all
-```
-
-in the project root. List all test cases through
-
-```shell
-$ nix-build --pure testing --option allow-import-from-derivation false -A list
-```
-
-and run an individual test, for example `alacritty-empty-settings`, through
-
-```shell
-$ nix-build --pure testing --option allow-import-from-derivation false -A build.alacritty-empty-settings
-```
-
-However, those invocations will impurely source the system’s Nixpkgs, and may cause failures. To run against the Nixpkgs from the `flake.lock` file, use instead for example
-
-```shell
-$ nix build --reference-lock-file flake.lock --option allow-import-from-derivation false ./testing#test-all
-```
-
-or
-
-```shell
-$ nix build --reference-lock-file flake.lock --option allow-import-from-derivation false ./tests#test-alacritty-empty-settings
-```
-
-## Debugging tests {#sec-tests-debugging}
-
-If you run an individual test, the contents will be in `./result/tested/`. This may help you figure out what happened (for example, did a file get written to an unexpected directory).

@@ -54,7 +54,7 @@ class TestRunner:
         return result.stdout.strip()
 
     def discover_tests(self, integration: bool = False) -> list[str]:
-        """Discover available tests using 'nix eval'."""
+        """Discover available tests using `nix eval`."""
         system = self.get_current_system()
         test_prefix = "integration-test-" if integration else "test-"
         nix_apply_expr = (
@@ -72,13 +72,13 @@ class TestRunner:
         return result.stdout.splitlines()
 
     def filter_tests(self, tests: list[str], filters: list[str]) -> list[str]:
-        """Filter tests based on a list of substrings."""
+        """Filter tests based on a list of sub-strings."""
         if not filters:
             return tests
         return [test for test in tests if any(f in test for f in filters)]
 
     def interactive_select(self, tests: list[str]) -> list[str]:
-        """Allow interactive test selection using fzf."""
+        """Allow interactive test selection using `fzf`."""
         if not tests:
             return []
 
@@ -89,7 +89,8 @@ class TestRunner:
             result = _run_command(cmd, text_input=fzf_input)
             return result.stdout.splitlines()
         except TestRunnerError:
-            # Can happen if fzf is not found or the user cancels (non-zero exit)
+            # Can happen if `fzf` isn’t found or the user cancels (non-zero
+            # exit)
             return []
 
     def run_tests(self, tests_to_run: list[str], nix_args: list[str]) -> bool:

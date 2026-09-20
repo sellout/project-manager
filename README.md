@@ -1,11 +1,9 @@
 # Project Manager (for Nix flakes)
 
-[![built with garnix](https://img.shields.io/endpoint?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Fsellout%2Fproject-manager)](https://garnix.io/repo/sellout/project-manager)
 [![Nix CI](https://nix-ci.com/badge/gh:sellout:project-manager)](https://nix-ci.com/gh:sellout:project-manager)
+[![Project Manager](https://img.shields.io/badge/%20-Project%20Manager-%235277C3?logo=nixos&labelColor=%23cccccc)](https://sellout.github.io/project-manager/)
 
 Like [Home Manager](https://nix-community.github.io/home-manager/), but for repositories.
-
-This file is primarily for contributors. See [the manual](https://sellout.github.io/project-manager/) for user documentation (including how to write modules) or join [the Matrix room](https://matrix.to/#/%23project-manager:matrix.org) to discuss any aspect of Project Manager.
 
 ## What?
 
@@ -35,7 +33,9 @@ Other configuration files need to be in particular locations that the tools know
 
 Granted, after generation, those configuration files still exist in those locations, but 1. they’re often not committed the repository and 2. they’re ignored by the version control system (VCS). And there are many other tools that _also_ ignore VCS-ignored files, so in some ways the generated configurations are still invisible.
 
-## Usage
+## usage
+
+This file is primarily for contributors. See [the manual](https://sellout.github.io/project-manager/) for user documentation (including how to write modules) or join [the Matrix room](https://matrix.to/#/%23project-manager:matrix.org) to discuss any aspect of Project Manager.
 
 For now, after cloning, etc. run
 
@@ -72,7 +72,7 @@ checks = self.projectConfigurations.${system}.checks // {
 };
 ```
 
-There are two other attribute sets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules (like Vale) that fail in the sandbox.
+Project Manager has two other attribute sets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules (like Vale) that fail in the sandbox.
 
 If that's the case, you have a couple options. You can either
 
@@ -115,7 +115,7 @@ You shouldn’t need to use the `Except` variants, because modules that rely on 
 
 ### persistence
 
-One of the ideas underlying the decluttering here is that of “persistence”. _How_ do different files persist? There are three levels, from strongest to weakest:
+One of the ideas underlying the decluttering here is that of “persistence”. _How_ do different files persist? Project Manager has three levels, from strongest to weakest:
 
 #### `repository`
 
@@ -137,9 +137,13 @@ Users have control over each file’s persistence, but you don’t have to worry
 
 Finally, there is a `project.commit-by-default` (which defaults to `false`) and a `commit-by-default` for each file (which defaults to `project.commit-by-default`). These can be used to override the `minimum-persistence` values and commit files that otherwise wouldn’t be. It can be helpful to set `project.commit-by-default = true` when you have non-Nix-using contributors who use tooling that expects these files to exist outside of a Nix environment.
 
-## Comparisons
+## contributing
 
-There are a couple other projects that apply Nix modules to your flakes. However, they differ from Project Manager in various ways, and so far I believe they’re all complementary. One thing that could be improved is making it easier to share different modules between the systems.
+- [contributor guide](https://sellout.github.io/flaky/CONTRIBUTING)
+
+## comparisons
+
+There exist a couple other projects that apply Nix modules to your flakes. However, they differ from Project Manager in various ways, and so far I believe they’re all complementary. One thing that could be improved is making it easier to share different modules between the systems.
 
 ### [devenv](https://devenv.sh/)
 
@@ -153,6 +157,6 @@ This is at the other end of the spectrum and is _maybe_ more of a competitor to 
 
 Flake Parts should probably have a Project Manager module for defining `projectConfiguration` outputs.
 
-## Credit
+## credit
 
 This is more than inspired by Home Manager, it’s basically a hacked-up copy (for now). That should change to _depend on_ Home Manager for what it can and to do everything else its own way. But this is a pre-pre-alpha at the moment, so it’s hack city.
