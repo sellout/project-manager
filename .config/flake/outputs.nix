@@ -191,9 +191,12 @@ in
           '';
         };
     in
-      ## FIXME: Because the basement override isn’t working.
+      ## TODO: Because the basement override isn’t working.
       if system == "i686-linux"
-      then removeAttrs allChecks ["formatter-23_05" "shellcheck-23_05"]
+      then removeAttrs allChecks ["formatter-23_05"]
+      ## TODO: Because llvm-16 isn’t building.
+      else if system == "aarch64-darwin"
+      then removeAttrs allChecks ["formatter-23_11"]
       else allChecks;
 
     formatter = self.projectConfigurations.${system}.formatter;
