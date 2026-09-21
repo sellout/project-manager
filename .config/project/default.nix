@@ -175,12 +175,6 @@ in {
       ])
       testedNixpkgsVersions) ["x86_64-linux"]
   );
-  services.nix-ci.doNotBuild = [
-    "checks.x86_64-linux.formatter-22_11"
-    "checks.x86_64-linux.formatter-23_05"
-    "checks.x86_64-linux.formatter-23_11"
-    "checks.x86_64-linux.formatter-24_05"
-  ];
 
   ## publishing
   services.github.settings.repository = {
