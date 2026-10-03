@@ -41,12 +41,17 @@
 
     ## We test against each supported version of nixpkgs, but build against the
     ## latest stable release.
+    ##
     ## TODO: Split these into separate flakes a la
     ##       https://github.com/NixOS/nix/issues/4193#issuecomment-1228967251
     ##       once garnix-io/issues#27 is fixed.
     nixpkgs-22_11.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs/release-23.05";
-    nixpkgs-23_11.url = "github:NixOS/nixpkgs/release-23.11";
+    ## `release-23.11`’s head is past EOL, so Hydra never built it for darwin. A
+    ## check would then bootstrap the stdenv locally, where LLVM 16’s test suite
+    ## fails on macOS 26. The darwin channel branch is the newest 23.11 that
+    ## substitutes on every supported system.
+    nixpkgs-23_11.url = "github:NixOS/nixpkgs/nixpkgs-23.11-darwin";
     nixpkgs-24_05.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-24_11.url = "github:NixOS/nixpkgs/release-24.11";
     nixpkgs-25_05.url = "github:NixOS/nixpkgs/release-25.05";
