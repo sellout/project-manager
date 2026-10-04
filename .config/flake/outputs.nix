@@ -194,9 +194,6 @@ in
       ## TODO: Because the basement override isn’t working.
       if system == "i686-linux"
       then removeAttrs allChecks ["formatter-23_05"]
-      ## TODO: Because llvm-16 isn’t building.
-      else if system == "aarch64-darwin"
-      then removeAttrs allChecks ["formatter-23_11"]
       else allChecks;
 
     formatter = self.projectConfigurations.${system}.formatter;

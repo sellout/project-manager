@@ -328,7 +328,7 @@ in {
 
         programs.vale.excludes = ["./.gitattributes"];
 
-        xdg.cacheFile."git/config" = {
+        xdg.dataFile."git/config" = {
           minimum-persistence = "store";
           onChange =
             if cfg.installConfig
@@ -340,7 +340,7 @@ in {
               fi
 
               ${gitExe} config "$scope" \
-                include.path "${config.xdg.cacheFile."git/config".reference config.xdg.cacheFile."git/config"}"
+                include.path "${config.xdg.dataFile."git/config".reference config.xdg.dataFile."git/config"}"
             ''
             else ''
               if $(${gitExe} config --get extensions.worktreeConfig); then
@@ -382,16 +382,16 @@ in {
         ignoreRevsPath = "git/ignoreRevs";
       in {
         programs.git.iniContent.blame.ignoreRevsFile =
-          config.xdg.cacheFile."${ignoreRevsPath}".reference
-          config.xdg.cacheFile."git/config";
-        xdg.cacheFile."${ignoreRevsPath}" = {
+          config.xdg.dataFile."${ignoreRevsPath}".reference
+          config.xdg.dataFile."git/config";
+        xdg.dataFile."${ignoreRevsPath}" = {
           minimum-persistence = "store";
           text = concatLines cfg.ignoreRevs;
         };
       }))
 
       (mkIf (cfg.hooks != null) {
-        xdg.cacheFile = lib.mapAttrs' (name: file:
+        xdg.dataFile = lib.mapAttrs' (name: file:
           lib.nameValuePair "git/hooks/${name}"
           (lib.mkMerge [
             file
@@ -403,17 +403,17 @@ in {
         cfg.hooks;
 
         programs.git.iniContent.core.hooksPath =
-          if builtins.any (name: config.xdg.cacheFile."git/hooks/${name}".referenceViaStore config.xdg.cacheFile."git/config") (builtins.attrNames cfg.hooks)
+          if builtins.any (name: config.xdg.dataFile."git/hooks/${name}".referenceViaStore config.xdg.dataFile."git/config") (builtins.attrNames cfg.hooks)
           then let
             entries =
               mapAttrsToList (name: file: {
                 inherit name;
-                path = config.xdg.cacheFile."git/hooks/${name}".reference config.xdg.cacheFile."git/config";
+                path = config.xdg.dataFile."git/hooks/${name}".reference config.xdg.dataFile."git/config";
               })
               cfg.hooks;
           in
             toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries)
-          else lib.pm.path.routeFromFile config.xdg.cacheFile."git/config".target "${config.xdg.cacheDir}/git/hooks";
+          else lib.pm.path.routeFromFile config.xdg.dataFile."git/config".target "${config.xdg.dataDir}/git/hooks";
       })
 
       (mkIf (lib.isAttrs cfg.config) {
