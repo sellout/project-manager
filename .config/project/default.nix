@@ -28,21 +28,12 @@ in {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
     license = "MIT"; # Induced by this being basically a fork of Home Manager
-
-    ## The base config sets this to `true`, because I want most projects to be
-    ## contributable-to by non-Nix users. However, Nix-specific projects can
-    ## lean into Project Manager and avoid committing extra files.
-    commit-by-default = lib.mkForce false;
   };
 
   ## development
-  programs = {
-    ## See the reasoning on `project.commit-by-default`.
-    direnv.commit-envrc = false;
-    git.ignoreRevs = [
-      "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
-    ];
-  };
+  programs.git.ignoreRevs = [
+    "85aa90127b474729fecedfbfce566c8db1760cd1" # formatting
+  ];
 
   ## formatting
   programs = {
@@ -83,6 +74,7 @@ in {
         "*.css"
         "*.scss"
         "*.xml" # TODO: Remove this once we get the XSL transform working.
+        "./.local/share/vale/*"
         "./docs/manual/manpage-urls.json"
         "./docs/project-manager.1"
         "./docs/project-configuration-nix-header.5"
@@ -119,40 +111,10 @@ in {
   };
 
   ## CI
-  services.garnix = let
-    ## Build certain outputs only on one platform (x86_64-linux)
-    ## TODO: Move this up to Flaky, and make the selected platform configurable.
-    singlePlatform = output: name:
-      flaky.lib.forGarnixSystems supportedSystems (sys:
-        if sys == "aarch64-darwin"
-        then []
-        else ["${output}.${sys}.${name}"]);
-  in {
-    builds."*".exclude =
-      [
-        "checks.*.formatter-22_11"
-        "checks.*.formatter-23_05"
-        "checks.*.formatter-23_11"
-        "checks.*.formatter-24_05"
-        "checks.*.formatter-24_11"
-        "checks.*.shellcheck-22_11"
-        "checks.*.shellcheck-23_05"
-        "checks.*.shellcheck-23_11"
-        "checks.*.shellcheck-24_05"
-        "checks.*.shellcheck-24_11"
-      ]
-      ++ lib.concatMap (singlePlatform "checks") [
-        "formatter"
-        "shellcheck"
-        "vale"
-      ];
-  };
   ## FIXME: The Project Manager module needs to be fixed so that these merge
   ##        correctly, rather than having to use `lib.mkForce`.
   services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (
     []
-    ## For Garnix, these are covered by “All Garnix checks”, but for Nix CI, we
-    ## need to add them individually.
     ++ lib.concatMap (sys:
       [
         "build checks.${sys}.formatter"
