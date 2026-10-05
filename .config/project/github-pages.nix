@@ -48,8 +48,8 @@ in {
             {
               uses = "cachix/install-nix-action@v24";
               "with".extra_nix_config = ''
-                extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g=
-                extra-substituters = https://cache.garnix.io
+                extra-trusted-public-keys = sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE=
+                extra-substituters = https://sellout.cachix.org
               '';
             }
             {
