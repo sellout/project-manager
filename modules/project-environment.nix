@@ -706,39 +706,40 @@ in {
     };
     project = {
       checks.project-manager-files =
-        pmPkgs.runEmptyCommand "project-manager-files" {
-          nativeBuildInputs = [
-            config.programs.git.package
-            config.programs.project-manager.package
-            pkgs.cacert
-            pkgs.coreutils
-          ];
+        pmPkgs.runStrictCommand "project-manager-files" {
+          nativeBuildInputs = [pkgs.diffutils];
 
           meta.description = "Check that the generated files are up-to-date.";
         } ''
-          PRJ="$(mktemp --directory --tmpdir project.XXXXXX)"
-          cp -r ${self}/. $PRJ
-          chmod -R a+w $PRJ
-          cd $PRJ
-          export HOME="$(mktemp --directory --tmpdir fake-home.XXXXXX)"
-          mkdir -p "$HOME/.local/state/nix/profiles"
+          status=0
 
-          export NIX_CONFIG=$(cat <<'CONFIG'
-          accept-flake-config = true
-          extra-experimental-features = flakes nix-command
-          CONFIG
-          )
+          while read -r target persistence; do
+            [ "$persistence" = repository ] || continue
 
-          ## Record the current state of the repo
-          git init
-          git config user.email nix@localhost
-          git config user.name Nix
-          git add .
-          git commit --message "current files"
-          ## Update everything
-          project-manager switch --verbose
-          ## Make sure there are no changes
-          git --no-pager diff --exit-code
+            generated=${config.project-files}/$target
+            committed=${self}/$target
+
+            diff --unified --new-file --recursive "$generated" "$committed" \
+              || status=1
+
+            ## Only compare the execute bit, because the store copy is globally
+            ## readable, and not writable.
+            if [ -f "$generated" ] && [ -f "$committed" ]; then
+              if [ -x "$generated" ] && ! [ -x "$committed" ]; then
+                echo "$target should be executable" >&2
+                status=1
+              elif ! [ -x "$generated" ] && [ -x "$committed" ]; then
+                echo "$target should not be executable" >&2
+                status=1
+              fi
+            fi
+          done < ${config.project-files}/pm-metadata/persistence
+
+          if [ "$status" -ne 0 ]; then
+            echo "Run 'project-manager switch' and commit the result." >&2
+            exit "$status"
+          fi
+          touch "$out"
         '';
 
       sandboxedChecks =
