@@ -224,6 +224,19 @@ function setFlakeAttribute() {
   export FLAKE_CONFIG_URI="$flake#projectConfigurations.$name"
 }
 
+# Tells the user how to report a failed `init`, once strict mode has said what
+# the failure actually was.
+function pm_initFailed() {
+  local status=$?
+
+  if [[ $status -ne 0 ]]; then
+    echo
+    # translators: The "%s" specifier will be replaced by a URL.
+    _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
+      "https://github.com/sellout/project-manager/issues"
+  fi
+}
+
 function pm_init() {
   # The directory where we should place the initial configuration.
   local projectDir
@@ -274,9 +287,13 @@ function pm_init() {
   fi
 
   if [[ ! -d $confDir ]]; then
-    _iError "%s: unknown option '%s'" "$0" "$opt" >&2
+    _iError "%s: '%s' exists, but is not a directory" "$0" "$confDir" >&2
     exit 1
   fi
+
+  ## Errors above here are user errors and we only want to append our bug-
+  ## reporting info to internal errors.
+  trap pm_initFailed EXIT
 
   local confFile="$confDir/default.nix"
   local flakeFile="${PROJECT_ROOT}/flake.nix"
@@ -314,17 +331,13 @@ function pm_init() {
     ##       do bad things when the user runs `switch`, so we shouldn’t change
     ##       that.
     cd "$PROJECT_ROOT" || true
-    if pm_switch; then
-      # translators: The "%s" specifier will be replaced by a file path.
-      _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
-        "$confFile"
-      exit 0
-    else
-      # translators: The "%s" specifier will be replaced by a URL.
-      _i $'Uh oh, the installation failed! Please create an issue at\n\n    %s\n\nif the error seems to be the fault of Project Manager.' \
-        "https://github.com/sellout/project-manager/issues"
-      exit 1
-    fi
+
+    pm_switch
+
+    # translators: The "%s" specifier will be replaced by a file path.
+    _i $'All done! The project-manager tool should now be installed and you can edit\n\n    %s\n\nto configure Project Manager. Run \'man project-configuration.nix\' to\nsee all available options.' \
+      "$confFile"
+    exit 0
   fi
 }
 
@@ -407,8 +420,7 @@ function pm_build() {
     "$FLAKE_CONFIG_URI.packages.activation" \
     ${DRY_RUN+--dry-run} \
     ${NO_OUT_LINK+--no-link} \
-    ${PRINT_BUILD_LOGS+--print-build-logs} \
-    || return
+    ${PRINT_BUILD_LOGS+--print-build-logs}
 
   # presentNews
 }
@@ -421,8 +433,7 @@ function pm_switch() {
     "$FLAKE_CONFIG_URI.packages.activation" \
     ${PRINT_BUILD_LOGS+--print-build-logs} \
     ${VERBOSE+--verbose} \
-    "${PASSTHROUGH_OPTS[@]}" \
-    || return
+    "${PASSTHROUGH_OPTS[@]}"
 
   # presentNews
 }
@@ -535,8 +546,7 @@ function pm_buildNews() {
   pm_buildFlake \
     "$FLAKE_CONFIG_URI.config.news.json.output" \
     --quiet \
-    --out-link "$newsJsonFile" \
-    || return
+    --out-link "$newsJsonFile"
 
   local extraArgs=()
 
