@@ -5,7 +5,7 @@
 #   nix build --reference-lock-file flake.lock ./testing#test-all
 #   nix build --reference-lock-file flake.lock ./testing#test-alacritty-empty-settings
 #
-# in the Home Manager project root directory.
+# in the Project Manager project root directory.
 #
 # Similarly for integration tests
 #

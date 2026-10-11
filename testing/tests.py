@@ -64,7 +64,7 @@ class TestRunner:
         )
 
         cmd = [
-            "nix", "eval", "--raw", "--reference-lock-file", "flake.lock",
+            "nix", "eval", "--raw", "--no-write-lock-file", "--reference-lock-file", "flake.lock",
             f"./testing#packages.{system}", "--apply", nix_apply_expr
         ]
 
@@ -106,7 +106,7 @@ class TestRunner:
         for i, test in enumerate(tests_to_run, 1):
             print(f"\n--- Running test {i}/{count}: {test} ---")
             cmd = [
-                "nix", "build", "-L", "--reference-lock-file", "flake.lock",
+                "nix", "build", "-L", "--no-write-lock-file", "--reference-lock-file", "flake.lock",
                 f"./testing#{test}", *nix_args
             ]
             try:
