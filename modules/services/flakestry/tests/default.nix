@@ -1,0 +1,3 @@
+{
+  flakestry-enabled = ./enabled;
+}
