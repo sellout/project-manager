@@ -33,7 +33,7 @@
   # ./programs/zsh.nix
   project-environment = ./project-environment.nix;
   flakehub = ./services/flakehub;
-  flakestry = ./services/flakestry.nix;
+  flakestry = ./services/flakestry;
   garnix = ./services/garnix.nix;
   github = ./services/github.nix;
   # ./services/git-sync.nix

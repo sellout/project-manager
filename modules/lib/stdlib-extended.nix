@@ -9,4 +9,6 @@ in
     # For forward compatibility.
     literalExpression = super.literalExpression or super.literalExample;
     literalDocBook = super.literalDocBook or super.literalExample;
+    # Arrived in Nixpkgs 23.05, so 22.11 needs it spelled out.
+    concatLines = super.concatLines or (super.concatMapStrings (s: s + "\n"));
   })

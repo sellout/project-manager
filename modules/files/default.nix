@@ -257,7 +257,9 @@ in {
       pkgs.runCommandLocal
       "project-manager-files-for-${config.project.name}"
       {
-        nativeBuildInputs = [pkgs.lndir];
+        ## `lndir` moved in Nixpkgs 25.11. It still exists at the old location
+        ## (26.05), but warns on newer Nixpkgs.
+        nativeBuildInputs = [(pkgs.lndir or pkgs.xorg.lndir)];
       }
       (''
           mkdir -p $out
