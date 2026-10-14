@@ -110,34 +110,6 @@ in {
     };
   };
 
-  ## CI
-  ## FIXME: The Project Manager module needs to be fixed so that these merge
-  ##        correctly, rather than having to use `lib.mkForce`.
-  services.github.settings.branches.main.protection.required_status_checks.contexts = lib.mkForce (
-    []
-    ++ lib.concatMap (sys:
-      [
-        "build checks.${sys}.formatter"
-        "build checks.${sys}.project-manager-files"
-        "build checks.${sys}.shellcheck"
-        "build checks.${sys}.vale"
-        "build devShells.${sys}.default"
-        "build devShells.${sys}.project-manager"
-        "build packages.${sys}.default"
-        "build packages.${sys}.docs-html"
-        "build packages.${sys}.docs-json"
-        "build packages.${sys}.docs-manpages"
-        "build packages.${sys}.project-manager"
-      ]
-      ++ lib.concatMap (nixpkgs: [
-        "build checks.${sys}.formatter-${nixpkgs}"
-        "build checks.${sys}.project-manager-files-${nixpkgs}"
-        "build checks.${sys}.shellcheck-${nixpkgs}"
-        "build checks.${sys}.vale-${nixpkgs}"
-      ])
-      testedNixpkgsVersions) ["x86_64-linux"]
-  );
-
   ## publishing
   services.github.settings.repository = {
     homepage = "https://sellout.github.io/${config.project.name}";
