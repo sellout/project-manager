@@ -35,7 +35,7 @@
   flakehub = ./services/flakehub;
   flakestry = ./services/flakestry;
   garnix = ./services/garnix.nix;
-  github = ./services/github.nix;
+  github = ./services/github;
   # ./services/git-sync.nix
   # ./services/lorri.nix
   nix-cx = ./services/nix-ci.nix;

@@ -51,6 +51,7 @@ in {
           ##       causing `nix flake check` to fail.
           alejandra.excludes = ["nix-ci.nix"];
           prettier.excludes = [
+            "modules/services/github/tests/settings/settings.yml"
             "modules/services/renovate/tests/simple/renovate.json"
           ];
           shellcheck = {inherit includes;};

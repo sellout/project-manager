@@ -9,7 +9,7 @@
   projectDirectory = config.project.projectDirectory;
 
   fileType =
-    (import ../lib/file-type.nix {
+    (import ../../lib/file-type.nix {
       inherit projectDirectory lib pkgs;
       commit-by-default = config.project.commit-by-default;
     })
