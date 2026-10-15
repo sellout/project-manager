@@ -69,7 +69,7 @@ in {
   config = lib.mkIf cfg.enable (let
     ## This is a bit complicated, because if we’re _not_ generating a .vale.ini,
     ## then this needs to have the default "styles" value, but if we are, then
-    ## we want to default to ".cache/vale".
+    ## we want to default to ".local/share/vale".
     actualCoreSettings =
       if cfg.coreSettings == null
       then {StylesPath = "styles";}
@@ -155,7 +155,12 @@ in {
 
           vale sync
           find . -type f \
-            ${lib.concatStringsSep " " (map (v: "-not -path '${v}' ") cfg.excludes)} \
+            ${
+            lib.concatStringsSep " " (map (v: "-not -path '${v}' ")
+              ## `vale sync` populates `StylesPath` with other people’s
+              ## packages, so we tell `find` to skip those.
+              (cfg.excludes ++ ["./${actualCoreSettings.StylesPath}/*"]))
+          } \
             -exec vale {} +
         '';
     };

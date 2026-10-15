@@ -76,7 +76,6 @@ in {
         "*.css"
         "*.scss"
         "*.xml" # TODO: Remove this once we get the XSL transform working.
-        "./.local/share/vale/*"
         "./docs/manual/manpage-urls.json"
         "./docs/project-manager.1"
         "./docs/project-configuration-nix-header.5"
