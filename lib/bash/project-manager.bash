@@ -421,7 +421,6 @@ function presentNews() {
 
 function pm_edit() {
   if [[ ! -v EDITOR || -z $EDITOR ]]; then
-    # shellcheck disable=2016
     _i 'Please set the $EDITOR environment variable' >&2
     return 1
   fi

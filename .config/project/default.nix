@@ -37,6 +37,13 @@ in {
 
   ## formatting
   programs = {
+    shellcheck = {
+      enable = true;
+      ## We configure this one file specifically so that we test the ShellCheck
+      ## check, rather than just relying on Treefmt all the time.
+      includes = ["project-manager/project-manager"];
+    };
+
     treefmt = {
       package = lib.mkForce pkgs.treefmt;
       ## Shell linter
