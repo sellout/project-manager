@@ -544,6 +544,58 @@ in {
     # script's "check" and the "write" phases.
     project.activation.writeBoundary = pm.dag.entryAnywhere "";
 
+    ## Loads a two-column CCSV file into an associative array, keyed by the
+    ## first column.
+    ##
+    ## TODO: Use `_iError` – currently some of the places this gets interpolated
+    ##       into don't source the message helpers.
+    lib.bash.readCcsvPairs = ''
+      function pm_splitCcsvRecord() {
+        local -n _pm_fields=$1
+        local record=$2
+
+        ## `read -a` drops a trailing empty field, but a CCSV value may be
+        ## empty, so split by hand to keep the field count exact.
+        _pm_fields=()
+        while [[ $record == *$'\x1f'* ]]; do
+          _pm_fields+=("''${record%%$'\x1f'*}")
+          record=''${record#*$'\x1f'}
+        done
+        _pm_fields+=("$record")
+      }
+
+      function pm_readCcsvPairs() {
+        local -n _pm_pairs=$1
+        local file=$2
+        local record=""
+        local -a columns=() fields=()
+
+        {
+          IFS= read -r -d $'\x1e' record || true
+          pm_splitCcsvRecord columns "$record"
+
+          if [[ ''${#columns[@]} -ne 2 ]]; then
+            printf '%s: expected two columns, but the header names %s\n' \
+              "$file" "''${#columns[@]}" >&2
+            return 1
+          fi
+
+          while IFS= read -r -d $'\x1e' record || [[ -n $record ]]; do
+            pm_splitCcsvRecord fields "$record"
+
+            if [[ ''${#fields[@]} -ne 2 ]]; then
+              printf '%s: a record has %s field(s), but the header names 2\n' \
+                "$file" "''${#fields[@]}" >&2
+              return 1
+            fi
+
+            _pm_pairs[''${fields[0]}]=''${fields[1]}
+            record=""
+          done
+        } < "$file"
+      }
+    '';
+
     # Text containing Bash commands that will initialize the Project Manager Bash
     # library. Most importantly, this will prepare for using translated strings
     # in the `pm-modules` text domain.
@@ -564,6 +616,7 @@ in {
       export TEXTDOMAIN=pm-modules
       export TEXTDOMAINDIR=${domainDir}
       source ${../lib/bash/project-manager.bash}
+      ${config.lib.bash.readCcsvPairs}
     '';
 
     project.packages.activation = let
@@ -683,8 +736,14 @@ in {
         } ''
           status=0
 
-          while read -r target persistence; do
-            [ "$persistence" = repository ] || continue
+          ${config.lib.bash.readCcsvPairs}
+
+          declare -A persistence=()
+          pm_readCcsvPairs persistence ${config.project-files}/${config.project.persistenceFile}
+
+          ## Sorted, so that a failure reads the same way twice.
+          while read -r target; do
+            [ "''${persistence[$target]}" = repository ] || continue
 
             generated=${config.project-files}/$target
             committed=${self}/$target
@@ -703,7 +762,7 @@ in {
                 status=1
               fi
             fi
-          done < ${config.project-files}/pm-metadata/persistence
+          done < <(printf '%s\n' "''${!persistence[@]}" | sort)
 
           if [ "$status" -ne 0 ]; then
             echo "Run 'project-manager switch' and commit the result." >&2

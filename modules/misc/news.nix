@@ -140,6 +140,15 @@ in {
           A new module is available: 'programs.qcal'.
         '';
       }
+
+      {
+        time = "2026-10-16T06:27:10+00:00";
+        message = ''
+          Files that Project Manager commits to the repository but no longer
+          generates are now deleted when you switch, instead of being left
+          behind.
+        '';
+      }
     ];
   };
 }

@@ -9,6 +9,27 @@ with lib; let
 
   projectDirectory = config.project.projectDirectory;
 
+  ## ASCII separators, so that a target containing whitespace can’t be misread
+  ## as two fields.
+  ##
+  ## TODO: Move these to a lib module somewhere.
+  fileSeparator = builtins.fromJSON ''"\u001c"'';
+  groupSeparator = builtins.fromJSON ''"\u001d"'';
+  recordSeparator = builtins.fromJSON ''"\u001e"'';
+  unitSeparator = builtins.fromJSON ''"\u001f"'';
+
+  ## Which generated symlinks would dangle, so the linker knows to copy
+  ## instead. Same format as the persistence list, and likewise kept whole
+  ## rather than appended to a line at a time.
+  brokenSymlinkFile =
+    pkgs.writeText "broken-symlink.ccsv"
+    (concatStringsSep recordSeparator
+      ([(concatStringsSep unitSeparator ["target" "broken-symlink"])]
+        ++ naturalSort
+        (mapAttrsToList
+          (_: f: "${f.target}${unitSeparator}${toString f.broken-symlink}")
+          cfg)));
+
   fileType =
     (import ../lib/file-type.nix {
       inherit projectDirectory lib pkgs;
@@ -32,6 +53,34 @@ in {
       internal = true;
       description = ''
         Package to contain all project files
+      '';
+    };
+
+    project.persistenceFile = mkOption {
+      type = types.str;
+      internal = true;
+      readOnly = true;
+      default = "${config.xdg.dataDir}/project-manager/persistence.ccsv";
+      description = ''
+        Path, relative to the project root, of every file we generate and how
+        each one is persisted.
+
+        This is committed, so that a `switch` can still tell what the last one
+        produced in a checkout that has no generation of its own.
+      '';
+    };
+
+    project.metadataDir = mkOption {
+      type = types.str;
+      internal = true;
+      readOnly = true;
+      default = "${config.xdg.dataDir}/project-manager/metadata";
+      description = ''
+        Directory, relative to the project root, that a generation keeps its
+        own bookkeeping in. Unlike {option}`project.persistenceFile`, nothing
+        here is linked into the worktree, so it only ever exists inside the
+        generation. It lives under our own directory so that it’s unlikely to
+        collide with a file some other tool wants to write.
       '';
     };
   };
@@ -60,6 +109,17 @@ in {
         }
       )
     ];
+
+    project.file.${config.project.persistenceFile} = {
+      commit-by-default = true;
+      text =
+        concatStringsSep recordSeparator
+        ([(concatStringsSep unitSeparator ["target" "persistence"])]
+          ++ naturalSort
+          (mapAttrsToList
+            (_: f: "${f.target}${unitSeparator}${f.persistence}")
+            cfg));
+    };
 
     lib.file.mkOutOfStoreSymlink = path: let
       pathStr = toString path;
@@ -119,55 +179,13 @@ in {
           newGenFiles="$1"
           shift
           declare -A persistence=( )
-          while read -r var value; do
-            persistence[$var]=$value
-          done < "$newGenFiles/pm-metadata/persistence"
+          pm_readCcsvPairs persistence "$newGenFiles/${config.project.persistenceFile}"
           declare -A broken_symlink=( )
-          while read -r var value; do
-            broken_symlink[$var]=$value
-          done < "$newGenFiles/pm-metadata/broken_symlink"
+          pm_readCcsvPairs broken_symlink "$newGenFiles/${config.project.metadataDir}/broken-symlink.ccsv"
           for sourcePath in "$@" ; do
             targetPath="''${sourcePath#$newGenFiles/}"
-            [[ $targetPath =~ pm-metadata ]] && continue
+            [[ $targetPath == ${config.project.metadataDir}/* ]] && continue
             create_reference "$sourcePath" "$targetPath"
-          done
-        '';
-
-        cleanup = pkgs.writeShellScript "cleanup" ''
-          ${config.lib.bash.initProjectManagerLib}
-
-          setRunModeVariables
-
-          # A symbolic link whose target path matches this pattern will be
-          # considered part of a Project Manager generation.
-          projectFilePattern="$(readlink -e ${escapeShellArg builtins.storeDir})/*-project-manager-files/*"
-
-          newGenFiles="$1"
-          shift 1
-          for relativePath in "$@" ; do
-            targetPath="$PROJECT_ROOT/$relativePath"
-            if [[ -e "$newGenFiles/$relativePath" ]] ; then
-              "''${VERBOSE_ECHO}" "Checking $targetPath: exists"
-            else
-              "''${VERBOSE_ECHO}" "Checking $targetPath: gone (deleting)"
-              "''${DRY_RUN_CMD[@]}" rm "''${VERBOSE_ARG[@]}" "$targetPath" || true
-
-              # Recursively delete empty parent directories.
-              targetDir="$(dirname "$relativePath")"
-              if [[ "$targetDir" != "." ]] ; then
-                pushd "$PROJECT_ROOT" > /dev/null
-
-                # Call rmdir with a relative path excluding $PROJECT_ROOT.
-                # Otherwise, it might try to delete $PROJECT_ROOT and exit
-                # with a permission error.
-                "''${DRY_RUN_CMD[@]}" rmdir "''${VERBOSE_ARG[@]}" \
-                    -p --ignore-fail-on-non-empty \
-                    "$targetDir" \
-                  || true
-
-                popd > /dev/null
-              fi
-            fi
           done
         '';
       in ''
@@ -179,26 +197,6 @@ in {
           find "$newGenFiles" \( -type f -or -type l \) \
             -exec bash ${link} "$newGenFiles" {} +
         }
-
-        function cleanOldGen() {
-          if [[ ! -v oldGenPath || ! -e "$oldGenPath/project-files" ]] ; then
-            return
-          fi
-
-          _i "Cleaning up orphan links from %s" "$PROJECT_ROOT"
-
-          local newGenFiles oldGenFiles
-          newGenFiles="$(readlink -e "$newGenPath/project-files")"
-          oldGenFiles="$(readlink -e "$oldGenPath/project-files")"
-
-          # Apply the cleanup script on each leaf in the old
-          # generation. The find command below will print the
-          # relative path of the entry.
-          find "$oldGenFiles" '(' -type f -or -type l ')' -printf '%P\0' \
-            | xargs -0 bash ${cleanup} "$newGenFiles"
-        }
-
-        cleanOldGen
 
         if ! pm_profileHoldsExactly "$genProfilePath" "$newGenPath" ${config.project.packages.path}; then
           # Remove all packages from "$genProfilePath"
@@ -233,6 +231,54 @@ in {
         linkNewGen
       ''
     );
+
+    ## Delete obsolete Project Manager files.
+    project.activation.removeStaleFiles = pm.dag.entryBetween ["linkGeneration"] ["writeBoundary"] ''
+      function removeStaleFiles() {
+        local newGenFiles
+        newGenFiles="$(readlink -e "$newGenPath/project-files")"
+
+        local -A produced=()
+        local target
+
+        local committed="$PROJECT_ROOT/${config.project.persistenceFile}"
+        if [[ -e $committed ]]; then
+          pm_readCcsvPairs produced "$committed"
+        fi
+
+        if [[ -v oldGenPath && -e $oldGenPath/project-files ]]; then
+          local oldGenFiles
+          oldGenFiles="$(readlink -e "$oldGenPath/project-files")"
+          while IFS= read -r -d $'\0' target; do
+            produced[$target]=1
+          done < <(find "$oldGenFiles" '(' -type f -o -type l ')' -printf '%P\0')
+        fi
+
+        for target in "''${!produced[@]}"; do
+          if [[ -e $newGenFiles/$target ]]; then
+            "''${VERBOSE_ECHO}" "Keeping ‘$target’: still generated"
+          elif [[ -e $PROJECT_ROOT/$target ]]; then
+            _i "Removing ‘%s’, which is no longer generated" "$target"
+            "''${DRY_RUN_CMD[@]}" rm "''${VERBOSE_ARG[@]}" "$PROJECT_ROOT/$target" \
+              || true
+
+            ## Take any directories that this emptied with it. Relative so
+            ## that `rmdir` can’t wander up out of the project.
+            local directory
+            directory="$(dirname "$target")"
+            if [[ $directory != "." ]]; then
+              pushd "$PROJECT_ROOT" > /dev/null
+              "''${DRY_RUN_CMD[@]}" rmdir "''${VERBOSE_ARG[@]}" \
+                -p --ignore-fail-on-non-empty "$directory" \
+                || true
+              popd > /dev/null
+            fi
+          fi
+        done
+      }
+
+      removeStaleFiles
+    '';
 
     project.activation.checkFilesChanged = pm.dag.entryBefore ["linkGeneration"] (
       let
@@ -289,20 +335,16 @@ in {
 
           # Needed in case /nix is a symbolic link.
           realOut="$(realpath -m "$out")"
-          mkdir -p "$realOut/pm-metadata"
+          mkdir -p "$realOut/${config.project.metadataDir}"
+          cp ${brokenSymlinkFile} \
+            "$realOut/${config.project.metadataDir}/broken-symlink.ccsv"
 
           function insertFile() {
             local source="$1"
             local relTarget="$2"
             local executable="$3"
             local recursive="$4"
-            local persistence="$5"
-            local broken_symlink="$6"
 
-            ## TOOD: There should be a safer place for this (i.e., if there is a
-            ##       real file called `pm-metadata`, we’ll mess it up).
-            echo "$relTarget $persistence" >> $realOut/pm-metadata/persistence
-            echo "$relTarget $broken_symlink" >> $realOut/pm-metadata/broken_symlink
 
             # If the target already exists then we have a collision. Note, this
             # should not happen due to the assertion found in the “files” module.
@@ -367,8 +409,6 @@ in {
                   else toString v.executable
                 )
                 (toString v.recursive)
-                v.persistence
-                v.broken-symlink
               ]
             }
           '')
