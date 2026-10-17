@@ -82,6 +82,14 @@ function _iNote() {
 
 ## Project Manager logic
 
+function pm_generationNumber() {
+  ## A profile symlink points at `<profile>-<number>-link`.
+  local link
+  link="$(readlink "$1")"
+  link="${link%-link}"
+  printf '%s' "${link##*-}"
+}
+
 function pm_listPackagesBySuffix() {
   # We attempt to use `--json` first (added in Nix 2.17). Otherwise
   # attempt to parse the legacy output format.
