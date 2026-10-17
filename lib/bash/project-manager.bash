@@ -122,7 +122,6 @@ function pm_removePackagesBySuffix() {
 }
 
 function setNixProfileCommands() {
-  LIST_OUTPATH_CMD=('nix' 'profile' 'list')
   REMOVE_CMD='pm_removePackagesBySuffix'
 }
 
@@ -526,9 +525,13 @@ function pm_expireGenerations() {
 }
 
 function pm_listPackages() {
-  setNixProfileCommands
+  setProjectManagerPathVariables
+
   local outPath
-  outPath="$("${LIST_OUTPATH_CMD[@]}" | grep -o '/.*project-manager-path$')"
+  outPath="$(
+    pm_listPackagesBySuffix "$PM_PROFILE_DIR/project-manager" "" \
+      | { grep -- '-project-manager-path-for-' || test $? = 1; }
+  )"
   if [[ -n $outPath ]]; then
     nix-store -q --references "$outPath" | sed 's/[^-]*-//'
   else
