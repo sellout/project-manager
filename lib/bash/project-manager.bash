@@ -106,25 +106,34 @@ function setNixProfileCommands() {
   REMOVE_CMD='pm_removePackagesBySuffix'
 }
 
-function pm_setVerboseAndDryRun() {
+## Called in each script, because Bash can’t export arrays.
+function setRunModeVariables() {
   if [[ -v VERBOSE ]]; then
     export VERBOSE_ECHO='echo'
-    export VERBOSE_ARG=('--verbose')
-    export VERBOSE_RUN=()
+    VERBOSE_ARG=('--verbose')
+    VERBOSE_RUN=()
   else
     export VERBOSE_ECHO='true'
-    export VERBOSE_ARG=()
-    export VERBOSE_RUN=('true')
+    VERBOSE_ARG=()
+    VERBOSE_RUN=('true')
   fi
 
   if [[ -v DRY_RUN ]]; then
-    _i "This is a dry run"
-    export DRY_RUN_CMD=('echo')
+    DRY_RUN_CMD=('echo')
     export DRY_RUN_NULL="/dev/stdout"
   else
-    "${VERBOSE_RUN[@]}" _i "This is a live run"
-    export DRY_RUN_CMD=()
+    DRY_RUN_CMD=()
     export DRY_RUN_NULL=/dev/null
+  fi
+}
+
+function pm_setVerboseAndDryRun() {
+  setRunModeVariables
+
+  if [[ -v DRY_RUN ]]; then
+    _i "This is a dry run"
+  else
+    "${VERBOSE_RUN[@]}" _i "This is a live run"
   fi
 }
 

@@ -91,6 +91,10 @@ in {
     project.activation.linkGeneration = pm.dag.entryAfter ["writeBoundary"] (
       let
         link = pkgs.writeShellScript "link" ''
+          ${config.lib.bash.initProjectManagerLib}
+
+          setRunModeVariables
+
           ## TODO: Extract this to be used by other scripts.
           function create_reference() {
             sourcePath="$1"
@@ -100,7 +104,7 @@ in {
               # The target exists but is identical – don’t do anything.
               "''${VERBOSE_ECHO}" "Skipping '$relativePath' as it is identical to '$sourcePath'"
             else
-              mkdir -p $(dirname "$relativePath")
+              "''${DRY_RUN_CMD[@]}" mkdir -p "$(dirname "$relativePath")"
               ## Try a symlink (if allowed), then a hard link, then a copy
               ([[ ''${persistence[$relativePath]} == worktree && ! ''${broken_symlink[$relativePath]} ]] \
                   && "''${DRY_RUN_CMD[@]}" ln -Tsf "''${VERBOSE_ARG[@]}" "$sourcePath" "$targetPath") \
@@ -131,6 +135,8 @@ in {
 
         cleanup = pkgs.writeShellScript "cleanup" ''
           ${config.lib.bash.initProjectManagerLib}
+
+          setRunModeVariables
 
           # A symbolic link whose target path matches this pattern will be
           # considered part of a Project Manager generation.

@@ -266,6 +266,8 @@ in {
             updateStatus = pkgs.writeText "updateStatus" ''
               ${config.lib.bash.initProjectManagerLib}
 
+              setRunModeVariables
+
               # A symbolic link whose target path matches this pattern will be
               # considered part of a Project Manager generation.
               projectFilePattern="$(readlink -e ${escapeShellArg builtins.storeDir})/*-project-manager-files/*"
@@ -283,16 +285,16 @@ in {
                 if [[ ''${persistence[$relativePath]} == repository ]]; then
                   ## We use force here in case the file is covered by an ignore
                   ## somewhere.
-                  ${gitExe} add --force --intent-to-add "$relativePath"
+                  "''${DRY_RUN_CMD[@]}" ${gitExe} add --force --intent-to-add "$relativePath"
                 else
-                  ${gitExe} rm --cached --ignore-unmatch "$relativePath"
+                  "''${DRY_RUN_CMD[@]}" ${gitExe} rm --cached --ignore-unmatch "$relativePath"
                 fi
               done
             '';
           in ''
             function updateGitStatuses() {
-              [[ $(${gitExe} rev-parse --is-inside-work-tree &>/dev/null) ]] ||
-                 ${gitExe} init
+              ${gitExe} rev-parse --is-inside-work-tree &> /dev/null ||
+                "''${DRY_RUN_CMD[@]}" ${gitExe} init
 
               local newGenFiles
               newGenFiles="$(readlink -e "$newGenPath/project-files")"
