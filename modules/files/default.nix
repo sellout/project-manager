@@ -199,13 +199,18 @@ in {
         }
 
         if ! pm_profileHoldsExactly "$genProfilePath" "$newGenPath" ${config.project.packages.path}; then
-          # Remove all packages from "$genProfilePath"
-          # `nix profile remove '.*' --profile "$genProfilePath"` was not
-          # working (NixOS/nix#7487), so here is a workaround:
-          pm_removePackagesBySuffix "$genProfilePath" ""
+          ## WAIT: Before Nix 2.21 (Nixpkgs 24.11), `nix profile remove` can’t
+          ##       clear a profile, so we have a fallback. See NixOS/nix#7487.
+          if pm_nixAtLeast 2.21; then
+            "''${DRY_RUN_CMD[@]}" nix profile remove "''${VERBOSE_ARG[@]}" \
+              --profile "$genProfilePath" --all
+          else
+            pm_removePackagesBySuffix "$genProfilePath" ""
+          fi
 
-          ## Every `nix profile` invocation creates a generation of its own, so
-          ## everything the profile should hold is installed at once.
+          ## WAIT: With `nix profile` we can’t replace the packages in a single
+          ##       generation (NixOS/nix#6349), so we currently “increment” two
+          ##       generations at a time.
           if ! "''${DRY_RUN_CMD[@]}" nix profile install "''${VERBOSE_ARG[@]}" \
             --profile "$genProfilePath" \
             "$newGenPath" ${config.project.packages.path}; then
