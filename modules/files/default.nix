@@ -200,17 +200,34 @@ in {
 
         cleanOldGen
 
-        if [[ ! -v oldGenPath || "$oldGenPath" != "$newGenPath" ]] ; then
-          _i "Creating profile generation %s" $newGenNum
+        if ! pm_profileHoldsExactly "$genProfilePath" "$newGenPath" ${config.project.packages.path}; then
           # Remove all packages from "$genProfilePath"
           # `nix profile remove '.*' --profile "$genProfilePath"` was not
           # working (NixOS/nix#7487), so here is a workaround:
           pm_removePackagesBySuffix "$genProfilePath" ""
-          "''${DRY_RUN_CMD[@]}" nix profile install "''${VERBOSE_ARG[@]}" --profile "$genProfilePath" "$newGenPath"
+
+          ## Every `nix profile` invocation creates a generation of its own, so
+          ## everything the profile should hold is installed at once.
+          if ! "''${DRY_RUN_CMD[@]}" nix profile install "''${VERBOSE_ARG[@]}" \
+            --profile "$genProfilePath" \
+            "$newGenPath" ${config.project.packages.path}; then
+            echo
+            _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' \
+              "nix profile install --profile $genProfilePath" \
+              "nix profile list --profile $genProfilePath" \
+              "nix profile remove --profile $genProfilePath {number | store path}"
+            exit 1
+          fi
+
+          if [[ -v DRY_RUN ]]; then
+            _i "Would create a new profile generation"
+          else
+            _i "Created profile generation %s" "$(pm_generationNumber "$genProfilePath")"
+          fi
 
           "''${DRY_RUN_CMD[@]}" nix-store --realise "$newGenPath" --add-root "$newGenGcPath" > "$DRY_RUN_NULL"
         else
-          _i "No change so reusing latest profile generation %s" "$oldGenNum"
+          _i "No change so reusing profile generation %s" "$oldGenNum"
         fi
 
         linkNewGen

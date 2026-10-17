@@ -10,33 +10,12 @@ function setupVars() {
   declare -gr newGenPath="@GENERATION_DIR@"
   declare -gr newGenGcPath="$pmGcrootsDir/current-project"
 
-  declare greatestGenNum
-  greatestGenNum=$(
-    nix profile history --profile "$genProfilePath" \
-      | tail -2 \
-      | sed -E 's/.*m([[:digit:]]+).*/\1/' \
-      | head -1
-  )
-
-  if [[ -n $greatestGenNum ]]; then
-    declare -gr oldGenNum=$greatestGenNum
-    declare -gr newGenNum=$((oldGenNum + 1))
-  else
-    declare -gr newGenNum=1
-  fi
-
   if [[ -e $genProfilePath ]]; then
-    declare -g oldGenPath
+    declare -g oldGenNum oldGenPath
+    oldGenNum="$(pm_generationNumber "$genProfilePath")"
     oldGenPath="$(readlink -e "$genProfilePath")"
-  fi
-
-  "${VERBOSE_RUN[@]}" _i "Checking oldGenNum and oldGenPath for consistency"
-  if [[ -v oldGenNum && ! -v oldGenPath ||
-    ! -v oldGenNum && -v oldGenPath ]]; then
-    _i $'The previous generation number and path are in conflict! These\nmust be either both empty or both set but are now set to\n\n    \'%s\' and \'%s\'\n\nIf you don\'t mind losing previous profile generations then\nthe easiest solution is probably to run\n\n   rm %s/project-manager*\n   rm %s/current-project\n\nand trying project-manager switch again. Good luck!' \
-      "${oldGenNum-}" "${oldGenPath-}" \
-      "$profilesDir" "$pmGcrootsDir"
-    exit 1
+  elif [[ -L $genProfilePath ]]; then
+    _iWarn "The profile at ‘%s’ points at a generation that no longer exists, so there is no previous generation to compare against." "$genProfilePath"
   fi
 }
 
@@ -74,6 +53,5 @@ else
   "${VERBOSE_ECHO}" "  oldGenPath undefined (first run?)"
 fi
 "${VERBOSE_ECHO}" "  newGenPath=$newGenPath"
-"${VERBOSE_ECHO}" "  newGenNum=$newGenNum"
 "${VERBOSE_ECHO}" "  genProfilePath=$genProfilePath"
 "${VERBOSE_ECHO}" "  newGenGcPath=$newGenGcPath"

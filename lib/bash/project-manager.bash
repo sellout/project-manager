@@ -82,6 +82,14 @@ function _iNote() {
 
 ## Project Manager logic
 
+function pm_generationNumber() {
+  ## A profile symlink points at `<profile>-<number>-link`.
+  local link
+  link="$(readlink "$1")"
+  link="${link%-link}"
+  printf '%s' "${link##*-}"
+}
+
 function pm_listPackagesBySuffix() {
   # We attempt to use `--json` first (added in Nix 2.17). Otherwise
   # attempt to parse the legacy output format.
@@ -95,6 +103,18 @@ function pm_listPackagesBySuffix() {
   }
 }
 
+## Whether the profile's current generation matches the new one exactly.
+function pm_profileHoldsExactly() {
+  local profile=$1
+  shift
+
+  local -a installed=() wanted=()
+  mapfile -t installed < <(pm_listPackagesBySuffix "$profile" "" | sort)
+  mapfile -t wanted < <(printf '%s\n' "$@" | sort)
+
+  [[ ${installed[*]} == "${wanted[*]}" ]]
+}
+
 function pm_removePackagesBySuffix() {
   pm_listPackagesBySuffix "$1" "$2" \
     | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" --no-run-if-empty \
@@ -102,7 +122,6 @@ function pm_removePackagesBySuffix() {
 }
 
 function setNixProfileCommands() {
-  LIST_OUTPATH_CMD=('nix' 'profile' 'list')
   REMOVE_CMD='pm_removePackagesBySuffix'
 }
 
@@ -506,9 +525,13 @@ function pm_expireGenerations() {
 }
 
 function pm_listPackages() {
-  setNixProfileCommands
+  setProjectManagerPathVariables
+
   local outPath
-  outPath="$("${LIST_OUTPATH_CMD[@]}" | grep -o '/.*project-manager-path$')"
+  outPath="$(
+    pm_listPackagesBySuffix "$PM_PROFILE_DIR/project-manager" "" \
+      | { grep -- '-project-manager-path-for-' || test $? = 1; }
+  )"
   if [[ -n $outPath ]]; then
     nix-store -q --references "$outPath" | sed 's/[^-]*-//'
   else
