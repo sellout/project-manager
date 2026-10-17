@@ -544,36 +544,6 @@ in {
     # script's "check" and the "write" phases.
     project.activation.writeBoundary = pm.dag.entryAnywhere "";
 
-    # Install packages to the project environment.
-    #
-    project.activation.installPackages = pm.dag.entryAfter ["writeBoundary"] (
-      let
-        profileDir = "$PROJECT_ROOT/${config.xdg.stateDir}/nix/profiles/project-manager";
-        pathPackageName = "project-manager-path-for-${cfg.name}";
-      in ''
-        function nixReplaceProfile() {
-          local oldNix="$(command -v nix)"
-
-          pm_removePackagesBySuffix "${profileDir}" '${pathPackageName}'
-
-          "''${DRY_RUN_CMD[@]}" $oldNix profile install --profile ${profileDir} $1
-        }
-
-        INSTALL_CMD="nix profile install --profile ${profileDir}"
-        INSTALL_CMD_ACTUAL="nixReplaceProfile"
-        LIST_CMD="nix profile list --profile ${profileDir}"
-        REMOVE_CMD_SYNTAX='nix profile remove --profile ${profileDir} {number | store path}'
-
-        if ! $INSTALL_CMD_ACTUAL ${cfg.packages.path} ; then
-          echo
-          _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' "$INSTALL_CMD" "$LIST_CMD" "$REMOVE_CMD_SYNTAX"
-          exit 1
-        fi
-        unset -f nixReplaceProfile
-        unset INSTALL_CMD INSTALL_CMD_ACTUAL LIST_CMD REMOVE_CMD_SYNTAX
-      ''
-    );
-
     # Text containing Bash commands that will initialize the Project Manager Bash
     # library. Most importantly, this will prepare for using translated strings
     # in the `pm-modules` text domain.
