@@ -293,8 +293,8 @@ in {
             '';
           in ''
             function updateGitStatuses() {
-              [[ $(${gitExe} rev-parse --is-inside-work-tree &>/dev/null) ]] ||
-                 "''${DRY_RUN_CMD[@]}" ${gitExe} init
+              ${gitExe} rev-parse --is-inside-work-tree &> /dev/null ||
+                "''${DRY_RUN_CMD[@]}" ${gitExe} init
 
               local newGenFiles
               newGenFiles="$(readlink -e "$newGenPath/project-files")"
