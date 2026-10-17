@@ -106,6 +106,13 @@ in {
   };
 
   config = {
+    ## A cache directory should be clearable at any time without causing any VCS
+    ## modifications.
+    programs = {
+      git.ignores = ["/${cfg.cacheDir}/"];
+      mercurial.ignoresRooted = ["${cfg.cacheDir}/**"];
+    };
+
     project.file = lib.mkMerge [
       (lib.mapAttrs'
         (name: file: lib.nameValuePair "${cfg.cacheDir}/${name}" file)

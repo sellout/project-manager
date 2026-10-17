@@ -130,7 +130,12 @@ in
               ["_"]
               nixpkgs.lib.trivial.release))
           (projectConfigurationsFor
-            (nixpkgs.legacyPackages.${system}.appendOverlays [overlay]))
+            (nixpkgs.legacyPackages.${system}.appendOverlays [
+              ## `gnome2` before Nixpkgs 26.05 violates
+              ## `lint-short-path-literals`. We don’t need it, so we hide it.
+              (_: _: {gnome2 = {};})
+              overlay
+            ]))
           .checks
         else {};
       allChecks =

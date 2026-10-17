@@ -73,14 +73,22 @@ in {
     actualCoreSettings =
       if cfg.coreSettings == null
       then {StylesPath = "styles";}
-      ## TODO: Can we instead pre-populate this and have `stylesPath` simply point
-      ##       to the Nix store? That would declutter the working tree even more
-      ##       while also giving us additional sharing between worktrees and across
-      ##       projects.
+      ## NOTE: This doesn’t use `config.xdg.cacheDir` because the contents
+      ##       aren’t automatically regenerated. `vale sync` has to be run to
+      ##       populate it.
+      ##
+      ## TODO: Can we instead pre-populate this and have `stylesPath` simply
+      ##       point to the Nix store? That would declutter the working tree
+      ##       even more while also giving us additional sharing between
+      ##       worktrees and across projects.
+      ##
       ##     - There are a couple issues here
+      ##
       ##       1. it involves downloading the packages. We could define a fixed-
-      ##           output Nix package for each Vale package to get around that, then
-      ##           combine the requested packages with our Vocabs for a new package
+      ##           output Nix package for each Vale package to get around that,
+      ##           then combine the requested packages with our Vocabs for a new
+      ##           package
+      ##
       ##       2. if we _don’t_ create a Nix package for this, then the check
       ##           requires downloading.
       else {StylesPath = "${config.xdg.dataDir}/vale";} // cfg.coreSettings;
@@ -157,9 +165,13 @@ in {
           find . -type f \
             ${
             lib.concatStringsSep " " (map (v: "-not -path '${v}' ")
-              ## `vale sync` populates `StylesPath` with other people’s
-              ## packages, so we tell `find` to skip those.
-              (cfg.excludes ++ ["./${actualCoreSettings.StylesPath}/*"]))
+              (cfg.excludes
+                ++ [
+                  "./${config.xdg.cacheDir}/*"
+                  ## `vale sync` populates `StylesPath` with other people’s
+                  ## packages, so we tell `find` to skip those.
+                  "./${actualCoreSettings.StylesPath}/*"
+                ]))
           } \
             -exec vale {} +
         '';

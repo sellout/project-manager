@@ -268,19 +268,13 @@ in {
 
               setRunModeVariables
 
-              # A symbolic link whose target path matches this pattern will be
-              # considered part of a Project Manager generation.
-              projectFilePattern="$(readlink -e ${escapeShellArg builtins.storeDir})/*-project-manager-files/*"
-
               newGenFiles="$1"
               shift
               declare -A persistence=( )
-              while read -r var value; do
-                persistence[$var]=$value
-              done < "$newGenFiles/pm-metadata/persistence"
+              pm_readCcsvPairs persistence "$newGenFiles/${config.project.persistenceFile}"
               cd $PROJECT_ROOT
               for sourcePath in "$@" ; do
-                [[ $sourcePath =~ pm-metadata ]] && continue
+                [[ $sourcePath == *${config.project.metadataDir}/* ]] && continue
                 relativePath="''${sourcePath#$newGenFiles/}"
                 if [[ ''${persistence[$relativePath]} == repository ]]; then
                   ## We use force here in case the file is covered by an ignore

@@ -95,6 +95,20 @@ in {
         Shellcheck directives allow you to control how shellcheck works.
       '';
     };
+
+    includes = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      example = ["bin/my-program"];
+      description = ''
+        Which files the `shellcheck` check lints, as paths relative to the
+        project root. Taken literally, so list each file rather than a glob.
+
+        ShellCheck run via `treefmt` will automatically pick up files suffixed
+        with “.bash” and “.sh” as well as some others. Leaving this empty
+        produces no `shellcheck` check.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable (let
@@ -149,15 +163,18 @@ in {
       else cfg.package;
   in {
     project = {
-      checks.shellcheck =
+      checks.shellcheck = lib.mkIf (cfg.includes != []) (
         pmPkgs.runStrictCommand "shellcheck" {
           nativeBuildInputs = [wrapped];
           src =
             config.project.cleanRepositoryPersistedExcept [".shellcheckrc"] self;
         } ''
-          shellcheck "$src/project-manager/project-manager"
+          shellcheck ${
+            lib.concatMapStringsSep " " (file: ''"$src/${file}"'') cfg.includes
+          }
           mkdir -p "$out"
-        '';
+        ''
+      );
 
       file.".shellcheckrc" = lib.mkIf (!cfg.wrapProgram) {
         text = lib.concatLines (lib.concatLists [
