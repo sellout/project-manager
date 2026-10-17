@@ -103,6 +103,18 @@ function pm_listPackagesBySuffix() {
   }
 }
 
+## Whether the profile's current generation matches the new one exactly.
+function pm_profileHoldsExactly() {
+  local profile=$1
+  shift
+
+  local -a installed=() wanted=()
+  mapfile -t installed < <(pm_listPackagesBySuffix "$profile" "" | sort)
+  mapfile -t wanted < <(printf '%s\n' "$@" | sort)
+
+  [[ ${installed[*]} == "${wanted[*]}" ]]
+}
+
 function pm_removePackagesBySuffix() {
   pm_listPackagesBySuffix "$1" "$2" \
     | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" --no-run-if-empty \

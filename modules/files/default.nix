@@ -200,7 +200,7 @@ in {
 
         cleanOldGen
 
-        if [[ ! -v oldGenPath || "$oldGenPath" != "$newGenPath" ]] ; then
+        if ! pm_profileHoldsExactly "$genProfilePath" "$newGenPath" ${config.project.packages.path}; then
           # Remove all packages from "$genProfilePath"
           # `nix profile remove '.*' --profile "$genProfilePath"` was not
           # working (NixOS/nix#7487), so here is a workaround:
