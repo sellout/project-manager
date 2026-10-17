@@ -90,54 +90,6 @@ function pm_generationNumber() {
   printf '%s' "${link##*-}"
 }
 
-function pm_nixAtLeast() {
-  ## Whether the `nix` on `PATH` is at least version $1. Activation uses
-  ## whichever `nix` the user has rather than one from a pinned Nixpkgs, so
-  ## asking it is the only way to know what it supports.
-  ##
-  ## An unreadable version answers “no”, which falls back to whatever works
-  ## on every version.
-  local want=$1 have
-  have="$(nix --version | grep -oE '[0-9]+(\.[0-9]+)+' | head -1)"
-
-  [[ $(printf '%s\n%s\n' "$want" "$have" | sort --version-sort | head -1) == "$want" ]]
-}
-
-function pm_listPackagesBySuffix() {
-  # We attempt to use `--json` first (added in Nix 2.17). Otherwise
-  # attempt to parse the legacy output format.
-  {
-    nix profile list --profile "$1" --json 2> /dev/null \
-      | jq --raw-output --arg name "$2" '.elements[].storePaths[] | select(endswith($name))'
-  } || {
-    nix profile list --profile "$1" \
-      | { grep "$2\$" || test $? = 1; } \
-      | cut -d ' ' -f 4
-  }
-}
-
-## Whether the profile's current generation matches the new one exactly.
-function pm_profileHoldsExactly() {
-  local profile=$1
-  shift
-
-  local -a installed=() wanted=()
-  mapfile -t installed < <(pm_listPackagesBySuffix "$profile" "" | sort)
-  mapfile -t wanted < <(printf '%s\n' "$@" | sort)
-
-  [[ ${installed[*]} == "${wanted[*]}" ]]
-}
-
-function pm_removePackagesBySuffix() {
-  pm_listPackagesBySuffix "$1" "$2" \
-    | xargs "${VERBOSE_ARG[@]}" "${DRY_RUN_CMD[@]}" --no-run-if-empty \
-      nix profile remove "${VERBOSE_ARG[@]}" --profile "$1"
-}
-
-function setNixProfileCommands() {
-  REMOVE_CMD='pm_removePackagesBySuffix'
-}
-
 ## Called in each script, because Bash can’t export arrays.
 function setRunModeVariables() {
   if [[ -v VERBOSE ]]; then
@@ -539,13 +491,10 @@ function pm_expireGenerations() {
 function pm_listPackages() {
   setProjectManagerPathVariables
 
-  local outPath
-  outPath="$(
-    pm_listPackagesBySuffix "$PM_PROFILE_DIR/project-manager" "" \
-      | { grep -- '-project-manager-path-for-' || test $? = 1; }
-  )"
-  if [[ -n $outPath ]]; then
-    nix-store -q --references "$outPath" | sed 's/[^-]*-//'
+  ## The path package is part of the generation the profile points at.
+  local outPath="$PM_PROFILE_DIR/project-manager/project-path"
+  if [[ -e $outPath ]]; then
+    nix-store -q --references "$(readlink -e "$outPath")" | sed 's/[^-]*-//'
   else
     _i 'No project-manager packages seem to be installed.' >&2
   fi
@@ -654,7 +603,6 @@ function pm_showNews() {
 
 function pm_uninstall() {
   pm_setVerboseAndDryRun
-  setNixProfileCommands
 
   _i 'This will remove Project Manager from your system.'
 
@@ -677,10 +625,6 @@ function pm_uninstall() {
       echo "  manual.manpages.enable = false;" >> "$PROJECT_MANAGER_CONFIG"
       echo "}" >> "$PROJECT_MANAGER_CONFIG"
       pm_switch
-      if [[ -e $PM_PROFILE_DIR ]]; then
-        "${DRY_RUN_CMD[@]}" "${REMOVE_CMD}" "$PM_PROFILE_DIR/project-manager" project-manager-path || true
-      fi
-
       rm "$PROJECT_MANAGER_CONFIG"
 
       if [[ -e $PM_DATA_HOME ]]; then

@@ -200,29 +200,10 @@ in {
             -exec bash ${link} "$newGenFiles" {} +
         }
 
-        if ! pm_profileHoldsExactly "$genProfilePath" "$newGenPath" ${config.project.packages.path}; then
-          ## WAIT: Before Nix 2.21 (Nixpkgs 24.11), `nix profile remove` can’t
-          ##       clear a profile, so we have a fallback. See NixOS/nix#7487.
-          if pm_nixAtLeast 2.21; then
-            "''${DRY_RUN_CMD[@]}" nix profile remove "''${VERBOSE_ARG[@]}" \
-              --profile "$genProfilePath" --all
-          else
-            pm_removePackagesBySuffix "$genProfilePath" ""
-          fi
-
-          ## WAIT: With `nix profile` we can’t replace the packages in a single
-          ##       generation (NixOS/nix#6349), so we currently “increment” two
-          ##       generations at a time.
-          if ! "''${DRY_RUN_CMD[@]}" nix profile install "''${VERBOSE_ARG[@]}" \
-            --profile "$genProfilePath" \
-            "$newGenPath" ${config.project.packages.path}; then
-            echo
-            _iError $'Oops, Nix failed to install your new Project Manager profile!\n\nPerhaps there is a conflict with a package that was installed using\n"%s"? Try running\n\n    %s\n\nand if there is a conflicting package you can remove it with\n\n    %s\n\nThen try activating your Project Manager configuration again.' \
-              "nix profile install --profile $genProfilePath" \
-              "nix profile list --profile $genProfilePath" \
-              "nix profile remove --profile $genProfilePath {number | store path}"
-            exit 1
-          fi
+        ## Is the new generation different from the current one?
+        if [[ ! -v oldGenPath || $oldGenPath != "$newGenPath" ]]; then
+          "''${DRY_RUN_CMD[@]}" nix-env "''${VERBOSE_ARG[@]}" \
+            --profile "$genProfilePath" --set "$newGenPath"
 
           if [[ -v DRY_RUN ]]; then
             _i "Would create a new profile generation"
