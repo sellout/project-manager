@@ -1,4 +1,3 @@
-Hacktoberfest
 direnv
 formatter
 [Nn]ix
