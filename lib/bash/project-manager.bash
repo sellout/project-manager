@@ -90,6 +90,19 @@ function pm_generationNumber() {
   printf '%s' "${link##*-}"
 }
 
+function pm_nixAtLeast() {
+  ## Whether the `nix` on `PATH` is at least version $1. Activation uses
+  ## whichever `nix` the user has rather than one from a pinned Nixpkgs, so
+  ## asking it is the only way to know what it supports.
+  ##
+  ## An unreadable version answers “no”, which falls back to whatever works
+  ## on every version.
+  local want=$1 have
+  have="$(nix --version | grep -oE '[0-9]+(\.[0-9]+)+' | head -1)"
+
+  [[ $(printf '%s\n%s\n' "$want" "$have" | sort --version-sort | head -1) == "$want" ]]
+}
+
 function pm_listPackagesBySuffix() {
   # We attempt to use `--json` first (added in Nix 2.17). Otherwise
   # attempt to parse the legacy output format.
