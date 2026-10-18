@@ -6,10 +6,12 @@
   defaultBranch = "main";
 in {
   services.github = {
-    settings.pages = {
-      build_type = "workflow";
-      source.branch = defaultBranch;
-    };
+    ## WAIT: The Settings app doesn’t yet support configuring Pages
+    ##       (repository-settings/app#609).
+    # settings.pages = {
+    #   build_type = "workflow";
+    #   source.branch = defaultBranch;
+    # };
     workflow."pages.yml".text = lib.pm.generators.toYAML {} {
       name = "Deploy generated docs to Pages";
       on = {
