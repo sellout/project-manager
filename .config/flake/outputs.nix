@@ -80,7 +80,12 @@ in
 
     pkgs = pkgsFor system;
   in {
-    apps.tests = flake-utils.lib.mkApp {drv = self.checks.${system}.tests;};
+    apps.tests = flake-utils.lib.mkApp {
+      drv = pkgs.writeShellScriptBin "tests" ''
+        exec env PATH="${pkgs.fzf}/bin:$PATH" \
+          ${nixpkgs.lib.getExe pkgs.python3} ${self}/testing/tests.py "$@"
+      '';
+    };
 
     packages = let
       docs = import ../../docs {
@@ -190,10 +195,16 @@ in
         // checksWith nixpkgs-unstable (_: _: {})
         ## TODO: Run tests against all support Nixpkgs versions.
         // {
-          tests = pkgs.writeShellScriptBin "tests" ''
-            exec env PATH="${pkgs.fzf}/bin:$PATH" \
-              ${nixpkgs.lib.getExe pkgs.python3} ${self}/testing/tests.py "$@"
-          '';
+          tests =
+            (import ../../testing {
+              inherit pkgs;
+              pmPkgs = pkgs;
+              ## These cost more than everything else combined. `nix run .#tests
+              ## -- all` includes them.
+              enableBig = false;
+            })
+            .build
+            .all;
         };
     in
       ## TODO: Because the basement override isn’t working.
