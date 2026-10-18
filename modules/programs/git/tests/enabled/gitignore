@@ -1,4 +1,5 @@
 /.gitattributes
 /.gitignore
+/.cache/
 /.local/state/project-manager/
 /.local/state/nix/profiles/

@@ -6,7 +6,7 @@ You can look at the existing tests in the `tests` project directory to see how t
 
 ## Running tests {#sec-tests-running}
 
-Project Manager provides a convenient `tests` command for discovering and running tests:
+`nix flake check` runs the suite, apart from the big tests. It runs all of them or none, so Project Manager also provides a `tests` command for listing tests and running a subset:
 
 ```shell
 # List all available tests
