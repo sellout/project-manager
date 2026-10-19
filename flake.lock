@@ -103,11 +103,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1792216103,
-        "narHash": "sha256-o/HL+pvGO5esPBcLWPOMrYRfQB0IKcXsvVH4lDCTTBc=",
+        "lastModified": 1792451919,
+        "narHash": "sha256-hx+WhIX1EKCHBEJQUB894VVkHxRuGDvgoAKNVizBWAI=",
         "owner": "sellout",
         "repo": "flaky",
-        "rev": "ddd44f97d09543cbc7020ccf33f29e00578c61ef",
+        "rev": "5e6bad7ad4664a0093a15ea9b22a1e622a17d0ed",
         "type": "github"
       },
       "original": {
