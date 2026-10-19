@@ -9,6 +9,13 @@
   appDocs = "https://github.com/repository-settings/app/blob/master/docs";
 
   pluginDocs = plugin: "${appDocs}/plugins/${plugin}.md";
+
+  optional = type: attrs:
+    lib.mkOption ({
+        type = lib.types.nullOr type;
+        default = null;
+      }
+      // attrs);
 in {
   meta.maintainers = [lib.maintainers.sellout];
 
@@ -41,6 +48,11 @@ in {
         branch protection. See `lib/settings.js` and `lib/plugins/repository.js`
         in [the app](https://github.com/repository-settings/app) for the
         implementation.
+
+        An unset section is also not the same as an empty one. An empty section
+        (except `branches` and `repository`) interprets an empty section as
+        “remove all entries from GitHub”, whereas unset means “don’t modify the
+        entries currently on GitHub”.
       '';
       type = lib.types.nullOr (lib.types.submodule {
         freeformType = lib.types.attrs;
@@ -49,14 +61,16 @@ in {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
             description = ''
-              [Branch-specific settings](${pluginDocs "branches"}).
+              [Branch-specific settings](${pluginDocs "branches"}). This is
+              the one section where an empty value means the same as an unset
+              one – see `services.github.settings`.
             '';
           };
-          labels = lib.mkOption {
-            type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
-            default = {};
+          labels = optional (lib.types.attrsOf (lib.types.attrsOf lib.types.anything)) {
             description = ''
-              [Labels for issues & PRs](${pluginDocs "labels"}).
+              [Labels for issues & PRs](${pluginDocs "labels"}). `null` omits
+              the section, which isn’t the same as an empty one – see
+              `services.github.settings`.
             '';
           };
           repository = lib.mkOption {
@@ -79,9 +93,7 @@ in {
                   – guessing wrong in either direction is harmful.
                 '';
               };
-              options.has_wiki = lib.mkOption {
-                type = lib.types.nullOr lib.types.bool;
-                default = null;
+              options.has_wiki = optional lib.types.bool {
                 description = ''
                   Whether the repository has a wiki. `null` leaves whatever
                   GitHub currently has alone.
@@ -112,13 +124,17 @@ in {
       then {}
       else cfg.settings;
 
+    dropUnset = lib.filterAttrs (_: v: v != null);
+
+    sections = dropUnset declared;
+
     ## Private repositories on the free plan don’t have access to a number of
     ## features, so GitHub rejects any attempt to configure them.
     restricted = cfg.plan == "free" && declared.repository.private or false;
 
     protectedBranches =
       lib.attrNames
-      (lib.filterAttrs (_: v: v ? protection) (declared.branches or {}));
+      (lib.filterAttrs (_: v: v ? protection) (sections.branches or {}));
 
     unavailable = feature: consequence: "${feature} isn’t available in a private repository on the “free” plan, so ${consequence}. Either correct `services.github.plan` (if the owning account is on a paid plan) or stop setting it here.";
 
@@ -134,11 +150,7 @@ in {
     ## meaningful to GitHub, so this is deliberately not applied globally.
     dropUnsetRepositorySettings = settings:
       if settings ? repository
-      then
-        settings
-        // {
-          repository = lib.filterAttrs (_: v: v != null) settings.repository;
-        }
+      then settings // {repository = dropUnset settings.repository;}
       else settings;
 
     ## Have users provide a list of topics, then convert it into the comma-
@@ -198,7 +210,7 @@ in {
         text =
           lib.pm.generators.toYAML {}
           (restructureBranches (restructureLabels
-              (concatTopics (dropUnsetRepositorySettings cfg.settings))));
+              (concatTopics (dropUnsetRepositorySettings sections))));
       };
   });
 }
