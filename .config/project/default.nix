@@ -59,6 +59,7 @@ in {
           alejandra.excludes = ["nix-ci.nix"];
           prettier.excludes = [
             "modules/services/github/tests/all-sections/settings.yml"
+            "modules/services/github/tests/branch-protection/settings.yml"
             "modules/services/github/tests/paid-plan/settings.yml"
             "modules/services/github/tests/settings/settings.yml"
             "modules/services/renovate/tests/simple/renovate.json"

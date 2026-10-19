@@ -16,6 +16,9 @@ in {
         has_wiki = true;
       };
       branches.main.protection.enforce_admins = false;
+      ## Taking a branch’s protection away isn’t _using_ branch protection, so
+      ## this one mustn’t join `main` in the assertion below.
+      branches.unprotected.protection = null;
       environments.production = {};
       rulesets.main.target = "branch";
     };
@@ -25,6 +28,7 @@ in {
     ## `has_wiki` is only ineffective, not rejected, so it warns instead.
     warnings.expected = [
       "`services.github.settings.repository.has_wiki` ${ignored}"
+      "`services.github.settings.branches.unprotected.protection` is null, which _removes_ whatever protection `unprotected` currently has. If you meant to leave it alone, drop the branch."
     ];
 
     assertions.expected = [
