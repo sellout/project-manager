@@ -4,6 +4,11 @@
   ...
 }: let
   cfg = config.services.github;
+
+  ## The Settings app’s documentation.
+  appDocs = "https://github.com/repository-settings/app/blob/master/docs";
+
+  pluginDocs = plugin: "${appDocs}/plugins/${plugin}.md";
 in {
   meta.maintainers = [lib.maintainers.sellout];
 
@@ -11,7 +16,8 @@ in {
     settings = lib.mkOption {
       description = ''
         Declarative GitHub settings, as provided by [Probot’s Settings
-        app](https://probot.github.io/apps/settings/).
+        app](https://probot.github.io/apps/settings/), whose [configuration
+        reference](${appDocs}/configuration.md) documents each section.
 
         The app gives no feedback when GitHub rejects something, so it’s easy to
         end up with a partially-applied configuration. Knowing its request
@@ -43,19 +49,20 @@ in {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
             description = ''
-              Branch-specific settings.
+              [Branch-specific settings](${pluginDocs "branches"}).
             '';
           };
           labels = lib.mkOption {
             type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
             default = {};
             description = ''
-              Labels for issues & PRs.
+              [Labels for issues & PRs](${pluginDocs "labels"}).
             '';
           };
           repository = lib.mkOption {
             description = ''
-              Settings that affect the entire repository.
+              [Settings that affect the entire
+              repository](${pluginDocs "repository"}).
             '';
             type = lib.types.submodule {
               freeformType = lib.types.anything;
