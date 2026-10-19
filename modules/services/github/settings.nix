@@ -16,6 +16,8 @@
         default = null;
       }
       // attrs);
+
+  namedRecords = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
 in {
   meta.maintainers = [lib.maintainers.sellout];
 
@@ -55,22 +57,39 @@ in {
         entries currently on GitHub”.
       '';
       type = lib.types.nullOr (lib.types.submodule {
-        freeformType = lib.types.attrs;
         options = {
           branches = lib.mkOption {
-            type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
+            type = namedRecords;
             default = {};
             description = ''
-              [Branch-specific settings](${pluginDocs "branches"}). This is
-              the one section where an empty value means the same as an unset
-              one – see `services.github.settings`.
+              [Branch-specific settings](${pluginDocs "branches"}), keyed on
+              `name`. This is the one section where an empty value means the
+              same as an unset one – see `services.github.settings`.
             '';
           };
-          labels = optional (lib.types.attrsOf (lib.types.attrsOf lib.types.anything)) {
+          collaborators = optional namedRecords {
+            description = ''
+              [Users with access to the
+              repository](${pluginDocs "collaborators"}), keyed on `username`.
+            '';
+          };
+          environments = optional namedRecords {
+            description = ''
+              [Deployment environments](${pluginDocs "environments"}), keyed on
+              `name`. Note that `deployment_branch_policy` deliberately differs
+              from the shape GitHub’s own API takes.
+            '';
+          };
+          labels = optional namedRecords {
             description = ''
               [Labels for issues & PRs](${pluginDocs "labels"}). `null` omits
               the section, which isn’t the same as an empty one – see
               `services.github.settings`.
+            '';
+          };
+          milestones = optional namedRecords {
+            description = ''
+              [Milestones](${pluginDocs "milestones"}), keyed on `title`.
             '';
           };
           repository = lib.mkOption {
@@ -111,6 +130,23 @@ in {
                 '';
               };
             };
+          };
+          rulesets = optional namedRecords {
+            description = ''
+              [Rulesets](${pluginDocs "rulesets"}), keyed on `name`.
+
+              **NOTE**: The app’s support for these is still under development,
+                        and it warns to expect breaking changes to the shape.
+                        See
+                        [repository-settings/app#732](https://github.com/repository-settings/app/issues/732).
+            '';
+          };
+          teams = optional namedRecords {
+            description = ''
+              [Teams with access to the repository](${pluginDocs "teams"}),
+              keyed on `name` – which the app matches against the team’s
+              _slug_, not its display name.
+            '';
           };
         };
       });
@@ -166,12 +202,32 @@ in {
         }
       else settings;
 
+    ## When converting a record to a list, we need to know the name of the field
+    ## to map the key to..
+    keyField = {
+      branches = "name";
+      collaborators = "username";
+      environments = "name";
+      labels = "name";
+      milestones = "title";
+      rulesets = "name";
+      teams = "name";
+    };
+
     ## Coverts a structure like `{foo = {x = y;}; bar = {x = z;};}` to one like
     ## `[{name = "foo"; x = y;} {name = "bar"; x = z;}]`.
-    attrsToNamedList = lib.mapAttrsToList (k: v:
-      if v ? name
-      then v
-      else v // {name = k;});
+    attrsToNamedList = key:
+      lib.mapAttrsToList (k: v:
+        if v ? ${key}
+        then v
+        else v // {${key} = k;});
+
+    restructureSections =
+      lib.mapAttrs
+      (section: value:
+        if keyField ? ${section}
+        then attrsToNamedList keyField.${section} value
+        else value);
 
     ## settings.yaml expects a list of branches, but that doesn’t have the most
     ## useful merge semantics. So we have an attrSet of branches, with the key
@@ -179,11 +235,6 @@ in {
     restructureBranches = settings:
       if settings ? branches
       then settings // {branches = attrsToNamedList settings.branches;}
-      else settings;
-
-    restructureLabels = settings:
-      if settings ? labels
-      then settings // {labels = attrsToNamedList settings.labels;}
       else settings;
   in {
     warnings =
@@ -198,10 +249,10 @@ in {
         (protectedBranches != []))
       (requiresPaidPlan
         "`services.github.settings.rulesets`"
-        (declared ? rulesets))
+        (sections ? rulesets))
       (requiresPaidPlan
         "`services.github.settings.environments`"
-        (declared ? environments))
+        (sections ? environments))
     ];
 
     project.file.".github/settings.yml" =
@@ -209,8 +260,7 @@ in {
       {
         text =
           lib.pm.generators.toYAML {}
-          (restructureBranches (restructureLabels
-              (concatTopics (dropUnsetRepositorySettings sections))));
+          (restructureSections (concatTopics (dropUnsetRepositorySettings sections)));
       };
   });
 }

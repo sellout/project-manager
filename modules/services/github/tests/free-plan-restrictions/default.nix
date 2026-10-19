@@ -16,13 +16,8 @@ in {
         has_wiki = true;
       };
       branches.main.protection.enforce_admins = false;
-      environments = [{name = "production";}];
-      rulesets = [
-        {
-          name = "main";
-          target = "branch";
-        }
-      ];
+      environments.production = {};
+      rulesets.main.target = "branch";
     };
   };
 
