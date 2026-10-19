@@ -36,6 +36,7 @@
   flakestry = ./services/flakestry;
   garnix = ./services/garnix.nix;
   github = ./services/github;
+  github-settings = ./services/github/settings.nix;
   # ./services/git-sync.nix
   # ./services/lorri.nix
   nix-cx = ./services/nix-ci.nix;
