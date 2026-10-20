@@ -11,7 +11,7 @@ in {
     enable = lib.mkEnableOption "Renovate";
 
     settings = lib.mkOption {
-      type = lib.types.attrs;
+      type = lib.types.attrsOf lib.types.anything;
       default = {};
       description = ''
         Configuration written to {file}`$PROJECT_ROOT/renovate.json`.

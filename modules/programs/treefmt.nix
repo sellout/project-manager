@@ -25,7 +25,7 @@ in {
     };
 
     programs = lib.mkOption {
-      type = lib.types.attrsOf lib.types.attrs;
+      type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
       default = {};
       description = ''
         Configuration for treefmt formatters. See
@@ -34,7 +34,7 @@ in {
     };
 
     settings = lib.mkOption {
-      type = lib.types.attrsOf lib.types.attrs;
+      type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
       default = {};
       description = ''
         Settings for treefmt. See
