@@ -1,4 +1,4 @@
-## The same settings as ‘github-free-plan-restrictions’, but on a plan that can
+## The same settings as `github-free-plan-restrictions`, but on a plan that can
 ## actually use them, so none of the assertions should fire.
 {
   services.github = {

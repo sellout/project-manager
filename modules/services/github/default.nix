@@ -172,10 +172,10 @@ in {
       lib.attrNames
       (lib.filterAttrs (_: v: v ? protection) (declared.branches or {}));
 
-    unavailable = feature: consequence: "${feature} isn’t available in a private repository on the “free” plan, so ${consequence}. Either correct ‘services.github.plan’ (if the owning account is on a paid plan) or stop setting it here.";
+    unavailable = feature: consequence: "${feature} isn’t available in a private repository on the “free” plan, so ${consequence}. Either correct `services.github.plan` (if the owning account is on a paid plan) or stop setting it here.";
 
     ## GitHub rejects these outright, which – as explained on
-    ## ‘services.github.settings’ – can take other settings down with them.
+    ## `services.github.settings` – can take other settings down with them.
     requiresPaidPlan = feature: what: {
       assertion = restricted -> ! what;
       message = unavailable feature "GitHub will reject the request";
@@ -232,18 +232,18 @@ in {
     warnings =
       lib.optional (restricted && (declared.repository.has_wiki or null) == true)
       (unavailable
-        "‘services.github.settings.repository.has_wiki’"
+        "`services.github.settings.repository.has_wiki`"
         "GitHub will accept the request and silently ignore the field, leaving this permanently out of step with the repository");
 
     assertions = [
       (requiresPaidPlan
-        "branch protection (‘services.github.settings.branches.*.protection’, set on ${lib.concatStringsSep ", " protectedBranches})"
+        "branch protection (`services.github.settings.branches.*.protection`, set on ${lib.concatStringsSep ", " protectedBranches})"
         (protectedBranches != []))
       (requiresPaidPlan
-        "‘services.github.settings.rulesets’"
+        "`services.github.settings.rulesets`"
         (declared ? rulesets))
       (requiresPaidPlan
-        "‘services.github.settings.environments’"
+        "`services.github.settings.environments`"
         (declared ? environments))
     ];
 
