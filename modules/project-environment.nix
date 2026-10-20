@@ -31,7 +31,7 @@ in {
     };
 
     authors = mkOption {
-      type = types.nonEmptyListOf types.attrs;
+      type = types.nonEmptyListOf (types.attrsOf types.anything);
       defaultText = lib.literalMD "undefined";
       example = "[lib.maintainers.sellout]";
       description = ''
@@ -42,7 +42,7 @@ in {
     };
 
     maintainers = mkOption {
-      type = types.nonEmptyListOf types.attrs;
+      type = types.nonEmptyListOf (types.attrsOf types.anything);
       default = cfg.authors;
       defaultText = lib.literalMD "config.project.authors";
       example = "[lib.maintainers.sellout]";
@@ -351,7 +351,7 @@ in {
 
     cleanRepositoryPersistedExcept = mkOption {
       internal = true;
-      type = types.functionTo (types.functionTo types.attrs);
+      type = types.functionTo (types.functionTo (types.attrsOf types.anything));
       description = ''
         Remove repository-persisted files from some `src`, except for those
         listed in `exceptions`.
@@ -360,7 +360,7 @@ in {
 
     cleanRepositoryPersisted = mkOption {
       internal = true;
-      type = types.functionTo types.attrs;
+      type = types.functionTo (types.attrsOf types.anything);
       description = ''
         Remove all repository-persisted files from some `src`.
       '';

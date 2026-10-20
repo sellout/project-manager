@@ -165,7 +165,7 @@ in {
       ##       has the flexibility for non-Bash scripts.
       hooks = mkOption {
         # types.nullOr (fileType "programs.git.hooks" "" hooksPath);
-        type = types.nullOr (types.attrsOf types.attrs);
+        type = types.nullOr (types.attrsOf (types.attrsOf types.anything));
         default = {};
         example = lib.literalMD ''
           {

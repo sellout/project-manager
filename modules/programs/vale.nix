@@ -20,7 +20,7 @@ in {
     };
 
     coreSettings = lib.mkOption {
-      type = lib.types.nullOr lib.types.attrs;
+      type = lib.types.nullOr (lib.types.attrsOf lib.types.anything);
       default = null;
       description = ''
         The [core settings](https://vale.sh/docs/vale-ini#core-settings) section
@@ -39,7 +39,7 @@ in {
     };
 
     formatSettings = lib.mkOption {
-      type = lib.types.nullOr (lib.types.attrsOf lib.types.attrs);
+      type = lib.types.nullOr (lib.types.attrsOf (lib.types.attrsOf lib.types.anything));
       default = null;
       description = ''
         The [format-specific
