@@ -207,10 +207,16 @@ in
             .all;
         };
     in
-      ## TODO: Because the basement override isn’t working.
-      if system == "i686-linux"
-      then removeAttrs allChecks ["formatter-23_05"]
-      else allChecks;
+      removeAttrs allChecks (
+        ## TODO: Because the basement override isn’t working.
+        nixpkgs.lib.optional (system == "i686-linux") "formatter-23_05"
+        ## These Vale binaries have no `LC_UUID` load command, so macOS’s dyld
+        ## refuses to load them (on at least macOS 26).
+        ++ nixpkgs.lib.optionals (nixpkgs.lib.hasSuffix "-darwin" system) [
+          "vale-22_11"
+          "vale-23_11"
+        ]
+      );
 
     formatter = self.projectConfigurations.${system}.formatter;
   })
