@@ -171,7 +171,7 @@ in {
                 || ([[ ''${persistence[$relativePath]} != store ]] \
                       && ("''${DRY_RUN_CMD[@]}" ln -Tf "''${VERBOSE_ARG[@]}" "$sourcePath" "$targetPath" 2>/dev/null \
                           || "''${DRY_RUN_CMD[@]}" cp -T --remove-destination "''${VERBOSE_ARG[@]}" "$sourcePath" "$targetPath" \
-                          || ("''${VERBOSE_ECHO}" "failed to create “$targetPath”" && exit 1))) \
+                          || ("''${VERBOSE_ECHO}" "failed to create “''${targetPath}”" && exit 1))) \
                 || true
             fi
           }
@@ -261,7 +261,7 @@ in {
 
         for target in "''${!produced[@]}"; do
           if [[ -e $newGenFiles/$target ]]; then
-            "''${VERBOSE_ECHO}" "Keeping ‘$target’: still generated"
+            "''${VERBOSE_ECHO}" "Keeping ‘''${target}’: still generated"
           elif [[ -e $PROJECT_ROOT/$target ]]; then
             _i "Removing ‘%s’, which is no longer generated" "$target"
             "''${DRY_RUN_CMD[@]}" rm "''${VERBOSE_ARG[@]}" "$PROJECT_ROOT/$target" \
@@ -356,7 +356,7 @@ in {
             # We therefore simply log the conflict and otherwise ignore it, mainly
             # to make the `files-target-config` test work as expected.
             if [[ -e "$realOut/$relTarget" ]]; then
-              echo "File conflict for file “$relTarget”" >&2
+              echo "File conflict for file “''${relTarget}”" >&2
               return
             fi
 
@@ -366,7 +366,7 @@ in {
 
             # Target path must be within $PROJECT_ROOT.
             if [[ ! $target == $realOut* ]] ; then
-              echo "Error installing file “$relTarget” outside \$PROJECT_ROOT" >&2
+              echo "Error installing file “''${relTarget}” outside \$PROJECT_ROOT" >&2
               exit 1
             fi
 
