@@ -50,6 +50,31 @@ in {
   options.services.garnix = {
     enable = mkEnableOption "Garnix CI configuration";
 
+    supportedSystemFeatures = mkOption {
+      type = types.nullOr (types.listOf types.str);
+      default = null;
+      description = ''
+        The system features that Garnix’s builders provide. Checks that require
+        any other feature are excluded from the build. `null` means to not
+        exclude any features.
+
+        If a build fails with “missing system features”, Nix’s error lists the
+        builder’s “Available features”, which is what belongs here.
+      '';
+    };
+
+    unbuildableChecks = mkOption {
+      type = types.attrsOf types.package;
+      readOnly = true;
+      internal = true;
+      default =
+        lib.pm.ci.unbuildable cfg.supportedSystemFeatures
+        config.project.checks;
+      description = ''
+        The checks (for the current system) that Garnix can’t build.
+      '';
+    };
+
     builds = mkOption {
       type = lib.types.attrsOf (lib.types.submodule buildOptions);
       default = {};
@@ -120,13 +145,11 @@ in {
         cfg.servers;
     };
 
-    ## Can’t build un-sandboxed derivations on Garnix (see garnix-io/issues#33)
+    ## Can’t build un-sandboxed derivations on Garnix (see garnix-io/issues#33),
+    ## nor ones that need system features its builders don’t have.
     services.garnix.builds."*" = {
       exclude = flaky.lib.forGarnixSystems supportedSystems (sys:
-        map
-        (name: "checks.${sys}.${name}")
-        (builtins.attrNames
-          self.projectConfigurations.${sys}.unsandboxedChecks)
+        lib.pm.ci.excludedFlakePaths cfg.supportedSystemFeatures self sys
         ++ ["devShells.${sys}.lax-checks"]);
     };
   };

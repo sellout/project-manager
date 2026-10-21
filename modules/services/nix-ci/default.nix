@@ -54,6 +54,31 @@ in {
       '';
     };
 
+    supportedSystemFeatures = lib.mkOption {
+      type = t.nullOr (t.listOf t.str);
+      default = ["benchmark" "big-parallel" "kvm" "nixos-test"];
+      description = ''
+        The system features that Nix CI’s builders provide. Checks that require
+        any other feature are added to {option}`services.nix-ci.doNotBuild`.
+        `null` means to not exclude any features.
+
+        If a build fails with “missing system features”, Nix’s error lists the
+        builder’s “Available features”, which is what belongs here.
+      '';
+    };
+
+    unbuildableChecks = lib.mkOption {
+      type = t.attrsOf t.package;
+      readOnly = true;
+      internal = true;
+      default =
+        lib.pm.ci.unbuildable cfg.supportedSystemFeatures
+        config.project.checks;
+      description = ''
+        The checks (for the current system) that Nix CI can’t build.
+      '';
+    };
+
     git-ssh-key = lib.mkOption {
       type = t.nullOr (t.attrsOf t.str);
       default = null;
@@ -174,14 +199,12 @@ in {
     project.file."nix-ci.nix".text =
       lib.pm.generators.toPretty {multiline = false;}
       ## TODO: Elide the other default values for a smaller/cleaner file.
-      (lib.filterAttrs (_: v: v != null) cfg);
+      (lib.filterAttrs (_: v: v != null)
+        ## These configure Project Manager, not Nix CI.
+        (removeAttrs cfg ["supportedSystemFeatures" "unbuildableChecks"]));
 
-    ## TODO: This duplicates logic in garnix.nix. The common functionality
-    ##       should be extracted, and maybe located near where
-    ##       `unsandboxedChecks` or `lax-checks` are defined.
     services.nix-ci.doNotBuild = lib.concatMap (sys:
-      map (name: "checks.${sys}.${name}")
-      (builtins.attrNames self.projectConfigurations.${sys}.unsandboxedChecks)
+      lib.pm.ci.excludedFlakePaths cfg.supportedSystemFeatures self sys
       ++ ["devShells.${sys}.lax-checks"])
     ["x86_64-linux"];
   };

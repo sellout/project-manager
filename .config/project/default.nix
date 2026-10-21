@@ -58,6 +58,8 @@ in {
           ##       causing `nix flake check` to fail.
           alejandra.excludes = ["nix-ci.nix"];
           prettier.excludes = [
+            "modules/services/garnix/tests/default-features/garnix.yaml"
+            "modules/services/garnix/tests/limited-features/garnix.yaml"
             "modules/services/github/tests/all-sections/settings.yml"
             "modules/services/github/tests/branch-protection/settings.yml"
             "modules/services/github/tests/paid-plan/settings.yml"
