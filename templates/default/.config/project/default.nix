@@ -40,7 +40,7 @@
 
       ## language servers
       pkgs.nil # Nix
-      pkgs.nodePackages.bash-language-server
+      pkgs.bash-language-server
     ];
 
     # Project Manager is pretty good at managing dotfiles. Many are handled

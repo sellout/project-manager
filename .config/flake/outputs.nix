@@ -106,14 +106,11 @@ in
     devShells =
       self.projectConfigurations.${system}.devShells
       // {
-        default =
-          self.devShells.${system}.project-manager.overrideAttrs
-          (old: {
-            inputsFrom =
-              old.inputsFrom
-              or []
-              ++ builtins.attrValues self.packages.${system};
-          });
+        default = pkgs.mkShell {
+          inputsFrom =
+            [self.devShells.${system}.project-manager]
+            ++ builtins.attrValues self.packages.${system};
+        };
       };
 
     checks = let
