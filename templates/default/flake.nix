@@ -48,7 +48,7 @@
               [self.projectConfigurations.${system}.devShells.project-manager]
               ++ map (drv: drv.unwrapped or drv)
               (builtins.attrValues self.checks.${system} or {}
-               ++ builtins.attrValues self.packages.${system} or {});
+                ++ builtins.attrValues self.packages.${system} or {});
           };
         };
 
