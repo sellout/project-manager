@@ -70,7 +70,7 @@ in {
 
     programs.git.ignores = ["/${cfg.layoutDir}/"];
     programs.mercurial.ignoresRooted = ["${cfg.layoutDir}/**"];
-    programs.vale.excludes = mkIf (config.project.file.".envrc".persistence != "store") [
+    programs.vale.excludes = mkIf config.project.file.".envrc".in-worktree [
       "./${config.project.file.".envrc".target}"
     ];
 

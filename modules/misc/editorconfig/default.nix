@@ -45,7 +45,7 @@ in {
   };
 
   config = mkIf (cfg.enable && cfg.settings != {}) {
-    programs.vale.excludes = mkIf (config.project.file.".editorconfig".persistence != "store") [
+    programs.vale.excludes = mkIf config.project.file.".editorconfig".in-worktree [
       "./${config.project.file.".editorconfig".target}"
     ];
 

@@ -1,0 +1,6 @@
+./.gitattributes
+./.gitignore
+./.local/share/git/config
+./.local/share/git/hooks/pre-push
+./.local/share/git/ignoreRevs
+./.local/share/project-manager/persistence.ccsv

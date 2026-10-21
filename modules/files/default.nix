@@ -110,6 +110,8 @@ in {
       )
     ];
 
+    programs.vale.excludes = ["./${cfg.${config.project.persistenceFile}.target}"];
+
     project.file.${config.project.persistenceFile} = {
       commit-by-default = true;
       text =

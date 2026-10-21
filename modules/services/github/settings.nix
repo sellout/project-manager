@@ -460,6 +460,13 @@ in {
       })
       contextsBranches;
 
+    programs.vale.excludes = let
+      file = config.project.file.".github/settings.yml";
+    in
+      lib.optional
+      (cfg.settings != null && file.in-worktree)
+      "./${file.target}";
+
     project.file.".github/settings.yml" =
       lib.mkIf (cfg.settings != null)
       {

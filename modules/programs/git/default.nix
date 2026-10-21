@@ -258,6 +258,10 @@ in {
       if cfg.package != null
       then lib.getExe cfg.package
       else "git";
+
+    ## Generated files in the worktree aren’t prose, so Vale shouldn’t check
+    ## them.
+    valeExclude = file: lib.optional file.in-worktree "./${file.target}";
   in
     mkMerge [
       {
@@ -322,7 +326,9 @@ in {
           devPackages = [cfg.package];
         };
 
-        programs.vale.excludes = ["./.gitattributes"];
+        programs.vale.excludes =
+          ["./.gitattributes"]
+          ++ valeExclude config.xdg.dataFile."git/config";
 
         xdg.dataFile."git/config" = {
           minimum-persistence = "store";
@@ -355,6 +361,8 @@ in {
         ## NB: For user config, we use .git/info/exclude instead.
         ignorePath = ".gitignore";
       in {
+        programs.vale.excludes = valeExclude config.project.file.${ignorePath};
+
         ## FIXME: This isn’t handled properly if it’s a symlink, so it needs to
         ##        actually be a copy, but can be added to itself, so we don’t need
         ##        to commit it.
@@ -380,6 +388,7 @@ in {
         programs.git.iniContent.blame.ignoreRevsFile =
           config.xdg.dataFile."${ignoreRevsPath}".reference
           config.xdg.dataFile."git/config";
+        programs.vale.excludes = valeExclude config.xdg.dataFile.${ignoreRevsPath};
         xdg.dataFile."${ignoreRevsPath}" = {
           minimum-persistence = "store";
           text = concatLines cfg.ignoreRevs;
@@ -387,6 +396,11 @@ in {
       }))
 
       (mkIf (cfg.hooks != null) {
+        programs.vale.excludes =
+          concatMap
+          (name: valeExclude config.xdg.dataFile."git/hooks/${name}")
+          (attrNames cfg.hooks);
+
         xdg.dataFile = lib.mapAttrs' (name: file:
           lib.nameValuePair "git/hooks/${name}"
           (lib.mkMerge [

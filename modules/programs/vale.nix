@@ -58,6 +58,9 @@ in {
       '';
     };
 
+    ## NOTE: Each module that generates files adds them here itself, rather than
+    ##       automatically excluding all generated files, because some generated
+    ##       files are prose, and those _should_ be checked by Vale.
     excludes = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
@@ -67,6 +70,12 @@ in {
     };
   };
   config = lib.mkIf cfg.enable (let
+    generateIni =
+      cfg.coreSettings
+      != null
+      || cfg.formatAssociations != null
+      || cfg.formatSettings != null;
+
     ## This is a bit complicated, because if we’re _not_ generating a .vale.ini,
     ## then this needs to have the default "styles" value, but if we are, then
     ## we want to default to ".local/share/vale".
@@ -96,10 +105,7 @@ in {
     project = {
       file =
         {
-          ".vale.ini" = lib.mkIf (cfg.coreSettings
-            != null
-            || cfg.formatAssociations != null
-            || cfg.formatSettings != null) {
+          ".vale.ini" = lib.mkIf generateIni {
             ## TODO: Should be able to make this `"store"`.
             # minimum-persistence = "worktree";
             onChange = ''
@@ -176,6 +182,11 @@ in {
             -exec vale {} +
         '';
     };
+
+    programs.vale.excludes = let
+      ini = config.project.file.".vale.ini";
+    in
+      lib.optional (generateIni && ini.in-worktree) "./${ini.target}";
 
     programs.git.ignores = let
       stylesPath = actualCoreSettings.StylesPath;
