@@ -28,6 +28,11 @@ in {
       then ".github"
       else ".";
   in {
+    programs.vale.excludes = let
+      file = config.project.file."${location}/renovate.json";
+    in
+      lib.optional file.in-worktree "./${file.target}";
+
     project.file."${location}/renovate.json".text = lib.pm.generators.toJSON {} ({
         "$schema" = "https://docs.renovatebot.com/renovate-schema.json";
         extends = ["config:recommended"];

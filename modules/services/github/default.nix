@@ -72,6 +72,12 @@ in {
     generatedAndCommitted =
       lib.filterAttrs (n: v: v.persistence == "repository") config.project.file;
   in {
+    programs.vale.excludes = lib.concatMap (name: let
+      file = config.project.file.${name};
+    in
+      lib.optional file.in-worktree "./${file.target}")
+    (builtins.attrNames cfg.workflow);
+
     programs.git = {
       ## TODO: This probably isn’t right – just because the user users git
       ##       doesn’t mean they want it managed by Nix – but we _do_ want to

@@ -212,6 +212,16 @@ in rec {
             “linguist-generated” attribute.
           '';
         };
+
+        in-worktree = mkOption {
+          type = types.bool;
+          readOnly = true;
+          default = config.persistence != "store";
+          description = ''
+            Whether the file is generated into the worktree, where tools that
+            walk the worktree (e.g., Vale) will see it.
+          '';
+        };
       };
 
       config = {
@@ -262,6 +272,30 @@ in rec {
     }
   ));
 
+  ## Files are often copied from one file option to another (for example, from
+  ## `xdg.dataFile` to `project.file`), and a copy carries the read-only options
+  ## it was evaluated with, which isn’t allowed for `readOnly`, so we drop them
+  ## from every definition.
+  dropReadOnly = type: let
+    readOnlyNames =
+      builtins.attrNames
+      (lib.filterAttrs (_: opt: opt.readOnly or false) (type.getSubOptions []));
+  in
+    type
+    // {
+      merge = loc: defs:
+        type.merge loc (map (def:
+          def
+          // {
+            value =
+              if builtins.isAttrs def.value
+              then removeAttrs def.value readOnlyNames
+              else def.value;
+          })
+        defs);
+      substSubModules = m: dropReadOnly (type.substSubModules m);
+    };
+
   # Constructs a type suitable for a `project.file` like option. The
   # target path may be either absolute or relative, in which case it
   # is relative the `basePath` argument (which itself must be an
@@ -272,5 +306,5 @@ in rec {
   #   - basePathDesc   docbook compatible description of the base path
   #   - basePath       the file base path
   fileType = opt: basePathDesc: basePath:
-    types.attrsOf (fileContents opt basePathDesc basePath "_name_");
+    types.attrsOf (dropReadOnly (fileContents opt basePathDesc basePath "_name_"));
 }
