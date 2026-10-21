@@ -13,7 +13,9 @@
     self,
   }:
     flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {inherit system;};
+      pkgs = nixpkgs.legacyPackages.${system}.appendOverlays [
+        project-manager.overlays.default
+      ];
     in {
       ## This is the line that sets up Project Manager for your project. It
       ## expects to find the configuration in .config/project/default.nix, which
@@ -37,20 +39,17 @@
         ## project configuration (.config/project/default.nix).
         self.projectConfigurations.${system}.devShells
         // {
-          ## An easy way to create a default devShell is to override
-          ## `devShells.project-manager` and add the inputs from your other
-          ## derivations. This should have all the build dependencies for your
-          ## packages & checks, but also the packages from the project
-          ## configuration.
-          default =
-            self.projectConfigurations.${system}.devShells.project-manager.overrideAttrs
-            (old: {
-              inputsFrom =
-                old.inputsFrom
-                or []
-                ++ builtins.attrValues self.checks.${system} or {}
-                ++ builtins.attrValues self.packages.${system} or {};
-            });
+          ## An easy way to create a default devShell is to take the inputs
+          ## from `devShells.project-manager` and your other derivations. This
+          ## should have all the build dependencies for your packages & checks,
+          ## but also the packages from the project configuration.
+          default = pkgs.mkShell {
+            inputsFrom =
+              [self.projectConfigurations.${system}.devShells.project-manager]
+              ++ map (drv: drv.unwrapped or drv)
+              (builtins.attrValues self.checks.${system} or {}
+               ++ builtins.attrValues self.packages.${system} or {});
+          };
         };
 
       ## If you’ve configured a formatter via your project configuration, this
@@ -68,7 +67,7 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
 
-    nixpkgs.url = "github:nixos/nixpkgs/release-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/release-26.05";
 
     project-manager = {
       url = "github:sellout/project-manager";
