@@ -1,4 +1,5 @@
 {lib}: rec {
+  ci = import ./ci.nix {inherit lib;};
   dag = import ./dag.nix {inherit lib;};
 
   # assertions = import ./assertions.nix { inherit lib; };

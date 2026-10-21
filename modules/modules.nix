@@ -34,12 +34,12 @@
   project-environment = ./project-environment.nix;
   flakehub = ./services/flakehub;
   flakestry = ./services/flakestry;
-  garnix = ./services/garnix.nix;
+  garnix = ./services/garnix;
   github = ./services/github;
   github-settings = ./services/github/settings.nix;
   # ./services/git-sync.nix
   # ./services/lorri.nix
-  nix-cx = ./services/nix-ci.nix;
+  nix-cx = ./services/nix-ci;
   renovate = ./services/renovate;
 }
 # // optional useNixpkgsModule ./misc/nixpkgs.nix
