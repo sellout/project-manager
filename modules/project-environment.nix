@@ -699,6 +699,8 @@ in {
 
         ln -s ${config.project-files} $out/project-files
 
+        ln -s ${cfg.packages.path} $out/project-path
+
         ${cfg.extraBuilderCommands}
       '';
 
