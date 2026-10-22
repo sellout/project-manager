@@ -5,6 +5,7 @@
   flaky,
   lib,
   pkgs,
+  self,
   supportedSystems,
   ...
 }: let
@@ -28,6 +29,16 @@ in {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
     license = "MIT"; # Induced by this being basically a fork of Home Manager
+
+    ## Instantiate each template against this version of Project Manager, and
+    ## check the result.
+    checks = lib.mapAttrs' (name: _:
+      lib.nameValuePair "${name}-template-validity"
+      (flaky.pkgsLib.${pkgs.stdenv.hostPlatform.system}.checks.validate-template-with
+        {overrideInputs.project-manager = self;}
+        name
+        self))
+    self.templates;
   };
 
   ## development
