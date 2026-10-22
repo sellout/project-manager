@@ -1,0 +1,10 @@
+## Values for the templates’ placeholders, used when checking the templates.
+{
+  project:
+    {
+      author: "Example Author",
+      license: "MIT",
+      name: "template-example",
+      summary: "An example template instantiation",
+    },
+}
