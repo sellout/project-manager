@@ -25,6 +25,18 @@ in {
     ./github-pages.nix
   ];
 
+  ## Ensure the template Nixpkgs matches the PM Nixpkgs, since
+  ## `validate-template` overrides the inputs.
+  assertions =
+    lib.mapAttrsToList (name: template: let
+      wanted = (import "${template.path}/flake.nix").inputs.nixpkgs.url;
+      inherit (self.inputs.nixpkgs.lib.trivial) release;
+    in {
+      assertion = lib.hasSuffix "/release-${release}" wanted;
+      message = "The ${name} template uses ${wanted}, but Project Manager uses Nixpkgs ${release}.";
+    })
+    self.templates;
+
   project = {
     name = "project-manager";
     summary = "Home Manager, but for repos.";
@@ -35,7 +47,13 @@ in {
     checks = lib.mapAttrs' (name: _:
       lib.nameValuePair "${name}-template-validity"
       (flaky.pkgsLib.${pkgs.stdenv.hostPlatform.system}.checks.validate-template-with
-        {overrideInputs.project-manager = self;}
+        {
+          overrideInputs = {
+            inherit (self.inputs) flake-utils nixpkgs;
+            "flake-utils/systems" = self.inputs.systems;
+            project-manager = self;
+          };
+        }
         name
         self))
     self.templates;
