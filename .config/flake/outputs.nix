@@ -133,9 +133,15 @@ in
               nixpkgs.lib.trivial.release))
           (projectConfigurationsFor
             (nixpkgs.legacyPackages.${system}.appendOverlays [
-              ## `gnome2` before Nixpkgs 26.05 violates
-              ## `lint-short-path-literals`. We don’t need it, so we hide it.
-              (_: _: {gnome2 = {};})
+              (_: _: {
+                ## `gnome2` before Nixpkgs 26.05 violates
+                ## `lint-short-path-literals`. We don’t need it, so we hide it.
+                gnome2 = {};
+                ## The style versions end up in the generated .vale.ini, which
+                ## has to match across Nixpkgs versions. This also provides
+                ## them before Nixpkgs 24.05, which has no `valeStyles`.
+                inherit (pkgs) valeStyles;
+              })
               overlay
             ]))
           .checks

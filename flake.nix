@@ -2,9 +2,7 @@
   description = "A configuration for managing flake-based projects.";
 
   nixConfig = {
-    ## NB: This is a consequence of using `self.pkgsLib.runEmptyCommand`, which
-    ##     allows us to sandbox derivations that otherwise can’t be.
-    allow-import-from-derivation = true;
+    allow-import-from-derivation = false;
     extra-substituters = ["https://sellout.cachix.org"];
     extra-trusted-public-keys = [
       "sellout.cachix.org-1:v37cTpWBEycnYxSPAgSQ57Wiqd3wjljni2aC0Xry1DE="
@@ -14,6 +12,8 @@
     lint-short-path-literals = "fatal";
     lint-url-literals = "fatal";
     ## Isolate the build.
+    ##
+    ## WAIT: Needed by `validate-template`, because NixOS/nix#16708.
     sandbox = "relaxed";
     use-registries = false;
   };
