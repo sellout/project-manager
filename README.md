@@ -72,7 +72,7 @@ checks = self.projectConfigurations.${system}.checks // {
 };
 ```
 
-Project Manager has two other attribute sets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules (like Vale) that fail in the sandbox.
+Project Manager has two other attribute sets, `sandboxedChecks` and `unsandboxedChecks`, that partition `checks`. I recommend having `nixConfig.sandbox = true` in your flake and using `checks` unless you know you have enabled some modules that fail in the sandbox.
 
 If that's the case, you have a couple options. You can either
 
