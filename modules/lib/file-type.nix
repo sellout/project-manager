@@ -107,6 +107,18 @@ in rec {
           '';
         };
 
+        referenceFrom = mkOption {
+          type = types.functionTo (types.functionTo types.str);
+          internal = true;
+          description = ''
+            Like `reference`, but for when the reference isn’t resolved from
+            the directory of the file it’s used in (for example, a setting that
+            is resolved from the project root). It takes the persistence of the
+            location the reference is used from, then that location’s
+            directory.
+          '';
+        };
+
         executable = mkOption {
           type = types.nullOr types.bool;
           default = null;
@@ -248,15 +260,19 @@ in rec {
         referenceViaStore = referencingFile:
           config.persistence == "store" || referencingFile.persistence == "store";
 
-        reference = referencingFile:
-          if config.referenceViaStore referencingFile
+        referenceFrom = persistence: dir:
+          if config.persistence == "store" || persistence == "store"
           ## Absolute path to the store. We do this in all cases where the
           ## referencing file isn't persisted to the working tree to avoid
           ## having references outside of the store, especially ones that will
           ## vary between users.
           then toString config.storePath
           ## Relative path within worktree
-          else lib.pm.path.routeFromFile referencingFile.target config.target;
+          else lib.pm.path.routeFromDir dir config.target;
+
+        reference = referencingFile:
+          config.referenceFrom referencingFile.persistence
+          (dirOf referencingFile.target);
 
         persistence = lib.mkForce (
           if
