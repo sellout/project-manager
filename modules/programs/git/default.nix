@@ -173,9 +173,9 @@ in {
           }
         '';
         description = ''
-          Configuration helper for Git hooks.
-          See <https://git-scm.com/docs/githooks>
-          for reference.
+          Configuration helper for Git hooks. See
+          <https://git-scm.com/docs/githooks> for reference. Setting to `null`
+          explicitly disallows Project Manager control of hooks.
         '';
       };
 
@@ -186,10 +186,11 @@ in {
 
       ignores = mkOption {
         type = types.nullOr (types.listOf types.str);
-        default = null;
+        default = [];
         example = ["*~" "*.swp"];
         description = ''
-          List of paths that should be globally ignored.
+          List of paths that should be ignored in the project. Setting to `null`
+          explicitly disallows Project Manager control of Git ignores.
         '';
       };
 
@@ -262,6 +263,8 @@ in {
     ## Generated files in the worktree aren’t prose, so Vale shouldn’t check
     ## them.
     valeExclude = file: lib.optional file.in-worktree "./${file.target}";
+
+    gitConfig = config.xdg.dataFile."git/config";
   in
     mkMerge [
       {
@@ -337,12 +340,25 @@ in {
             then ''
               if $(${gitExe} config --get extensions.worktreeConfig); then
                 scope='--worktree'
+                configDir="$(${gitExe} rev-parse --git-dir)"
               else
                 scope='--local'
+                configDir="$(${gitExe} rev-parse --git-common-dir)"
               fi
 
+              ## NB: Git resolves a relative `include.path` from the file that
+              ##     includes it.
               ${gitExe} config "$scope" \
-                include.path "${config.xdg.dataFile."git/config".reference config.xdg.dataFile."git/config"}"
+                include.path "${
+                ## The local config isn’t in the store, but isn’t in the
+                ## project either, so a relative reference has to be rebased.
+                let
+                  ref = gitConfig.referenceFrom "worktree" ".";
+                in
+                  if lib.hasPrefix "/" ref
+                  then ref
+                  else ''$(${pkgs.coreutils}/bin/realpath --relative-to="$configDir" "$(${gitExe} rev-parse --show-toplevel)/${ref}")''
+              }"
             ''
             else ''
               if $(${gitExe} config --get extensions.worktreeConfig); then
@@ -357,7 +373,7 @@ in {
         };
       }
 
-      (mkIf (cfg.ignores != null) (let
+      (mkIf (cfg.ignores != null && cfg.ignores != []) (let
         ## NB: For user config, we use .git/info/exclude instead.
         ignorePath = ".gitignore";
       in {
@@ -386,8 +402,9 @@ in {
         ignoreRevsPath = "git/ignoreRevs";
       in {
         programs.git.iniContent.blame.ignoreRevsFile =
-          config.xdg.dataFile."${ignoreRevsPath}".reference
-          config.xdg.dataFile."git/config";
+          config.xdg.dataFile."${ignoreRevsPath}".referenceFrom
+          gitConfig.persistence
+          ".";
         programs.vale.excludes = valeExclude config.xdg.dataFile.${ignoreRevsPath};
         xdg.dataFile."${ignoreRevsPath}" = {
           minimum-persistence = "store";
@@ -395,7 +412,7 @@ in {
         };
       }))
 
-      (mkIf (cfg.hooks != null) {
+      (mkIf (cfg.hooks != null && cfg.hooks != {}) {
         programs.vale.excludes =
           concatMap
           (name: valeExclude config.xdg.dataFile."git/hooks/${name}")
@@ -413,17 +430,21 @@ in {
         cfg.hooks;
 
         programs.git.iniContent.core.hooksPath =
-          if builtins.any (name: config.xdg.dataFile."git/hooks/${name}".referenceViaStore config.xdg.dataFile."git/config") (builtins.attrNames cfg.hooks)
+          if builtins.any (name: config.xdg.dataFile."git/hooks/${name}".referenceViaStore gitConfig) (builtins.attrNames cfg.hooks)
           then let
+            ## NB: These links are resolved from the store.
             entries =
               mapAttrsToList (name: file: {
                 inherit name;
-                path = config.xdg.dataFile."git/hooks/${name}".reference config.xdg.dataFile."git/config";
+                path = config.xdg.dataFile."git/hooks/${name}".referenceFrom "store" ".";
               })
               cfg.hooks;
           in
             toString (pkgs.linkFarm "git-hooks-for-${config.project.name}" entries)
-          else lib.pm.path.routeFromFile config.xdg.dataFile."git/config".target "${config.xdg.dataDir}/git/hooks";
+          ## All hooks share a directory, so any of them can locate it.
+          else
+            dirOf (config.xdg.dataFile."git/hooks/${lib.head (attrNames cfg.hooks)}".referenceFrom
+              gitConfig.persistence ".");
       })
 
       (mkIf (lib.isAttrs cfg.config) {

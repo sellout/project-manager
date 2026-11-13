@@ -122,6 +122,7 @@ in {
         "./project-manager/project-manager"
         "./project-manager/completion.fish"
         "./project-manager/completion.zsh"
+        "./modules/programs/git/tests/repository-references/config"
         "./modules/programs/git/tests/settings/git/config"
         "./modules/programs/git/tests/settings/gitignore"
       ];
